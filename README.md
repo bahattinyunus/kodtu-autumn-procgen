@@ -253,21 +253,23 @@ Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/s
 
 KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation** kısıtlamalarına tam bağlı kalınırken, oyun deneyimini hantal retro HUD kutularından kurtarıp **çağdaş, modern ve sade bir anlatı oyununa** dönüştüren hibrit bir mimari geliştirdik:
 
-1. **🏛️ 3 Aşamalı ODTÜ Hikaye Bölümleri (`src/core/story.py`):**
-   - **Bölüm I: Yalıncak Yaprak Yolu (Koru 1):** Bozkırın kalbinde Devrim Feneri'nin ilk kıvılcımı parlar. Kızıl yaprakların altında ODTÜ Bilim Ağacı Anıtı'na ulaşın ve ormanın uyuyan anı kristallerini uyandırın.
-   - **Bölüm II: Eymir'in Sisli Kıyıları (Koru 2):** Sislerin arasından yükselen ahşap iskeleler ve su birikintileri. Kadim meşelerin fısıltılarını dinleyerek karanlık alacakaranlık yaratıklarını savuşturun.
-   - **Bölüm III: Devrim Korusu ve Sonbahar Kalbi (Koru 3+):** Devrim Stadyumu'nun ulu korusunda Elder Stag Warden ile yüzleşin ve Sonbaharın Son Işığı'nı sonsuzluğa taşıyın.
-2. **💬 Piksel-Portreli Türkçe Diyalog Kutusu:**
-   - Ekranın alt-ortasında konuşmacıya özel `64×64` piksel-sanatı portre ikonları (**ODTÜ Bilim Ağacı**, **Sonbahar Anısı Kristali**, **Ormancı Kamp Ateşi**, **Muhafız Ekin**).
-   - Akıcı Türkçe metinler, harf kaydırma ve açık yönlendirmeler.
-3. **🧭 Üst-Orta Dinamik Pusula Kapsülü (Compass Pill):**
-   - Oyuncuyu haritada kaybolmaktan kurtaran minimalist navigasyon kapsülü: En yakın **Sonbahar Anısı Kristali** veya **Kadim Tapınak** yönünü ok ile ve gerçek adım mesafesiyle (`Mesafe: 14 adım`) anlık gösterir.
-4. **📊 Sol-Üst Sadeleştirilmiş Durum & Görev Kartı:**
+1. **🏛️ 3 Aşamalı Zengin ODTÜ Hikaye Bölümleri (`src/core/story.py`):**
+   - **Bölüm I: Yalıncak Yaprak Yolu (Koru 1):** 1956'dan beri bozkırdan ellerle yeşertilen ulu ODTÜ ormanına çöken alacakaranlık ayazı. Bilim Ağacı'nın meşalesinden Devrim Feneri'ni yakarak ormanın dağılmış 5 Sonbahar Hatırasını kurtarın.
+   - **Bölüm II: Eymir'in Sisli Kıyıları (Koru 2):** Eymir Gölü'nün sazlıklarına ve prosedürel ahşap iskelelerine inen patikalar. Gölgelerin fısıltılarını kılıç darbeleriyle geri püskürtün ve gölün kadim bilgisini tapınağa taşıyın.
+   - **Bölüm III: Devrim Korusu ve Sonbahar Kalbi (Koru 3+):** Devrim Stadyumu'nun ulu korusunda Ormanın Koruyucu Ruhu **Kadim Geyik (Elder Stag Warden)** ile yüzleşin, gölge kürelerini yansıtarak Sonbahar Kalbini sonsuzluğa mühürleyin!
+2. **💬 Daktilo Efektli (Typewriter) Piksel-Portreli Türkçe Diyalog Sistemi:**
+   - Ekranın alt-ortasında konuşmacıya özel `64×64` piksel-sanatı portre ikonları (**ODTÜ Bilim Ağacı Anıtı**, **Sonbahar Hatırası Kristali**, **Ormancı Kamp Ateşi**, **Genç Muhafız Ekin**, **Kadim Geyik Warden**).
+   - *Celeste* ve *Eastward* tarzı harf harf açılan akıcı Türkçe daktilo (Typewriter) animasyonu.
+3. **🕯️ Dinamik Sonbahar Fener Vinyeti & Işıklandırma Geçişi (`src/rendering/renderer.py`):**
+   - Oyuncunun taşıdığı fener, ODTÜ Bilim Ağacı Anıtı ve Kamp Ateşleri etrafında dinamik dalgalanan sıcak altın (`#FAEBAC` / `#E09F3E`) auralar yayılırken, ekranın kenarları doğal derinlik katan mor-çivit gölgelere (`#1A1118` / `#2C1820`) kavuşur.
+4. **🧭 Üst-Orta Dinamik Pusula Kapsülü (Compass Pill):**
+   - Minimalist navigasyon kapsülü: En yakın **Sonbahar Hatırası** veya **Kadim Tapınak** yönünü ok ile ve gerçek adım mesafesiyle (`Mesafe: 14 adım`) anlık gösterir.
+5. **📊 Sol-Üst Sadeleştirilmiş Durum & Görev Kartı:**
    - **Devrim Feneri Isısı:** Yüzde çubuğuyla temiz görsel geribildirim.
    - **Köz Mermisi [F]:** 4 şarj hücresi ile anlık mermi durumu.
-   - **Sonbahar Anısı:** `0 / 5` ilerleme göstergesi ve anlık Türkçe tek cümlelik net görev özeti: `GÖREV: Ormandaki Sonbahar Anılarını Bul (0/5) — Kalan: 5`.
-5. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
-   - Oyuna başlarken hikaye arka planını, fener mekaniğini ve 3 adımlı basit oyun amacını özetleyen estetik kart. İstendiğinde **`[H]`** tuşuyla yeniden açılabilir.
+   - **Sonbahar Hatırası:** `0 / 5` ilerleme göstergesi ve anlık Türkçe tek cümlelik net görev özeti.
+6. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
+   - Hikaye arka planını, fener mekaniğini ve 3 adımlı basit oyun amacını özetleyen estetik kart. İstendiğinde **`[H]`** tuşuyla yeniden açılabilir.
 
 ---
 

@@ -620,10 +620,12 @@ class AutumnProcGenGame:
                     self.spawn_floating_text(item.x, item.y, "+10 ISI", HARVEST_GOLD)
                     self.sound.play("harvest_chime")
 
-        # Update Enemies & check player contact
+        # Update Enemies & check player contact & boss encounter dialogue
         for enemy in self.enemies:
             if not enemy.alive:
                 continue
+            if enemy.kind == "warden" and math.hypot(self.player.x - enemy.x, self.player.y - enemy.y) <= 8.5:
+                self.story.on_boss_encounter()
             enemy.update(
                 dt,
                 self.player.x,

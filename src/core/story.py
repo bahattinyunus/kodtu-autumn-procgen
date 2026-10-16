@@ -21,51 +21,67 @@ class DialogueEntry:
     speaker: str
     title: str
     text: str
-    duration: float = 6.5
+    duration: float = 7.0
     accent_type: str = "gold"  # 'gold', 'birch', 'crimson'
+    avatar_key: str = "player"  # 'bilim_agaci', 'relic', 'campfire', 'player', 'warden'
+    chars_revealed: int = 0
+    typewriter_speed: float = 45.0  # characters per second
 
 
 CHAPTER_INFO: Dict[int, Tuple[str, str, str]] = {
     1: (
         "BÖLÜM I : YALINCAK YAPRAK YOLU",
-        "Bozkır ayazı ODTÜ ormanına erken çöktü. Bilim Ağacı'nın meşalesinden aldığın "
-        "ışıkla, her adımda yeniden şekillenen koruda kaybolmuş 5 Sonbahar Anısını bul.",
-        "Görev: 5 Sonbahar Anısını (Kristal) topla ve Kadim Tapınağa [E] ulaş.",
+        "1956'dan beri bozkırdan ellerle yeşertilen ulu ODTÜ ormanına ansızın dondurucu bir alacakaranlık sisi çöktü. "
+        "Yalıncak patikasında yapraklar hızla dökülürken, Bilim Ağacı'nın kadim meşalesinden aldığın köz feneriyle "
+        "ormanın dağılmış 5 Sonbahar Hatırasını topla ve tapınağı uyandır.",
+        "Görev: 5 Sonbahar Hatırası Kristalini topla, fenerini sıcak tut ve Kadim Tapınağa [E] ulaş.",
     ),
     2: (
         "BÖLÜM II : EYMİR'İN SİSLİ KIYILARI",
-        "İlk koru yeniden ısındı! Şimdi Eymir'in sisli sularına inen prosedürel patikaları "
-        "ve ahşap köprüleri takip ederek unutulmuş hatıraları birleştir.",
-        "Görev: Sisli kıyılardaki 5 Sonbahar Anısını topla ve Tapınağı uyandır.",
+        "İlk korunun yaprakları ısındı! Şimdi Eymir Gölü'nün bataklık sazlıklarına ve prosedürel ahşap iskelelerine "
+        "inme vakti. Suyun üzerinde asılı kalan alacakaranlık fısıltılarına kulak ver; gölgeler soğuk üflerken "
+        "sadece köz fenerinin ışığı göl kıyısındaki kadim bilgiyi koruyabilir.",
+        "Görev: Eymir'in sisli kıyılarındaki 5 Sonbahar Hatırasını bul ve karanlık orbları yansıtarak tapınağı aç.",
     ),
     3: (
         "BÖLÜM III : DEVRİM KORUSU VE SONBAHAR KALBİ",
-        "Alacakaranlık muhafızları Kadim Tapınağın etrafında toplanıyor. Fenerinin "
-        "sonbahar ateşiyle gölgeleri dağıt ve ODTÜ Ormanı'na sıcaklığı geri getir!",
-        "Görev: Son 5 Sonbahar Anısını topla ve Sonbahar Kalbini mühürle.",
+        "Devrim Stadyumu'nun çam ve meşe korusuna ulaştın! Ormanın en kadim bekçisi Elder Stag Warden ve gölge ordusu, "
+        "Sonbaharın Son Işığı'nı bozkır ayazına hapsetmek üzere. Fenerinin tüm kutsamalarını birleştir, "
+        "son anıları mühürle ve ebedi sonbahar ahengini tüm kampüse geri kazandır!",
+        "Görev: Devrim Korusu'ndaki son 5 hatırayı birleştir, Orman Bekçisiyle yüzleş ve Sonbahar Kalbini yak.",
     ),
 }
 
-RELIC_STORY_FRAGMENTS: List[Tuple[str, str]] = [
+RELIC_STORY_FRAGMENTS: List[Tuple[str, str, str]] = [
     (
         "İLK TOHUMUN HATIRASI (Anı 1/5)",
-        "1960'ların bozkırında toprağa düşen ilk fidanın yaprağı... Fenerin daha parlak yanıyor!",
+        "1956 güzünde bozkır rüzgarına emanet edilen ilk meşe palamudunun anısı... "
+        "'Bir fidan bin inançtır.' Fenerinin alevi pas rengi kıvılcımlarla parıldadı!",
+        "bilim_agaci",
     ),
     (
-        "YALINCAK RÜZGARININ MELODİSİ (Anı 2/5)",
-        "Sarı huş yapraklarının rüzgarda fısıldadığı eski bir öğrenci türküsü yankılandı.",
+        "YALINCAK RÜZGARININ TÜRKÜSÜ (Anı 2/5)",
+        "Altın huş yapraklarının savrulurken söylediği eski bir öğrenci marşı kulaklarında yankılandı: "
+        "'Bu orman teslim olmaz, her sonbahar yeni bir bahara gebe kalır!' [Hız +%18]",
+        "relic",
     ),
     (
-        "EYMİR SABAH SİSİ (Anı 3/5)",
-        "Göl yüzeyinden yükselen kehribar rengi sabah buğusu, fenerinin çatlaklarını onardı.",
+        "EYMİR SİSİ VE BİLİM MEŞALESİ (Anı 3/5)",
+        "Göl yüzeyindeki kehribar rengi sabah buğusu, fenerinin çatlaklarını güneş ısıyla doldurdu. "
+        "Gölün derinliklerindeki su nilüferleri altın köz saçarak seni selamladı.",
+        "bilim_agaci",
     ),
     (
-        "DEVRİM MEŞALESİNİN KIVILCIMI (Anı 4/5)",
-        "Stadyum basamaklarında yankılanan coşku, karanlık orman gölgelerini geri püskürttü!",
+        "DEVRİM STADYUMU KIVILCIMI (Anı 4/5)",
+        "Tarihin taşa ve çime kazındığı basamaklardan yükselen sönmeyen inanç dalgası! "
+        "Fenerinden fırlayan Solar Ember mermileri artık 3'lü yaylım halinde gölgeleri yarıyor!",
+        "player",
     ),
     (
         "SONBAHARIN SON IŞIĞI (Anı 5/5)",
-        "Tüm Sonbahar Anıları birleşti! Artık Kadim Tapınağa [E] giderek yeni korunun kapısını açabilirsin.",
+        "Tüm parçalar birleşti! ODTÜ ormanının bozkıra karşı verdiği yarım asırlık direniş fenerinde vücut buldu. "
+        "Artık Kadim Tapınağa [E] dön ve yeni korunun gizemli geçidini sonsuzluğa aç!",
+        "relic",
     ),
 ]
 
@@ -107,6 +123,7 @@ class StoryManager:
         text: str,
         duration: float = 6.0,
         accent_type: str = "gold",
+        avatar_key: str = "player",
         once_key: Optional[str] = None,
     ) -> None:
         if once_key is not None:
@@ -119,30 +136,34 @@ class StoryManager:
             text=text,
             duration=duration,
             accent_type=accent_type,
+            avatar_key=avatar_key,
+            chars_revealed=0,
         )
         self.dialogue_timer = duration
 
     def on_relic_collected(self, current_count: int, total_count: int, boon_title: Optional[str] = None) -> None:
         idx = max(0, min(len(RELIC_STORY_FRAGMENTS) - 1, current_count - 1))
-        frag_title, frag_text = RELIC_STORY_FRAGMENTS[idx]
+        frag_title, frag_text, avatar = RELIC_STORY_FRAGMENTS[idx]
         if boon_title:
-            frag_text += f" [Yeni Kutsama: {boon_title}]"
+            frag_text += f" [Yeni ODTÜ Kutsaması: {boon_title}]"
         self.trigger_dialogue(
-            speaker=f"SONBAHAR ANISI ({current_count}/{total_count})",
+            speaker=f"SONBAHAR HATIRASI ({current_count}/{total_count})",
             title=frag_title,
             text=frag_text,
-            duration=6.5,
+            duration=7.2,
             accent_type="birch" if current_count >= total_count else "gold",
+            avatar_key=avatar,
         )
 
     def on_near_bilim_agaci(self) -> None:
         self.trigger_dialogue(
             speaker="ODTÜ BİLİM AĞACI ANITI",
             title="SÖNMEYEN BİLİM MEŞALESİ",
-            text="'Bozkırdan yükselen bu orman, her sonbaharda küllerinden yeniden doğar. "
-            "Fenerin üşüdüğünde yanıma gel, ışığım seni koruyacaktır.' (+15 Isı/sn)",
-            duration=6.0,
+            text="'1956'dan beri bozkırdan yükselen bu orman, her sonbaharda küllerinden yeniden doğar. "
+            "Fenerin üşüdüğünde yanıma gel; bilgi ve dayanışmanın meşalesi fenerini koruyacaktır.' (+15 Isı/sn)",
+            duration=6.5,
             accent_type="birch",
+            avatar_key="bilim_agaci",
             once_key="bilim_agaci_intro",
         )
 
@@ -150,21 +171,42 @@ class StoryManager:
         self.trigger_dialogue(
             speaker="ORMANCI KAMP ATEŞİ",
             title="SICAK KÖZ DURAĞI",
-            text="Çıtırdayan kestane dalları fenerinin ısısını yeniliyor. "
-            "Yolculuğa devam etmeden önce soluklanmak için güvenli bir nokta.",
-            duration=5.0,
+            text="Çıtırdayan kestane dalları ve meşe kökleri fenerinin ısısını tazeliyor. "
+            "Yalıncak ve Eymir yollarında ilerlemeden önce soluklanmak için güvenli bir sığınak.",
+            duration=5.5,
             accent_type="gold",
+            avatar_key="campfire",
             once_key="campfire_intro",
+        )
+
+    def on_boss_encounter(self) -> None:
+        self.trigger_dialogue(
+            speaker="KADİM GEYİK (ELDER STAG WARDEN)",
+            title="ORMANIN KORUYUCU RUHU",
+            text="'Bozkırın kış uykusu yaklaşırken közünü söndürmeyeceğim, onu sınayacağım! "
+            "Kılıcınla gölge kürelerimi yansıt ve sonbaharın ışığına layık olduğunu kanıtla!'",
+            duration=6.8,
+            accent_type="crimson",
+            avatar_key="warden",
+            once_key="boss_encounter",
         )
 
     def get_current_objective_text(self, relics_collected: int, total_relics: int) -> str:
         if relics_collected >= total_relics:
-            return "GÖREV: Tüm Anılar Toplandı! Pusulayı takip et ve Kadim Tapınakta [E] tuşuna bas."
+            return "GÖREV: Tüm Hatıralar Toplandı! Pusulayı takip et ve Kadim Tapınakta [E] ile yeni koruyu aç."
         rem = total_relics - relics_collected
-        return f"GÖREV: Ormandaki Sonbahar Anılarını Bul ({relics_collected}/{total_relics}) — Kalan: {rem}"
+        return f"GÖREV: Ormandaki Sonbahar Hatıralarını Topla ({relics_collected}/{total_relics}) — Kalan: {rem}"
 
     def update(self, dt: float) -> None:
         if self.dialogue_timer > 0.0:
             self.dialogue_timer = max(0.0, self.dialogue_timer - dt)
+            if self.active_dialogue is not None:
+                # Progressive typewriter reveal
+                tot_chars = len(self.active_dialogue.text)
+                if self.active_dialogue.chars_revealed < tot_chars:
+                    add = max(1, int(round(self.active_dialogue.typewriter_speed * dt)))
+                    self.active_dialogue.chars_revealed = min(
+                        tot_chars, self.active_dialogue.chars_revealed + add
+                    )
             if self.dialogue_timer <= 0.0:
                 self.active_dialogue = None

@@ -352,12 +352,15 @@ class ModernStoryOverlay:
         pygame.draw.rect(box, WITHERED_BARK, (4, 4, dw - 8, dh - 8), 1, border_radius=6)
 
         # Choose speaker pixel-art portrait
-        if "BİLİM AĞACI" in dlg.speaker:
+        avatar_k = getattr(dlg, "avatar_key", "player")
+        if avatar_k == "bilim_agaci" or "BİLİM AĞACI" in dlg.speaker:
             raw_icon = self.assets.bilim_agaci_surf
-        elif "ANISI" in dlg.speaker:
+        elif avatar_k == "relic" or "HATIRA" in dlg.speaker or "ANISI" in dlg.speaker:
             raw_icon = self.assets.entity_surfaces[("relic", 0)]
-        elif "KAMP" in dlg.speaker:
+        elif avatar_k == "campfire" or "KAMP" in dlg.speaker:
             raw_icon = self.assets.campfire_frames[0]
+        elif avatar_k == "warden" or "GEYİK" in dlg.speaker:
+            raw_icon = self.assets.entity_surfaces[("warden", 0)]
         else:
             raw_icon = self.assets.player_frames_right[0]
 
@@ -372,13 +375,15 @@ class ModernStoryOverlay:
         box.blit(lbl_spk, (106, 14))
         box.blit(lbl_ttl, (106, 32))
 
-        # Wrapped narrative lines
-        wrapped = _wrap_text(dlg.text, self.f_body, dw - 130)
+        # Typewriter revealed narrative lines
+        visible_chars = getattr(dlg, "chars_revealed", len(dlg.text))
+        visible_text = dlg.text[:visible_chars]
+        wrapped = _wrap_text(visible_text, self.f_body, dw - 130)
         for i, line in enumerate(wrapped[:2]):
             l_surf = self.f_body.render(line, True, PALE_SUNBEAM)
             box.blit(l_surf, (106, 58 + i * 21))
 
-        hint = self.f_tiny.render("[C] Hikaye & Kutsama Günlüğü   |   [F5] ODTÜBölgesi Değiştir", True, HARVEST_GOLD)
+        hint = self.f_tiny.render("[C] Günlük & Kutsamalar   |   [F5] ODTÜ Bölgesi Değiştir", True, HARVEST_GOLD)
         box.blit(hint, (dw - hint.get_width() - 16, 14))
 
         screen.blit(box, (dx, dy))

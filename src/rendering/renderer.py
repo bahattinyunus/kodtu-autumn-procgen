@@ -329,16 +329,56 @@ class WorldRenderer:
                 if 0 <= fsx < NATIVE_WIDTH and 0 <= fsy < NATIVE_HEIGHT:
                     self.font.draw_text(canvas, ft.text, fsx, fsy - 14, ft.color, align_center=True)
 
-        # 6. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
+        # 6. Dynamic Lantern Vignette & Atmospheric Autumn Lighting Pass
+        self._render_autumn_lantern_vignette(canvas, camera, player, world, time_sec)
+
+        # 7. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
         self._render_autumn_mist_wisps(canvas, camera.x, camera.y, time_sec)
 
-        # 7. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
+        # 8. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
         if debug_mode == DEBUG_BITMASK_GRID:
             self._render_f2_bitmask_grid_overlay(
                 canvas, world, camera, spatial_hash, player, enemies, visible_props, x0, y0, x1, y1
             )
 
         self.last_draw_calls = draw_calls
+
+    def _render_autumn_lantern_vignette(
+        self,
+        canvas: pygame.Surface,
+        camera: PixelCamera,
+        player: Player,
+        world: WorldData,
+        time_sec: float,
+    ) -> None:
+        """
+        Applies a modern cinematic autumn lighting vignette with a warm lantern glow
+        centered on the player and structures (Bilim Ağacı & Campfire), transitioning
+        toward atmospheric Deep Void (#1A1118) and Plum Shadow (#2C1820) at viewport edges.
+        """
+        vignette = pygame.Surface((NATIVE_WIDTH, NATIVE_HEIGHT), pygame.SRCALPHA)
+        # Deep atmospheric edge shadows
+        vignette.fill((*DEEP_VOID, 78))
+
+        # Cut out soft warm radial halos around light sources
+        pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
+        halo_radius = int(round(56.0 + 4.0 * math.sin(time_sec * 3.5)))
+        # Warm inner glow around player
+        pygame.draw.circle(vignette, (*PALE_SUNBEAM, 0), (pl_sx, pl_sy - 4), halo_radius)
+        pygame.draw.circle(vignette, (*HARVEST_GOLD, 25), (pl_sx, pl_sy - 4), halo_radius + 18)
+        pygame.draw.circle(vignette, (*PLUM_SHADOW, 55), (pl_sx, pl_sy - 4), halo_radius + 36)
+
+        # Warm halos around Bilim Ağacı and Campfires
+        for st in world.structures:
+            st_sx, st_sy = camera.world_to_screen(
+                (st.tile_x + 0.5) * TILE_SIZE, (st.tile_y + 0.5) * TILE_SIZE
+            )
+            if -30 <= st_sx <= NATIVE_WIDTH + 30 and -30 <= st_sy <= NATIVE_HEIGHT + 30:
+                rad = 48 if st.structure_type == "bilim_agaci" else 36
+                pygame.draw.circle(vignette, (*PALE_SUNBEAM, 0), (st_sx, st_sy), rad)
+                pygame.draw.circle(vignette, (*HARVEST_GOLD, 30), (st_sx, st_sy), rad + 14)
+
+        canvas.blit(vignette, (0, 0))
 
     def _draw_ember_sweep(
         self,
