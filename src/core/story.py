@@ -195,7 +195,9 @@ class StoryManager:
         if relics_collected >= total_relics:
             return "GÖREV: Tüm Hatıralar Toplandı! Pusulayı takip et ve Kadim Tapınakta [E] ile yeni koruyu aç."
         rem = total_relics - relics_collected
-        return f"GÖREV: Ormandaki Sonbahar Hatıralarını Topla ({relics_collected}/{total_relics}) — Kalan: {rem}"
+        if relics_collected == 0:
+            return f"GÖREV: Tepedeki Pusula Okunu Takip Et ve 5 Kristali Topla! (0/{total_relics}) — [WASD] Yürü | Sol Tık: Vur | [H] Kılavuz"
+        return f"GÖREV: Ormandaki Sonbahar Hatıralarını Topla ({relics_collected}/{total_relics}) — Kalan: {rem} — Üşürsen Ateşe Git!"
 
     def update(self, dt: float) -> bool:
         """Updates dialogue timers and typewriter progression. Returns True if a character was revealed this tick."""

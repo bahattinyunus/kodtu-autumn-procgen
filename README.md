@@ -304,8 +304,15 @@ KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation**
    - **Devrim Feneri Isısı:** Yüzde çubuğuyla temiz görsel geribildirim.
    - **Köz Mermisi [F]:** 4 şarj hücresi ile anlık mermi durumu.
    - **Sonbahar Hatırası:** `0 / 5` ilerleme göstergesi ve anlık Türkçe tek cümlelik net görev özeti.
-7. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
-   - Hikaye arka planını, fener mekaniğini ve 3 adımlı basit oyun amacını özetleyen estetik kart. İstendiğinde **`[H]`** tuşuyla yeniden açılabilir.
+7. **📜 Başlangıç & Oynanış Kılavuzu (Foolproof / Eşeğe Anlatır Gibi Başlangıç Ekranı — `[H]` / Enter):**
+   - Oyuna ilk girildiğinde veya oyun sırasında **`[H]`** tuşuna basıldığında açılan, sıfır oyun deneyimi olan birinin bile 10 saniyede kavrayabileceği **3 ana kutulu ultra-sade rehber**:
+     - **[1] HEDEFİN NEDİR?**: Ekranın tepesindeki altın pusula okunu takip et, 5 altın kristali topla, kadim tapınağa varıp **[E]** ile yeni seviyeye geç!
+     - **[2] KONTROLLER**: `[WASD]` yürü, `[Sol Tık / Space]` kılıç salla (mor mermileri geri yansıt!), `[Sağ Tık / F]` köz mermisi fırlat, `[Shift]` hızlıca atıl.
+     - **[3] ÖLMEME REHBERİ**: Fener ısısı senin canındır. Donmamak için devasa **ODTÜ Bilim Ağacı Anıtı** veya **Kamp Ateşlerine** koş! Çalı ve balkabaklarını kesip palamut topla.
+
+<div align="center">
+  <img src="docs/preview_intro_tutorial.png" alt="ODTÜ Sonbaharın Son Işığı Başlangıç Kılavuzu" width="90%" />
+</div>
 
 ---
 

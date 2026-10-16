@@ -65,6 +65,7 @@ class ModernStoryOverlay:
         self.f_body = pygame.font.SysFont(font_names, 15, bold=False)
         self.f_body_bold = pygame.font.SysFont(font_names, 15, bold=True)
         self.f_small = pygame.font.SysFont(font_names, 13, bold=True)
+        self.f_card_desc = pygame.font.SysFont(font_names, 13, bold=False)
         self.f_tiny = pygame.font.SysFont(font_names, 12, bold=False)
 
         self._minimap_surf: Optional[pygame.Surface] = None
@@ -223,14 +224,17 @@ class ModernStoryOverlay:
         uncollected = [it for it in items if not it.collected and it.kind == "relic"]
         if not uncollected:
             tx, ty = world.shrine_tile[0] + 0.5, world.shrine_tile[1] + 0.5
-            target_label = "KADİM TAPINAK [E]"
+            target_label = ">> KADİM TAPINAK [E] <<"
             col = PALE_SUNBEAM
         else:
             nearest = min(
                 uncollected, key=lambda it: (it.x - player.x) ** 2 + (it.y - player.y) ** 2
             )
             tx, ty = nearest.x, nearest.y
-            target_label = "EN YAKIN ANI KRİSTALİ"
+            if player.relics_collected == 0:
+                target_label = ">> BU OKU TAKİP ET: 1. KRİSTAL <<"
+            else:
+                target_label = f"EN YAKIN KRİSTAL ({player.relics_collected}/{world.total_relics})"
             col = HARVEST_GOLD
 
         dx = tx - player.x
@@ -238,7 +242,7 @@ class ModernStoryOverlay:
         dist = int(round(math.hypot(dx, dy)))
         angle = math.atan2(dy, dx)
 
-        cw, ch = 250, 44
+        cw, ch = 280, 44
         cx_box = (sw - cw) // 2
         cy_box = 16
         pill = pygame.Surface((cw, ch), pygame.SRCALPHA)
@@ -255,7 +259,7 @@ class ModernStoryOverlay:
         pygame.draw.circle(pill, SUNLIT_BIRCH, (ax, ay), 3)
 
         t1 = self.f_small.render(target_label, True, col)
-        t2 = self.f_tiny.render(f"Mesafe: {dist} adım", True, AUTUMN_MIST)
+        t2 = self.f_tiny.render(f"Mesafe: {dist} adim (Ok yonunde yuru)", True, AUTUMN_MIST)
         pill.blit(t1, (48, 6))
         pill.blit(t2, (48, 23))
         screen.blit(pill, (cx_box, cy_box))
@@ -271,7 +275,7 @@ class ModernStoryOverlay:
                     bpanel.fill((*DEEP_VOID, 230))
                     pygame.draw.rect(bpanel, CRIMSON_DECAY, (0, 0, bw, bh), 2, border_radius=6)
                     b_lbl = self.f_small.render(
-                        "🦌 ORMAN MUHAFIZI: KADİM GEYİK (ELDER STAG WARDEN)", True, SUNLIT_BIRCH
+                        "[!] ORMAN MUHAFIZI: KADİM GEYİK (ELDER STAG WARDEN)", True, SUNLIT_BIRCH
                     )
                     bpanel.blit(b_lbl, ((bw - b_lbl.get_width()) // 2, 5))
                     pygame.draw.rect(bpanel, PLUM_SHADOW, (16, 25, bw - 32, 10), border_radius=4)
@@ -389,20 +393,20 @@ class ModernStoryOverlay:
         screen.blit(box, (dx, dy))
 
     def _render_bottom_controls_bar(self, screen: pygame.Surface, sw: int, sh: int) -> None:
-        bw = min(900, sw - 40)
+        bw = min(960, sw - 40)
         bh = 32
         bx = (sw - bw) // 2
         by = sh - bh - 10
         bar = pygame.Surface((bw, bh), pygame.SRCALPHA)
-        bar.fill((*DEEP_VOID, 210))
-        pygame.draw.rect(bar, WITHERED_BARK, (0, 0, bw, bh), 1, border_radius=6)
+        bar.fill((*DEEP_VOID, 220))
+        pygame.draw.rect(bar, BURNT_AMBER, (0, 0, bw, bh), 1, border_radius=6)
 
         txt = (
-            "[WASD] Yürü   •   [SPACE / Sol Tık] Kılıç & Yansıtma   •   "
-            "[F / Sağ Tık] Köz Atışı   •   [Q] Nova   •   [SHIFT] Atıl   •   "
-            "[C] Günlük   •   [F5] ODTÜ Tohumu"
+            "[WASD] Yürü  •  [Sol Tık / SPACE] Kılıç & Mermi Yansıt  •  "
+            "[Sağ Tık / F] Köz Atışı  •  [SHIFT] Hızlı Atıl  •  [Q] Nova  •  "
+            "[H] KILAVUZ (Nasıl Oynanır)  •  [M] Harita  •  [C] Kutsamalar"
         )
-        lbl = self.f_tiny.render(txt, True, AUTUMN_MIST)
+        lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))
         screen.blit(bar, (bx, by))
 
@@ -422,59 +426,133 @@ class ModernStoryOverlay:
         self, screen: pygame.Surface, sw: int, sh: int, world: WorldData
     ) -> None:
         dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
-        dim.fill((*DEEP_VOID, 185))
+        dim.fill((*DEEP_VOID, 205))
         screen.blit(dim, (0, 0))
 
-        cw, ch = 740, 430
+        cw = min(1040, sw - 32)
+        ch = min(660, sh - 32)
         cx = (sw - cw) // 2
         cy = (sh - ch) // 2
+
         card = pygame.Surface((cw, ch), pygame.SRCALPHA)
-        card.fill((*PLUM_SHADOW, 248))
+        card.fill((*PLUM_SHADOW, 252))
         pygame.draw.rect(card, HARVEST_GOLD, (0, 0, cw, ch), 3, border_radius=12)
         pygame.draw.rect(card, SUNLIT_BIRCH, (6, 6, cw - 12, ch - 12), 1, border_radius=9)
 
-        # Top decorative sprites (Bilim Ağacı, Autumn Keeper, Shrine)
-        s_bilim = pygame.transform.scale(self.assets.bilim_agaci_surf, (64, 64))
-        s_player = pygame.transform.scale(self.assets.player_frames_right[0], (48, 48))
-        s_shrine = pygame.transform.scale(self.assets.shrine_awake_surf, (64, 64))
-        card.blit(s_bilim, (cw // 2 - 110, 22))
-        card.blit(s_player, (cw // 2 - 24, 34))
-        card.blit(s_shrine, (cw // 2 + 46, 22))
+        # Header Title with pixel sprites on each side
+        t_main = self.f_title.render("ODTÜ : SONBAHARIN SON IŞIĞI — BAŞLANGIÇ KILAVUZU", True, PALE_SUNBEAM)
+        tw = t_main.get_width()
+        tx = (cw - tw) // 2
+        card.blit(t_main, (tx, 14))
 
-        t_main = self.f_title.render("🍁 ODTÜ : SONBAHARIN SON IŞIĞI", True, PALE_SUNBEAM)
-        t_sub = self.f_subtitle.render(
-            "Prosedürel Bir Sonbahar Hikayesi  •  KODTÜ Game Jam", True, HARVEST_GOLD
+        s_bilim = pygame.transform.scale(self.assets.bilim_agaci_surf, (36, 36))
+        s_shrine = pygame.transform.scale(self.assets.shrine_awake_surf, (36, 36))
+        card.blit(s_bilim, (max(16, tx - 46), 11))
+        card.blit(s_shrine, (min(cw - 52, tx + tw + 10), 11))
+
+        # Golden Summary Pill (Crystal clear ELI5 banner)
+        pill_w, pill_h = min(980, cw - 40), 32
+        pill_x = (cw - pill_w) // 2
+        pill_y = 52
+        pill = pygame.Surface((pill_w, pill_h), pygame.SRCALPHA)
+        pill.fill((*DEEP_VOID, 230))
+        pygame.draw.rect(pill, HARVEST_GOLD, (0, 0, pill_w, pill_h), 2, border_radius=8)
+        s_txt = self.f_body_bold.render(
+            ">> 10 SANİYEDE ÖZET: Ekranın tepesindeki ALTIN OKU TAKİP ET, 5 sarı kristali topla, tapınaktan [E] ile geç! <<",
+            True,
+            PALE_SUNBEAM,
         )
-        card.blit(t_main, ((cw - t_main.get_width()) // 2, 96))
-        card.blit(t_sub, ((cw - t_sub.get_width()) // 2, 132))
+        pill.blit(s_txt, ((pill_w - s_txt.get_width()) // 2, 6))
+        card.blit(pill, (pill_x, pill_y))
 
-        story_lines = [
-            "Bozkır ayazı Orta Doğu Teknik Üniversitesi (ODTÜ) ormanına erken çöktü.",
-            "Bilim Ağacı'nın meşalesi sönmek üzereyken, genç orman bekçisi Ekin elinde",
-            "Devrim Feneri ile her adımda yeniden şekillenen (Procedural Generation)",
-            "büyülü sonbahar korusuna adım atar.",
-            "",
-            "🎯 OYUNUN AMACI (Çok Basit ve Net):",
-            "1. Pusula okunu takip ederek ormandaki 5 Altın Sonbahar Anısını (Kristal) topla.",
-            "2. Fenerin üşüdüğünde ODTÜ Bilim Ağacı Anıtı veya Kamp Ateşlerinin yanında ısın.",
-            "3. 5 Anıyı tamamladığında Kadim Tapınağa [E] giderek yeni korunun kapısını aç!",
+        # 3 Structured Columns
+        col_margin = 16
+        col_gap = 14
+        col_w = (cw - 2 * col_margin - 2 * col_gap) // 3
+        col_h = ch - 195
+        col_y = 94
+
+        columns_data = [
+            (
+                "[1] HEDEFİN NEDİR? (NE YAPACAKSIN)",
+                HARVEST_GOLD,
+                [
+                    ("* Tepedeki Oku Takip Et!", "Ekranın tam tepesinde dönen altın bir pusula oku var. Nereye dönerse o yöne yürü; seni hedefe adım adım götürür!", SUNLIT_BIRCH),
+                    ("* 5 Altın Kristali Topla!", "Ormana saçılmış 5 parlayan kristali topla. Her kristal fenerine kalıcı bir süper güç (ODTÜ Kutsaması) verir.", HARVEST_GOLD),
+                    ("* Kadim Tapınaktan Geç [E]!", "5 kristal bitince pusula Tapınağı gösterecek. Tapınağın yanına varıp [E] tuşuna bas ve seviyeyi bitir!", PALE_SUNBEAM),
+                    ("* Boss: Kadim Geyik Warden!", "Koru derinliğindeki ulu muhafızın mor mermilerini kılıcınla yansıtarak hakkından gel!", CRIMSON_DECAY),
+                ],
+            ),
+            (
+                "[2] KONTROLLER (HANGİ TUŞLAR)",
+                SUNLIT_BIRCH,
+                [
+                    ("* [W, A, S, D] — Yürü", "Ormanda 8 yöne serbestçe hareket et (Ok tuşları da çalışır).", AUTUMN_MIST),
+                    ("* [Sol Tık / SPACE] — Kılıç", "Düşmanları ve çalıları kes! Vurduğun her darbe sana Köz Mermisi doldurur.", SUNLIT_BIRCH),
+                    ("* DEFLECT! — Mermi Yansıt", "Düşmanın attığı mor mermilere kılıç vurursan, mermi 2 kat hasarla düşmana geri uçar!", PALE_SUNBEAM),
+                    ("* [Sağ Tık / F] — Köz Mermisi", "Doldurduğun köz mermisini uzaktan düşmana fırlat.", HARVEST_GOLD),
+                    ("* [SHIFT] Dash  •  [Q] Nova", "Shift ile hızlıca sıyrıl, Q ile 360 derece şok dalgası patlat.", AUTUMN_MIST),
+                ],
+            ),
+            (
+                "[3] ÖLMEME REHBERİ (HAYATTA KALMA)",
+                CRIMSON_DECAY,
+                [
+                    ("* Fener Isısı = Canındır!", "Sol üstteki sarı çubuk senin canındır. Soğukta durdukça azalır; ısı bitmeden ısın!", CRIMSON_DECAY),
+                    ("* ODTÜ Bilim Ağacı'na Koş!", "Üşüdüğünde haritadaki dev metal Bilim Ağacı Anıtı'na git. Yanında durunca fenerin hemen %100 dolar!", PALE_SUNBEAM),
+                    ("* Kamp Ateşlerinde Isın!", "Ormandaki yanan kamp ateşlerinin yanında durarak da donmaktan hemen kurtulursun.", HARVEST_GOLD),
+                    ("* Palamut & Balkabağı Kes!", "Balkabaklarını kılıçla parçala; çıkan altın meşe palamutlarını alıp can tazele.", SUNLIT_BIRCH),
+                    ("* [M] Harita  •  [C] Kutsamalar", "Bu kılavuzu istediğin an [H] tuşuna basarak tekrar açabilirsin.", AUTUMN_MIST),
+                ],
+            ),
         ]
-        for idx, line in enumerate(story_lines):
-            col = SUNLIT_BIRCH if line.startswith("🎯") else AUTUMN_MIST
-            font_use = self.f_body_bold if line.startswith("🎯") else self.f_body
-            ls = font_use.render(line, True, col)
-            card.blit(ls, (48, 172 + idx * 22))
 
-        # Start button pill
-        btn_w, btn_h = 420, 40
+        for i, (col_title, badge_col, items) in enumerate(columns_data):
+            bx = col_margin + i * (col_w + col_gap)
+            box_surf = pygame.Surface((col_w, col_h), pygame.SRCALPHA)
+            box_surf.fill((*DEEP_VOID, 235))
+            pygame.draw.rect(box_surf, badge_col, (0, 0, col_w, col_h), 2, border_radius=8)
+            pygame.draw.rect(box_surf, WITHERED_BARK, (3, 3, col_w - 6, col_h - 6), 1, border_radius=6)
+
+            # Column Badge Header
+            hdr_rect = pygame.Rect(8, 8, col_w - 16, 28)
+            pygame.draw.rect(box_surf, PLUM_SHADOW, hdr_rect, border_radius=6)
+            pygame.draw.rect(box_surf, badge_col, hdr_rect, 1, border_radius=6)
+            lbl_hdr = self.f_small.render(col_title, True, PALE_SUNBEAM)
+            box_surf.blit(lbl_hdr, ((col_w - lbl_hdr.get_width()) // 2, 13))
+
+            # Render item list
+            item_y = 44
+            for item_title, item_desc, title_col in items:
+                lbl_it = self.f_body_bold.render(item_title, True, title_col)
+                box_surf.blit(lbl_it, (12, item_y))
+                item_y += 20
+                wrapped = _wrap_text(item_desc, self.f_card_desc, col_w - 24)
+                for line in wrapped:
+                    l_s = self.f_card_desc.render(line, True, AUTUMN_MIST)
+                    box_surf.blit(l_s, (14, item_y))
+                    item_y += 18
+                item_y += 12
+
+            card.blit(box_surf, (bx, col_y))
+
+        # Bottom Start Button
+        btn_w, btn_h = min(560, cw - 60), 46
         btn_x = (cw - btn_w) // 2
-        btn_y = ch - 56
-        pygame.draw.rect(card, CRIMSON_DECAY, (btn_x, btn_y, btn_w, btn_h), border_radius=8)
-        pygame.draw.rect(card, PALE_SUNBEAM, (btn_x, btn_y, btn_w, btn_h), 2, border_radius=8)
+        btn_y = ch - 72
+        pygame.draw.rect(card, CRIMSON_DECAY, (btn_x, btn_y, btn_w, btn_h), border_radius=10)
+        pygame.draw.rect(card, PALE_SUNBEAM, (btn_x, btn_y, btn_w, btn_h), 2, border_radius=10)
         btn_lbl = self.f_subtitle.render(
-            "[ENTER / SPACE / TIKLA] HİKAYEYE BAŞLA", True, PALE_SUNBEAM
+            "[ENTER / SPACE / TIKLA] HER ŞEYİ ANLADIM, OYUNA BAŞLA!", True, PALE_SUNBEAM
         )
-        card.blit(btn_lbl, ((cw - btn_lbl.get_width()) // 2, btn_y + 8))
+        card.blit(btn_lbl, ((cw - btn_lbl.get_width()) // 2, btn_y + 11))
+
+        sub_hint = self.f_tiny.render(
+            "[i] İpucu: Bu kılavuzu oyun içinde istediğin an [H] tuşuna basarak tekrar açabilirsin.",
+            True,
+            AUTUMN_MIST,
+        )
+        card.blit(sub_hint, ((cw - sub_hint.get_width()) // 2, btn_y + btn_h + 4))
 
         screen.blit(card, (cx, cy))
 
