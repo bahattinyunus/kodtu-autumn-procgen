@@ -110,6 +110,7 @@ class ModernStoryOverlay:
         banner_text: str = "",
         banner_timer: float = 0.0,
         weather_name: str = "ALTIN İKİNDİ",
+        is_paused: bool = False,
     ) -> None:
         sw, sh = screen.get_size()
         if sw < 640 or sh < 360:
@@ -140,6 +141,8 @@ class ModernStoryOverlay:
             self._render_story_intro_card(screen, sw, sh, world)
         elif getattr(story, "show_victory_modal", False):
             self._render_victory_modal_hd(screen, sw, sh, world, player, story)
+        elif is_paused:
+            self._render_pause_modal_hd(screen, sw, sh)
         elif codex_open:
             self._render_codex_modal_hd(screen, sw, sh, world, player, story)
         elif seed_modal_open:
@@ -420,11 +423,45 @@ class ModernStoryOverlay:
         txt = (
             "[WASD] Yürü  •  [Sol Tık/SPACE] Kılıç & Yansıt  •  "
             "[Sağ Tık/F] Köz Atışı  •  [SHIFT] Hızlı Atıl  •  [Q] Nova  •  [X] KILIÇ DANSI  •  "
-            "[E] Oku/Közle  •  [H] Kılavuz  •  [C] Kutsamalar"
+            "[E] Oku/Közle  •  [P] Duraklat  •  [U] Ses  •  [H] Kılavuz  •  [C] Kutsamalar"
         )
         lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))
         screen.blit(bar, (bx, by))
+
+    def _render_pause_modal_hd(self, screen: pygame.Surface, sw: int, sh: int) -> None:
+        dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        dim.fill((*DEEP_VOID, 185))
+        screen.blit(dim, (0, 0))
+
+        pw, ph = 480, 220
+        px = (sw - pw) // 2
+        py = (sh - ph) // 2
+        pnl = pygame.Surface((pw, ph), pygame.SRCALPHA)
+        pnl.fill((*PLUM_SHADOW, 245))
+        pygame.draw.rect(pnl, HARVEST_GOLD, (0, 0, pw, ph), 2, border_radius=8)
+        pygame.draw.rect(pnl, SUNLIT_BIRCH, (4, 4, pw - 8, ph - 8), 1, border_radius=6)
+
+        t_lbl = self.f_title.render("OYUN DURAKLATILDI", True, PALE_SUNBEAM)
+        pnl.blit(t_lbl, ((pw - t_lbl.get_width()) // 2, 20))
+
+        sub_lbl = self.f_subtitle.render("Bozkırın Rüzgarı Dinginleşti...", True, HARVEST_GOLD)
+        pnl.blit(sub_lbl, ((pw - sub_lbl.get_width()) // 2, 60))
+
+        hints = [
+            "[P] veya [SPACE] : Oyuna Devam Et",
+            "[U] : Sesi Aç / Kapat (Mute Toggle)",
+            "[H] : Başlangıç & Oynanış Kılavuzu",
+            "[C] : Toplanan ODTÜ Kutsamaları ve Hikaye",
+            "[ESC] : Oyundan Çık",
+        ]
+        curr_y = 96
+        for h in hints:
+            lbl = self.f_small.render(h, True, SUNLIT_BIRCH)
+            pnl.blit(lbl, ((pw - lbl.get_width()) // 2, curr_y))
+            curr_y += 22
+
+        screen.blit(pnl, (px, py))
 
     def _render_banner_toast(self, screen: pygame.Surface, sw: int, text: str) -> None:
         lbl = self.f_body_bold.render(text, True, PALE_SUNBEAM)

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kodtu-autumn-procgen"
+version = "1.0.0"
+description = "16-Bit Pixelated Autumn Procedural Generation Engine & Story Game for KODTÜ Game Jam at METU"
+readme = "README.md"
+authors = [
+    { name = "Bahattin Yunus" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = [
+    "procedural-generation",
+    "pcg",
+    "game-jam",
+    "metu",
+    "kodtu",
+    "pixel-art",
+    "pygame-ce",
+    "autumn",
+    "roguelite",
+    "dijkstra",
+    "poisson-disk"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment",
+    "Topic :: Scientific/Engineering :: Information Analysis"
+]
+dependencies = [
+    "pygame-ce>=2.5.0",
+    "numpy>=1.26.0",
+    "pillow>=10.0.0",
+    "pytest>=8.0.0"
+]
+
+[project.scripts]
+kodtu-autumn = "src.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --durations=10"
+filterwarnings = [
+    "ignore::DeprecationWarning"
+]

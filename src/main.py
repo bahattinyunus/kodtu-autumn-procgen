@@ -123,6 +123,7 @@ class AutumnProcGenGame:
         self.bilim_aura_timer = 0.0
         self.hit_stop_timer = 0.0
         self.target_victory_depth = target_victory_depth
+        self.is_paused = False
 
         # Active world state
         self.world: WorldData
@@ -284,11 +285,36 @@ class AutumnProcGenGame:
                             self.hud.seed_input_buffer += ch
                     continue
 
+                if self.is_paused:
+                    if event.key in (pygame.K_p, pygame.K_SPACE, pygame.K_RETURN):
+                        self.is_paused = False
+                        self.hud.show_banner("OYUN DEVAM EDİYOR", duration=1.5)
+                        continue
+                    elif event.key == pygame.K_u:
+                        is_muted = self.sound.toggle_mute()
+                        self.hud.show_banner("SES: KAPALI (MUTED)" if is_muted else "SES: AÇIK (%100)", duration=2.0)
+                        continue
+                    elif event.key == pygame.K_h:
+                        self.story.show_intro_card = not self.story.show_intro_card
+                        continue
+                    elif event.key == pygame.K_c:
+                        self.hud.codex_modal_open = not self.hud.codex_modal_open
+                        continue
+                    elif event.key == pygame.K_ESCAPE:
+                        return False
+                    continue
+
                 if event.key == pygame.K_ESCAPE:
                     if self.hud.codex_modal_open:
                         self.hud.codex_modal_open = False
                         continue
                     return False
+                elif event.key == pygame.K_p:
+                    self.is_paused = not self.is_paused
+                    self.hud.show_banner("OYUN DURAKLATILDI [P]" if self.is_paused else "OYUN DEVAM EDİYOR", duration=2.0)
+                elif event.key == pygame.K_u:
+                    is_muted = self.sound.toggle_mute()
+                    self.hud.show_banner("SES: KAPALI (MUTED)" if is_muted else "SES: AÇIK (%100)", duration=2.0)
                 elif event.key == pygame.K_h:
                     self.story.show_intro_card = not self.story.show_intro_card
                 elif event.key == pygame.K_c:
@@ -346,6 +372,10 @@ class AutumnProcGenGame:
                     self._try_interact_action()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and not self.hud.seed_modal_open:
+                if self.is_paused:
+                    self.is_paused = False
+                    self.hud.show_banner("OYUN DEVAM EDİYOR", duration=1.5)
+                    continue
                 if self.story.show_intro_card:
                     self.story.show_intro_card = False
                     self.sound.play("portal_activate")
@@ -365,7 +395,8 @@ class AutumnProcGenGame:
 
     def _get_move_vector(self) -> tuple[float, float]:
         if (
-            self.hud.seed_modal_open
+            self.is_paused
+            or self.hud.seed_modal_open
             or self.hud.codex_modal_open
             or self.story.show_intro_card
             or getattr(self.story, "show_victory_modal", False)
@@ -502,17 +533,7 @@ class AutumnProcGenGame:
                         enemy.x, enemy.y - 0.3, label, PALE_SUNBEAM if is_crit else HARVEST_GOLD
                     )
                     if defeated:
-                        self.player.enemies_defeated += 1
-                        warmth_bonus = 15.0 if enemy.kind == "warden" else (12.0 if enemy.kind == "wolf" else 8.0)
-                        self.player.warmth = min(self.player.max_warmth, self.player.warmth + warmth_bonus)
-                        if enemy.kind == "wolf":
-                            self.items.append(
-                                CollectibleItem(x=enemy.x, y=enemy.y, kind="acorn", bob_phase=enemy.x)
-                            )
-                            self.spawn_floating_text(enemy.x, enemy.y - 0.4, "+BOZKIR REÇİNESİ!", HARVEST_GOLD)
-                        self.leaf_system.spawn_burst(
-                            enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=16, golden_bias=False
-                        )
+                        self._on_enemy_defeated(enemy)
 
     def _perform_harvest_nova(self) -> None:
         """[Q] / Middle Click: Unleashes a 360-degree Harvest Nova shockwave."""
@@ -540,8 +561,7 @@ class AutumnProcGenGame:
                 self.player.increment_combo(1)
                 self.spawn_floating_text(enemy.x, enemy.y - 0.3, "-3 NOVA", SUNLIT_BIRCH)
                 if defeated:
-                    self.player.enemies_defeated += 1
-                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+                    self._on_enemy_defeated(enemy)
 
     def _perform_blade_dance(self) -> None:
         """[X] / [R]: Bozkır Kılıç Dansı combo finisher flurry."""
@@ -577,8 +597,7 @@ class AutumnProcGenGame:
                 defeated = enemy.apply_hit(6, self.player.x, self.player.y, knockback=14.0)
                 self.spawn_floating_text(enemy.x, enemy.y - 0.35, "-6 DANSE!", HARVEST_GOLD)
                 if defeated:
-                    self.player.enemies_defeated += 1
-                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 14.0)
+                    self._on_enemy_defeated(enemy)
 
     def _try_interact_action(self) -> None:
         """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele or Shrine."""
@@ -652,8 +671,8 @@ class AutumnProcGenGame:
         if typewriter_stepped and int(self.time_sec * 24) % 3 == 0:
             self.sound.play("dialogue_blip")
 
-        # Pause gameplay movement/enemies while reading Intro Card or Victory Modal
-        if self.story.show_intro_card or getattr(self.story, "show_victory_modal", False):
+        # Pause gameplay movement/enemies while reading Intro Card, Victory Modal, or when Paused
+        if self.is_paused or self.story.show_intro_card or getattr(self.story, "show_victory_modal", False):
             return
 
         # Vlambeer / Nuclear Throne style tactile Hit-Stop micro-freeze
@@ -683,6 +702,8 @@ class AutumnProcGenGame:
             # Twilight Frost: subtle extra cold decay (mitigated by 50% under campfire aura)
             frost_factor = 0.50 if self.player.campfire_aura_timer > 0.0 else 1.0
             self.player.warmth = max(0.0, self.player.warmth - dt * 0.70 * frost_factor)
+            if self.player.warmth <= 0.0:
+                self._respawn_player(reason="frost")
         elif w_phase == 2:
             # Steppe Gale Surge: tailwind acceleration when moving
             if self.player.walk_timer > 0.0:
@@ -842,8 +863,7 @@ class AutumnProcGenGame:
                             enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=12, golden_bias=True
                         )
                         if defeated:
-                            self.player.enemies_defeated += 1
-                            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+                            self._on_enemy_defeated(enemy)
                             self.hit_stop_timer = max(self.hit_stop_timer, 0.035)
                         break
             else:
@@ -873,6 +893,69 @@ class AutumnProcGenGame:
             dt, self.world.wind_vx, self.world.wind_vy, world_px_w, world_px_h
         )
 
+    def _on_enemy_defeated(self, enemy: EnemyAgent) -> None:
+        """Handles reward, particle burst, SFX, and narrative dialogue on enemy defeat."""
+        self.player.enemies_defeated += 1
+        if enemy.kind == "warden":
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 35.0)
+            self.sound.play("level_up")
+            self.camera.add_trauma(0.60)
+            self.hit_stop_timer = max(self.hit_stop_timer, 0.08)
+            self.leaf_system.spawn_burst(
+                enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=48, golden_bias=True
+            )
+            # Drop 3 Golden Acorns around defeated boss
+            for offset_ang in (0.0, 2.094, 4.188):
+                drop_x = enemy.x + math.cos(offset_ang) * 0.75
+                drop_y = enemy.y + math.sin(offset_ang) * 0.75
+                self.items.append(
+                    CollectibleItem(x=drop_x, y=drop_y, kind="acorn", bob_phase=offset_ang)
+                )
+            self.hud.show_banner("KADİM ORMAN BEKÇİSİ DİZE GELDİ! ORMAN HUZURA KAVUŞTU", duration=4.5)
+            self.spawn_floating_text(enemy.x, enemy.y - 0.7, "KADİM BEKÇİ YENİLDİ!", PALE_SUNBEAM)
+            self.story.trigger_dialogue(
+                speaker="KADİM ORMAN BEKÇİSİ",
+                title="BOZKIRIN HUZURU",
+                text="'Gözlerindeki köz... Gerçekten de 1956'da toprağa düşen o ilk tohumun ruhunu taşıyorsun. Yürü evlat; bu orman artık seninle nefes alıyor.'",
+                duration=7.5,
+                accent_type="gold",
+                avatar_key="warden",
+                once_key=f"warden_defeat_{self.world.depth_level}",
+            )
+        elif enemy.kind == "wolf":
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 14.0)
+            self.items.append(
+                CollectibleItem(x=enemy.x, y=enemy.y, kind="acorn", bob_phase=enemy.x)
+            )
+            self.spawn_floating_text(enemy.x, enemy.y - 0.4, "+BOZKIR REÇİNESİ!", HARVEST_GOLD)
+            self.leaf_system.spawn_burst(
+                enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=16, golden_bias=False
+            )
+        else:
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+            self.leaf_system.spawn_burst(
+                enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=12, golden_bias=False
+            )
+
+    def _respawn_player(self, reason: str = "damage") -> None:
+        """Respawns player at spawn tile with full warmth, invulnerability, and VFX."""
+        sx, sy = self.world.spawn_tile
+        self.player.x = float(sx) + 0.5
+        self.player.y = float(sy) + 0.5
+        self.player.warmth = self.player.max_warmth
+        self.player.invuln_timer = 1.5
+        self.sound.play("portal_activate")
+        self.camera.add_trauma(0.45)
+        self.leaf_system.spawn_burst(
+            self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=24, golden_bias=True
+        )
+        if reason == "frost":
+            self.hud.show_banner("AYAZ FENERİ SÖNDÜRDÜ: DEVRİM ATEŞİYLE YENİDEN DOĞDUN", duration=4.0)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.5, "AYAZDAN DİRİLİŞ!", PALE_SUNBEAM)
+        else:
+            self.hud.show_banner("DEVRİM FENERİ KORUNUN KALBİNDE YENİDEN YANDI", duration=4.0)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.5, "FENER YENİDEN HARLANDI!", PALE_SUNBEAM)
+
     def _apply_player_damage(self, damage: float) -> None:
         self.player.warmth = max(0.0, self.player.warmth - damage)
         self.player.invuln_timer = 0.75
@@ -882,11 +965,7 @@ class AutumnProcGenGame:
             self.player.x, self.player.y - 0.3, f"-{int(damage)} ISI", CRIMSON_DECAY
         )
         if self.player.warmth <= 0.0:
-            sx, sy = self.world.spawn_tile
-            self.player.x = float(sx) + 0.5
-            self.player.y = float(sy) + 0.5
-            self.player.warmth = self.player.max_warmth
-            self.hud.show_banner("DEVRİM FENERİ KORUNUN KALBİNDE YENİDEN YANDI")
+            self._respawn_player(reason="damage")
 
     def render(self) -> None:
         w_phase = int((self.time_sec // 40.0) % 3)
@@ -952,6 +1031,7 @@ class AutumnProcGenGame:
             banner_text=self.hud.banner_text,
             banner_timer=self.hud.banner_timer,
             weather_name=w_name,
+            is_paused=self.is_paused,
         )
         pygame.display.flip()
 

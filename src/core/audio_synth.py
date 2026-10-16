@@ -389,6 +389,8 @@ class SoundEngine:
 
     def __init__(self, audio_dir: Path, enabled: bool = True) -> None:
         self.enabled = enabled
+        self.muted = False
+        self.master_volume = 1.0
         self.sounds: Dict[str, pygame.mixer.Sound] = {}
         self.leaf_variants: List[pygame.mixer.Sound] = []
         self._step_counter = 0
@@ -410,15 +412,47 @@ class SoundEngine:
         except Exception:
             self.enabled = False
 
+    def toggle_mute(self) -> bool:
+        """Toggles audio mute state. Returns True if now muted."""
+        self.muted = not self.muted
+        target_vol = 0.0 if self.muted else self.master_volume
+        if self.enabled:
+            for name, snd in self.sounds.items():
+                try:
+                    if name == "autumn_theme":
+                        snd.set_volume(0.65 * target_vol)
+                    elif name == "wind_ambience":
+                        snd.set_volume(0.40 * target_vol)
+                    else:
+                        snd.set_volume(target_vol)
+                except Exception:
+                    pass
+        return self.muted
+
+    def set_master_volume(self, volume: float) -> None:
+        """Sets master volume between 0.0 and 1.0."""
+        self.master_volume = max(0.0, min(1.0, volume))
+        if not self.muted and self.enabled:
+            for name, snd in self.sounds.items():
+                try:
+                    if name == "autumn_theme":
+                        snd.set_volume(0.65 * self.master_volume)
+                    elif name == "wind_ambience":
+                        snd.set_volume(0.40 * self.master_volume)
+                    else:
+                        snd.set_volume(self.master_volume)
+                except Exception:
+                    pass
+
     def play_leaf_crunch(self) -> None:
-        if not self.enabled or not self.leaf_variants:
+        if not self.enabled or self.muted or not self.leaf_variants:
             return
         snd = self.leaf_variants[self._step_counter % len(self.leaf_variants)]
         self._step_counter += 1
         snd.play()
 
     def play(self, name: str) -> None:
-        if not self.enabled:
+        if not self.enabled or self.muted:
             return
         snd: Optional[pygame.mixer.Sound] = self.sounds.get(name)
         if snd is not None:

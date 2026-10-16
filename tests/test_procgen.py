@@ -733,6 +733,106 @@ def test_continuous_five_chapter_saga_and_ci_contract() -> None:
     game.render()
 
 
+def test_audio_mute_toggle_volume_and_pause_modal_control() -> None:
+    """
+    Verifies:
+    1. SoundEngine audio controls: mute toggle, master volume adjustment, and safe fallback.
+    2. Engine pause mode ([P]): freeze simulation, movement vector zeroing, and headless pause modal overlay.
+    3. Modern pyproject.toml packaging and pytest configuration integrity.
+    """
+    from pathlib import Path
+    from src.main import AutumnProcGenGame
+
+    # 1. Packaging integrity check
+    pyproject_file = Path("pyproject.toml")
+    assert pyproject_file.is_file(), "pyproject.toml must exist in repo root"
+    content = pyproject_file.read_text(encoding="utf-8")
+    assert "kodtu-autumn-procgen" in content
+    assert "pygame-ce>=2.5.0" in content
+
+    # 2. Audio mute and volume controls
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+    assert game.sound.muted is False
+    assert game.sound.master_volume == 1.0
+
+    muted_state = game.sound.toggle_mute()
+    assert muted_state is True
+    assert game.sound.muted is True
+
+    unmuted_state = game.sound.toggle_mute()
+    assert unmuted_state is False
+    assert game.sound.muted is False
+
+    game.sound.set_master_volume(0.65)
+    assert abs(game.sound.master_volume - 0.65) < 1e-4
+
+    # 3. Game Pause State & Headless Rendering
+    assert game.is_paused is False
+    game.is_paused = True
+    assert game._get_move_vector() == (0.0, 0.0)
+
+    # Render while paused to verify _render_pause_modal_hd operates without errors
+    game.render()
+
+    game.is_paused = False
+    assert game.is_paused is False
+
+
+def test_boss_defeat_cinematic_drop_and_frost_respawn() -> None:
+    """
+    Verifies:
+    1. Player respawn system (_respawn_player) restores warmth to 100%, resets to spawn tile,
+       and activates invulnerability frames.
+    2. Twilight frost decay triggers automatic respawn when warmth depletes to 0.0.
+    3. Defeating Kadim Orman Bekçisi (Warden) drops 3 Golden Acorns, grants warmth bonus,
+       triggers unique narrative boss dialogue, and announces victory banner.
+    """
+    from src.main import AutumnProcGenGame
+    from src.entities.actors import EnemyAgent
+
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+    sx, sy = game.world.spawn_tile
+
+    # 1. Test player damage and respawn
+    game.player.x = sx + 10.0
+    game.player.y = sy + 10.0
+    game.player.warmth = 5.0
+    game._apply_player_damage(10.0)
+
+    assert game.player.warmth == game.player.max_warmth
+    assert abs(game.player.x - (sx + 0.5)) < 1e-4
+    assert abs(game.player.y - (sy + 0.5)) < 1e-4
+    assert game.player.invuln_timer > 1.0
+
+    # 2. Test Twilight Frost depletion respawn in update()
+    game.time_sec = 45.0  # Phase 1: Twilight Frost
+    game.player.x = sx + 8.0
+    game.player.y = sy + 8.0
+    game.player.warmth = 0.0
+    game.update(0.016)
+
+    assert game.player.warmth == game.player.max_warmth
+    assert abs(game.player.x - (sx + 0.5)) < 1e-4
+    assert abs(game.player.y - (sy + 0.5)) < 1e-4
+
+    # 3. Test Boss Defeat Event & 3-Acorn Loot Drop
+    initial_items_count = len(game.items)
+    warden = EnemyAgent(x=game.player.x + 3.0, y=game.player.y, kind="warden")
+    game.enemies.append(warden)
+
+    game._on_enemy_defeated(warden)
+    assert game.player.enemies_defeated >= 1
+    assert len(game.items) == initial_items_count + 3
+    new_drops = [it for it in game.items[-3:] if it.kind == "acorn"]
+    assert len(new_drops) == 3
+
+    # Narrative dialogue and banner
+    assert game.story.active_dialogue is not None
+    assert "BEKÇİSİ" in game.story.active_dialogue.speaker or "KADİM" in game.story.active_dialogue.speaker
+    assert "KADİM ORMAN BEKÇİSİ DİZE GELDİ" in game.hud.banner_text
+
+
+
 
 
 
