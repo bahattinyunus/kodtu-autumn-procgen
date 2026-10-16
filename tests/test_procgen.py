@@ -664,6 +664,76 @@ def test_boss_roar_and_parry_spark_synthesizers() -> None:
     assert warden.has_roared is True
 
 
+def test_continuous_five_chapter_saga_and_ci_contract() -> None:
+    """
+    Verifies:
+    1. GitHub Actions CI workflow (.github/workflows/ci.yml) exists and adheres to competition CI standards.
+    2. Continuous 5-Chapter Saga progression (Depths 1 through 5) synchronizes narrative chapters,
+       shrine transitions, and triggers grand victory at target_victory_depth=5.
+    3. Headless rendering works without artifact errors across all saga depths.
+    """
+    from pathlib import Path
+    from src.main import AutumnProcGenGame
+    from src.core.story import CHAPTER_INFO
+
+    # 1. CI Contract Verification
+    ci_file = Path(".github/workflows/ci.yml")
+    assert ci_file.is_file(), "GitHub Actions CI workflow must exist at .github/workflows/ci.yml"
+    ci_content = ci_file.read_text(encoding="utf-8")
+    assert "pytest tests/ -v" in ci_content
+    assert "SDL_VIDEODRIVER: dummy" in ci_content
+    assert "windows-latest" in ci_content
+    assert "ubuntu-latest" in ci_content
+
+    # 2. 5-Chapter Story Synchronization
+    for ch_idx in range(1, 6):
+        assert ch_idx in CHAPTER_INFO
+        title, text, task = CHAPTER_INFO[ch_idx]
+        assert len(title) > 0
+        assert len(text) > 0
+        assert len(task) > 0
+
+    # 3. Continuous 5-Depth Progression
+    game = AutumnProcGenGame(
+        initial_seed="KODTU-SAGA-2026",
+        debug_procgen=False,
+        headless=True,
+        target_victory_depth=5,
+    )
+    assert game.world.depth_level == 1
+    assert game.story.chapter_index == 1
+    assert "YALINCAK" in game.story.chapter_title
+
+    # Walk from Depth 1 up to Depth 4
+    for expected_depth in range(1, 5):
+        assert game.world.depth_level == expected_depth
+        assert game.story.chapter_index == expected_depth
+        game.player.relics_collected = game.world.total_relics
+        sx, sy = game.world.shrine_tile
+        game.player.x = sx + 0.5
+        game.player.y = sy + 0.5
+        game._try_interact_shrine()
+
+        assert game.story.show_victory_modal is False
+        assert game.world.depth_level == expected_depth + 1
+        assert game.story.chapter_index == expected_depth + 1
+
+    # At Depth 5: Interacting with Shrine triggers Grand Victory
+    assert game.world.depth_level == 5
+    assert "ALTIN ŞAFAK" in game.story.chapter_title or "SAGA" in game.story.chapter_title
+    game.player.relics_collected = game.world.total_relics
+    sx, sy = game.world.shrine_tile
+    game.player.x = sx + 0.5
+    game.player.y = sy + 0.5
+    game._try_interact_shrine()
+
+    assert game.story.show_victory_modal is True
+
+    # 4. Render headlessly during Chapter 5 victory modal
+    game.render()
+
+
+
 
 
 

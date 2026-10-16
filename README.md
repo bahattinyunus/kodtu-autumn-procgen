@@ -12,12 +12,13 @@
 
 <br />
 
+[![CI](https://github.com/bahattinyunus/kodtu-autumn-procgen/actions/workflows/ci.yml/badge.svg)](https://github.com/bahattinyunus/kodtu-autumn-procgen/actions/workflows/ci.yml)
 [![Jam: KODTÜ @ METU](https://img.shields.io/badge/Yarışma-KODTÜ_Game_Jam_@_ODTÜ-9E472A?style=for-the-badge&logo=metu&logoColor=white&labelColor=1A1118)](#bolum-1)
 [![Art Style: Pixelated](https://img.shields.io/badge/Art_Stili-Pixelated_(320x180_Native)-E09F3E?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 26/26 Passed](https://img.shields.io/badge/Pytest_Suite-26%2F26_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 27/27 Passed](https://img.shields.io/badge/Pytest_Suite-27%2F27_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -463,9 +464,9 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 26/26 Otomatik Test Paketini Çalıştırma (`pytest`)
+### 🧪 3. 27/27 Otomatik Test Paketi & GitHub Actions CI (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü görsel flurry şok dalgalarını, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane aurasını, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Felsefi Hikaye İlerlemesini, Kadim Boss Kükremesi & Parry Kıvılcımı ses sentezleyicilerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü flurry efektlerini, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane dinlenmesini, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Kesintisiz Saga İlerlemesini (`test_continuous_five_chapter_saga_and_ci_contract`), Kadim Boss Kükremesi & Parry Kıvılcımı ses sentezleyicilerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -474,29 +475,36 @@ pytest tests/ -v
 ```text
 tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  3%]
 tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  7%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 26%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 30%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 34%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 38%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 42%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 46%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 50%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 53%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 57%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 61%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 65%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 69%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 73%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 76%]
-tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 80%]
-tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 84%]
-tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 88%]
-tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 92%]
-tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 96%]
-tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [100%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 25%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 29%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 33%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 37%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 40%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 44%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 48%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 51%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 55%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 59%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 62%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 66%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 70%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 74%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 77%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 81%]
+tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 85%]
+tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 88%]
+tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 92%]
+tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [ 96%]
+tests/test_procgen.py::test_continuous_five_chapter_saga_and_ci_contract PASSED       [100%]
 
-============================= 26 passed in 3.11s ==============================
+============================= 27 passed in 3.19s ==============================
 ```
+
+#### 🔄 Sürekli Entegrasyon (GitHub Actions CI):
+Proje, `.github/workflows/ci.yml` iş akışı aracılığıyla her `push` ve `pull_request` işleminde:
+- **İşletim Sistemleri:** `ubuntu-latest` ve `windows-latest` matrisinde,
+- **Python Sürümleri:** Python `3.10`, `3.11` ve `3.12` üzerinde,
+- **Headless Sanity Check:** `SDL_VIDEODRIVER=dummy` ve `SDL_AUDIODRIVER=dummy` ile tam 27 test paketini ve 60 karelik otomatik simülasyonu çalıştırarak %100 doğrulama sağlar.
 
 ---
 

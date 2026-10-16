@@ -68,6 +68,7 @@ class AutumnProcGenGame:
         initial_seed: str = "KODTU2026",
         debug_procgen: bool = False,
         headless: bool = False,
+        target_victory_depth: int = 3,
     ) -> None:
         self.headless = headless
         if headless:
@@ -121,6 +122,7 @@ class AutumnProcGenGame:
         self.wind_refresh_timer = 0.0
         self.bilim_aura_timer = 0.0
         self.hit_stop_timer = 0.0
+        self.target_victory_depth = target_victory_depth
 
         # Active world state
         self.world: WorldData
@@ -246,6 +248,13 @@ class AutumnProcGenGame:
                     elif event.key in (pygame.K_r, pygame.K_RETURN):
                         self.story.show_victory_modal = False
                         self.load_seed("ODTU-1956-DEVRIM", depth_level=1)
+                        self.sound.play("portal_activate")
+                        continue
+                    elif event.key == pygame.K_c and self.world.depth_level < 5:
+                        self.story.show_victory_modal = False
+                        next_depth = self.world.depth_level + 1
+                        next_seed = f"{self.world.seed_input}-G{next_depth}"
+                        self.load_seed(next_seed, depth_level=next_depth)
                         self.sound.play("portal_activate")
                         continue
                     elif event.key == pygame.K_F5:
@@ -619,7 +628,7 @@ class AutumnProcGenGame:
         dist = math.hypot(self.player.x - (sx + 0.5), self.player.y - (sy + 0.5))
         if dist <= 2.2:
             if self.player.relics_collected >= self.world.total_relics:
-                if self.world.depth_level >= 3:
+                if self.world.depth_level >= getattr(self, "target_victory_depth", 3):
                     # Grand Victory Sequence!
                     self.story.show_victory_modal = True
                     self.sound.play("level_up")
@@ -1031,6 +1040,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default=None,
         help="Optional file path to save a 2x2 [F1]-[F4] debug showcase PNG",
     )
+    parser.add_argument(
+        "--target-depth",
+        type=int,
+        default=3,
+        help="Depth level required for Grand Victory epilogue (default: 3, supports up to 5 for full METU Saga)",
+    )
     return parser.parse_args(argv)
 
 
@@ -1041,6 +1056,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         initial_seed=args.seed,
         debug_procgen=args.debug_procgen,
         headless=headless,
+        target_victory_depth=args.target_depth,
     )
     preview_path = Path(args.export_preview) if args.export_preview else None
     quad_path = Path(args.export_quad_showcase) if args.export_quad_showcase else None

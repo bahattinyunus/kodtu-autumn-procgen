@@ -167,6 +167,15 @@ class StoryManager:
         )
         return title, text
 
+    @property
+    def chapter_index(self) -> int:
+        return self.chapter
+
+    @property
+    def chapter_title(self) -> str:
+        title, _ = self.get_chapter_meta()
+        return title
+
     def get_chapter_meta(self) -> tuple[str, str]:
         ch_key = min(5, max(1, self.chapter))
         title, text, _ = CHAPTER_INFO[ch_key]
