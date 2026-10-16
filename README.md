@@ -344,8 +344,11 @@ kodtu-autumn-procgen/
 │       ├── ambient_wind.wav           # Pembe gürültü + LFO alçak geçiren sonbahar rüzgarı
 │       ├── leaf_crunch_1..3.wav       # 3 farklı perdede kuru yaprak hışırtısı
 │       ├── slash_ember.wav            # Köz kılıcı savurma, Solar Bolt ve Nova sesi
-│       ├── harvest_chime.wav          # Pentatonik (`C5-D5-F5-G5-A5`) relik & kutsama tınısı
-│       └── portal_activate.wav        # Tapınak uyanışı ve ODTÜ tohum geçiş akoru
+│       ├── harvest_chime.wav          # Pentatonik (`C5-D5-F5-G5-A5`) relik tınısı
+│       ├── portal_activate.wav        # Tapınak uyanışı ve ODTÜ tohum geçiş akoru
+│       ├── dialogue_blip.wav          # Daktilo hikaye diyalog harf tıkırtısı
+│       ├── deflect_clash.wav          # Mermi yansıtma metalik parry çınlaması
+│       └── level_up.wav               # ODTÜ Kutsaması açılış zafer fanfarı
 ├── docs/
 │   ├── banners/                       # Prosedürel olarak üretilen yüksek çözünürlüklü infografik ve bannerlar
 │   │   ├── hero_odtu_kodtu_banner.png

@@ -353,11 +353,11 @@ class AutumnProcGenGame:
         boon = self.player.grant_next_boon()
         if boon is not None:
             _, title, desc = boon
-            self.sound.play("harvest_chime")
-            self.hud.show_banner(f"BOON: {title} ({desc})", duration=3.2)
+            self.sound.play("level_up")
+            self.hud.show_banner(f"KUTSAMA: {title} ({desc})", duration=3.5)
             self.spawn_floating_text(self.player.x, self.player.y - 0.5, f"+{title}!", PALE_SUNBEAM)
         else:
-            self.hud.show_banner("ALL 5 ODTU AUTUMN BOONS ACTIVE!", duration=2.4)
+            self.hud.show_banner("TÜM 5 ODTÜ KUTSAMASI AKTİF!", duration=2.4)
 
     def _perform_solar_bolt(self) -> None:
         """[F] / Right Click: Fires a blazing Solar Ember Bolt (Hyper Light Drifter style)."""
@@ -412,6 +412,7 @@ class AutumnProcGenGame:
                 self.player.recharge_bolt_on_melee()
                 if self.player.has_boon("EYMIR_REFLECT"):
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 6.0)
+                self.sound.play("deflect_clash")
                 self.hit_stop_timer = max(self.hit_stop_timer, 0.04)
                 self.camera.add_trauma(0.28)
                 self.spawn_floating_text(proj.x, proj.y - 0.3, "DEFLECT!", PALE_SUNBEAM)
@@ -511,7 +512,9 @@ class AutumnProcGenGame:
     def update(self, dt: float) -> None:
         self.time_sec += dt
         self.hud.update(dt)
-        self.story.update(dt)
+        typewriter_stepped = self.story.update(dt)
+        if typewriter_stepped and int(self.time_sec * 24) % 3 == 0:
+            self.sound.play("dialogue_blip")
 
         # Pause gameplay movement/enemies while reading the Story Intro Card
         if self.story.show_intro_card:
@@ -597,8 +600,8 @@ class AutumnProcGenGame:
                 if item.kind == "relic":
                     self.player.relics_collected += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 20.0)
-                    self.sound.play("harvest_chime")
                     boon = self.player.grant_next_boon()
+                    self.sound.play("level_up" if boon else "harvest_chime")
                     boon_label = f"+ANI & {boon[1]}!" if boon else "+SONBAHAR ANISI!"
                     self.spawn_floating_text(item.x, item.y, boon_label, PALE_SUNBEAM)
                     self.leaf_system.spawn_burst(

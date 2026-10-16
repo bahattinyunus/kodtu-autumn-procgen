@@ -135,6 +135,47 @@ def synth_wind_ambience() -> np.ndarray:
     return (wind * mod + drone) * fade * 0.35
 
 
+def synth_dialogue_blip() -> np.ndarray:
+    """Synthesizes an authentic retro dialogue text blip for the typewriter effect."""
+    rng = np.random.default_rng(42)
+    duration = int(SAMPLE_RATE * 0.04)
+    t = np.linspace(0.0, 0.04, duration, endpoint=False)
+    env = np.sin(np.pi * (t / 0.04)) * np.exp(-t * 40.0)
+    freq = 520.0 + rng.uniform(-40.0, 40.0)
+    tone = np.sin(2.0 * np.pi * freq * t) + 0.3 * np.sin(4.0 * np.pi * freq * t)
+    return tone * env * 0.18
+
+
+def synth_deflect_clash() -> np.ndarray:
+    """Synthesizes a sharp metallic/crystalline parry clash sound (Enter the Gungeon / Sekiro style)."""
+    duration = int(SAMPLE_RATE * 0.28)
+    t = np.linspace(0.0, 0.28, duration, endpoint=False)
+    env = np.exp(-t * 18.0)
+    f1, f2, f3 = 1480.0, 2217.0, 3322.0
+    ring = (
+        np.sin(2.0 * np.pi * f1 * t)
+        + 0.7 * np.sin(2.0 * np.pi * f2 * t)
+        + 0.5 * np.sin(2.0 * np.pi * f3 * t)
+    )
+    spark = np.random.default_rng(999).normal(0.0, 0.5, duration) * np.exp(-t * 65.0)
+    return (ring * 0.65 + spark * 0.35) * env * 0.40
+
+
+def synth_level_up() -> np.ndarray:
+    """Synthesizes a triumphant golden autumn fanfare chord when unlocking ODTÜ boons."""
+    duration = int(SAMPLE_RATE * 0.65)
+    t = np.linspace(0.0, 0.65, duration, endpoint=False)
+    notes = [440.0, 554.37, 659.25, 880.0]  # A Major chord: A4, C#5, E5, A5
+    signal = np.zeros(duration, dtype=np.float64)
+    for i, freq in enumerate(notes):
+        st = i * 0.08
+        mask = t >= st
+        lt = np.maximum(0.0, t - st)
+        env = mask * np.exp(-lt * 5.5) * np.sin(np.pi * np.minimum(1.0, lt / 0.1))
+        signal += (np.sin(2.0 * np.pi * freq * lt) + 0.25 * np.sin(4.0 * np.pi * freq * lt)) * env
+    return signal * 0.26
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -148,6 +189,9 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "portal_activate": audio_dir / "portal_activate.wav",
         "hit_hurt": audio_dir / "hit_hurt.wav",
         "wind_ambience": audio_dir / "wind_ambience.wav",
+        "dialogue_blip": audio_dir / "dialogue_blip.wav",
+        "deflect_clash": audio_dir / "deflect_clash.wav",
+        "level_up": audio_dir / "level_up.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -168,6 +212,12 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["hit_hurt"], synth_hit_hurt())
     if not files["wind_ambience"].exists():
         _save_wav_int16(files["wind_ambience"], synth_wind_ambience())
+    if not files["dialogue_blip"].exists():
+        _save_wav_int16(files["dialogue_blip"], synth_dialogue_blip())
+    if not files["deflect_clash"].exists():
+        _save_wav_int16(files["deflect_clash"], synth_deflect_clash())
+    if not files["level_up"].exists():
+        _save_wav_int16(files["level_up"], synth_level_up())
 
     return files
 

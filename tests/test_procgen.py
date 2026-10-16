@@ -187,6 +187,9 @@ def test_headless_engine_and_debug_overlays() -> None:
     assert (REPO_ROOT / "assets" / "shaders" / "palette_quantize.glsl").exists()
     assert (REPO_ROOT / "assets" / "shaders" / "wind_sway.glsl").exists()
     assert (REPO_ROOT / "assets" / "audio" / "leaf_crunch_1.wav").exists()
+    assert (REPO_ROOT / "assets" / "audio" / "dialogue_blip.wav").exists()
+    assert (REPO_ROOT / "assets" / "audio" / "deflect_clash.wav").exists()
+    assert (REPO_ROOT / "assets" / "audio" / "level_up.wav").exists()
 
 
 def test_astar_and_procedural_structures() -> None:

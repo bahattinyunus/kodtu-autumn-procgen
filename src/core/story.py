@@ -197,7 +197,9 @@ class StoryManager:
         rem = total_relics - relics_collected
         return f"GÖREV: Ormandaki Sonbahar Hatıralarını Topla ({relics_collected}/{total_relics}) — Kalan: {rem}"
 
-    def update(self, dt: float) -> None:
+    def update(self, dt: float) -> bool:
+        """Updates dialogue timers and typewriter progression. Returns True if a character was revealed this tick."""
+        revealed_char = False
         if self.dialogue_timer > 0.0:
             self.dialogue_timer = max(0.0, self.dialogue_timer - dt)
             if self.active_dialogue is not None:
@@ -205,8 +207,12 @@ class StoryManager:
                 tot_chars = len(self.active_dialogue.text)
                 if self.active_dialogue.chars_revealed < tot_chars:
                     add = max(1, int(round(self.active_dialogue.typewriter_speed * dt)))
+                    old_chars = self.active_dialogue.chars_revealed
                     self.active_dialogue.chars_revealed = min(
                         tot_chars, self.active_dialogue.chars_revealed + add
                     )
+                    if self.active_dialogue.chars_revealed > old_chars:
+                        revealed_char = True
             if self.dialogue_timer <= 0.0:
                 self.active_dialogue = None
+        return revealed_char
