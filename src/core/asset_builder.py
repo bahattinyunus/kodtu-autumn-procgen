@@ -44,7 +44,7 @@ from src.procgen.autotile import (
     BIT_S,
     BIT_SE,
 )
-from src.procgen.prng import Mulberry32
+from src.procgen.prng import Mulberry32, seed_to_uint64
 
 
 PALETTE_QUANTIZE_GLSL = """#version 330 core
@@ -270,7 +270,7 @@ def _build_tree_sprite(tree_kind: str, variant: int = 0) -> np.ndarray:
     with Y-sortable trunk base, dappled leaf clusters, and Hue-Shifted highlights/shadows.
     """
     arr = np.zeros((32, 32, 4), dtype=np.uint8)
-    rng = Mulberry32(hash(tree_kind) + variant * 31)
+    rng = Mulberry32((seed_to_uint64(tree_kind) & 0xFFFFFFFF) + variant * 31)
 
     if tree_kind == "tree_maple":
         shadow_c, mid_c, light_c, spec_c = MULBERRY_DUSK, CRIMSON_DECAY, RUST_TERRACOTTA, BURNT_AMBER
@@ -345,7 +345,7 @@ def _build_tree_sprite(tree_kind: str, variant: int = 0) -> np.ndarray:
 def _build_small_prop_sprite(prop_type: str, variant: int = 0) -> np.ndarray:
     """Renders 16x16 pixel-art sprites for bushes, leaf piles, glowing mushrooms, logs, and stones."""
     arr = np.zeros((16, 16, 4), dtype=np.uint8)
-    rng = Mulberry32(hash(prop_type) + variant * 53)
+    rng = Mulberry32((seed_to_uint64(prop_type) & 0xFFFFFFFF) + variant * 53)
 
     if prop_type == "leaf_pile":
         # Crunchy scattered autumn leaf mound
