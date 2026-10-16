@@ -329,4 +329,47 @@ def test_story_manager_and_modern_hd_overlay() -> None:
     game.render()
 
 
+def test_historical_kitabeler_and_victory_epilogue() -> None:
+    """
+    Verifies:
+    1. Historical ODTÜ Inscription Steles (odtu_kitabe) are placed in the world.
+    2. Reading a kitabe triggers historical campus dialogue, restores warmth, and grants inspiration.
+    3. Completing Depth 3 shrine interaction triggers the Grand Victory Epilogue sequence.
+    """
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="ODTU-1956-DEVRIM", debug_procgen=False, headless=True)
+
+    # 1. Verify odtu_kitabe structure exists in the world
+    kitabe_structs = [st for st in game.world.structures if st.structure_type == "odtu_kitabe"]
+    assert len(kitabe_structs) >= 1
+
+    # 2. Simulate reading an inscription
+    kitabe = kitabe_structs[0]
+    game.player.x = kitabe.tile_x + 0.5
+    game.player.y = kitabe.tile_y + 0.5
+    initial_warmth = game.player.warmth
+    game._try_interact_action()
+    assert len(game.story.read_kitabes) >= 1
+    assert game.story.active_dialogue is not None
+    assert "KİTABE" in game.story.active_dialogue.speaker or "ODTÜ" in game.story.active_dialogue.speaker
+    assert game.player.warmth >= initial_warmth
+    assert game.player.leaf_boost_timer > 0.0
+
+    # 3. Test Grand Victory sequence in Depth 3
+    game.world.depth_level = 3
+    game.player.relics_collected = game.world.total_relics
+    sx, sy = game.world.shrine_tile
+    game.player.x = sx + 0.5
+    game.player.y = sy + 0.5
+    game._try_interact_shrine()
+    assert game.story.show_victory_modal is True
+
+    # 4. Render victory epilogue modal headlessly
+    game.render()
+    game.story.show_victory_modal = False
+    game.render()
+
+
+
 

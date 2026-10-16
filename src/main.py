@@ -238,6 +238,20 @@ class AutumnProcGenGame:
                         self.sound.play("portal_activate")
                         continue
 
+                if getattr(self.story, "show_victory_modal", False):
+                    if event.key in (pygame.K_ESCAPE, pygame.K_SPACE):
+                        self.story.show_victory_modal = False
+                        continue
+                    elif event.key in (pygame.K_r, pygame.K_RETURN):
+                        self.story.show_victory_modal = False
+                        self.load_seed("ODTU-1956-DEVRIM", depth_level=1)
+                        self.sound.play("portal_activate")
+                        continue
+                    elif event.key == pygame.K_F5:
+                        self.story.show_victory_modal = False
+                        self.cycle_odtu_preset()
+                        continue
+
                 if self.hud.seed_modal_open:
                     if event.key in (pygame.K_ESCAPE, pygame.K_TAB):
                         self.hud.seed_modal_open = False
@@ -317,11 +331,15 @@ class AutumnProcGenGame:
                 elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
                     self._perform_gust_dash()
                 elif event.key == pygame.K_e:
-                    self._try_interact_shrine()
+                    self._try_interact_action()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and not self.hud.seed_modal_open:
                 if self.story.show_intro_card:
                     self.story.show_intro_card = False
+                    self.sound.play("portal_activate")
+                    continue
+                if getattr(self.story, "show_victory_modal", False):
+                    self.story.show_victory_modal = False
                     self.sound.play("portal_activate")
                     continue
                 if event.button == 1:
@@ -334,7 +352,12 @@ class AutumnProcGenGame:
         return True
 
     def _get_move_vector(self) -> tuple[float, float]:
-        if self.hud.seed_modal_open or self.hud.codex_modal_open or self.story.show_intro_card:
+        if (
+            self.hud.seed_modal_open
+            or self.hud.codex_modal_open
+            or self.story.show_intro_card
+            or getattr(self.story, "show_victory_modal", False)
+        ):
             return 0.0, 0.0
         keys = pygame.key.get_pressed()
         mx = 0.0
@@ -496,18 +519,47 @@ class AutumnProcGenGame:
                     self.player.enemies_defeated += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
 
+    def _try_interact_action(self) -> None:
+        """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele or Shrine."""
+        # 1. Check proximity to Historical Kitabeler
+        for idx, st in enumerate(self.world.structures):
+            if st.structure_type == "odtu_kitabe":
+                kx, ky = st.tile_x + 0.5, st.tile_y + 0.5
+                if math.hypot(self.player.x - kx, self.player.y - ky) <= 2.0:
+                    title, _ = self.story.on_read_kitabe(idx)
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 15.0)
+                    self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 8.0)
+                    self.sound.play("portal_activate")
+                    self.spawn_floating_text(kx, ky - 0.5, "KADİM ODTÜ MİRASI +ISI & HIZ", PALE_SUNBEAM)
+                    self.leaf_system.spawn_burst(
+                        kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
+                    )
+                    return
+
+        # 2. Check Shrine
+        self._try_interact_shrine()
+
     def _try_interact_shrine(self) -> None:
         sx, sy = self.world.shrine_tile
         dist = math.hypot(self.player.x - (sx + 0.5), self.player.y - (sy + 0.5))
         if dist <= 2.2:
             if self.player.relics_collected >= self.world.total_relics:
-                next_depth = self.world.depth_level + 1
-                next_seed = f"{self.world.seed_input}-G{next_depth}"
-                self.sound.play("portal_activate")
-                self.load_seed(next_seed, depth_level=next_depth)
+                if self.world.depth_level >= 3:
+                    # Grand Victory Sequence!
+                    self.story.show_victory_modal = True
+                    self.sound.play("level_up")
+                    self.leaf_system.spawn_burst(
+                        self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=64, golden_bias=True
+                    )
+                    self.spawn_floating_text(self.player.x, self.player.y - 0.8, "EBEDİ DÖNGÜ TAMAMLANDI!", PALE_SUNBEAM)
+                else:
+                    next_depth = self.world.depth_level + 1
+                    next_seed = f"{self.world.seed_input}-G{next_depth}"
+                    self.sound.play("portal_activate")
+                    self.load_seed(next_seed, depth_level=next_depth)
             else:
                 rem = self.world.total_relics - self.player.relics_collected
-                self.hud.show_banner(f"SHRINE DORMANT: COLLECT {rem} MORE RELICS")
+                self.hud.show_banner(f"KADİM TAPINAK UYKUDA: {rem} ANILIK KRİSTAL DAHA GEREKLİ")
 
     def update(self, dt: float) -> None:
         self.time_sec += dt
@@ -516,8 +568,8 @@ class AutumnProcGenGame:
         if typewriter_stepped and int(self.time_sec * 24) % 3 == 0:
             self.sound.play("dialogue_blip")
 
-        # Pause gameplay movement/enemies while reading the Story Intro Card
-        if self.story.show_intro_card:
+        # Pause gameplay movement/enemies while reading Intro Card or Victory Modal
+        if self.story.show_intro_card or getattr(self.story, "show_victory_modal", False):
             return
 
         # Vlambeer / Nuclear Throne style tactile Hit-Stop micro-freeze
@@ -561,6 +613,9 @@ class AutumnProcGenGame:
                 if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 1.8:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 9.0)
                     self.story.on_near_campfire()
+            elif st.structure_type == "odtu_kitabe":
+                if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 1.8:
+                    self.hud.show_banner("[E] ODTÜ KADİM TARİH KİTABESİNİ OKU", duration=0.3)
             elif st.structure_type == "bilim_agaci":
                 if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 2.4:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 15.0)

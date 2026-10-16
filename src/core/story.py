@@ -85,6 +85,32 @@ RELIC_STORY_FRAGMENTS: List[Tuple[str, str, str]] = [
     ),
 ]
 
+HISTORICAL_ODTU_INSCRIPTIONS = [
+    (
+        "1961 KEMAL KURDAŞ VE İLK AĞAÇ BAYRAMI",
+        "'3 Aralık 1961... Rektör Kemal Kurdaş önderliğinde binlerce ODTÜ öğrencisi ve hocası bozkıra indi. "
+        "Yalıncak sırtlarına ilk fidanlar dikildiğinde herkes bunun imkansız bir hayal olduğunu söylemişti. "
+        "O gün dikilen her fidan, aklın ve bilimin bozkır entropisine meydan okuyuşu oldu.' (+15 Isı & İlham Hızı)",
+    ),
+    (
+        "YALINCAK HÖYÜĞÜ VE KADİM ANADOLU MİRASI",
+        "'Bu topraklar sadece bir üniversite kampüsü değil; binlerce yıldır Hititlerden Friglere uzanan kadim bir hafızadır. "
+        "ODTÜ arkeologlarının Yalıncak Höyüğü'nde gün yüzüne çıkardığı çanak çömlekler der ki: "
+        "İnsan geçer, nesiller dönüşür; geriye yalnızca toprağa bırakılan emek ve bilgelik kalır.' (+15 Isı & İlham Hızı)",
+    ),
+    (
+        "EYMİR GÖLÜ VE BOZKIRDAKİ MAVİ GERDANLIK",
+        "'Ankara'nın çorak tepeleri arasına saklanmış Eymir, sabah ayazında antrenman yapan ODTÜ kürekçilerinin ve "
+        "göçmen kuşların sığınağıdır. Suya vuran her kürek sesi, doğayla savaşmak yerine onun ritmine uymanın "
+        "en saf şiiridir.' (+15 Isı & İlham Hızı)",
+    ),
+    (
+        "1968 DEVRİM STADYUMU VE ÖZGÜRLÜK RUHU",
+        "'Stadyum basamaklarına boydan boya kazınan o tek kelime, zamanın ve rüzgarın aşındıramadığı bir kolektif "
+        "irade manifestosudur. Bu yazı taşın değil, bağımsızlığa ve sorgulayan zihne adanmış bir gençliğin ruhuna kazınmıştır.' (+15 Isı & İlham Hızı)",
+    ),
+]
+
 
 class StoryManager:
     """
@@ -95,9 +121,25 @@ class StoryManager:
     def __init__(self, show_intro_card: bool = False) -> None:
         self.chapter = 1
         self.show_intro_card = show_intro_card
+        self.show_victory_modal = False
         self.active_dialogue: Optional[DialogueEntry] = None
         self.dialogue_timer = 0.0
         self.seen_triggers: set[str] = set()
+        self.read_kitabes: set[int] = set()
+
+    def on_read_kitabe(self, kitabe_idx: int) -> tuple[str, str]:
+        idx = kitabe_idx % len(HISTORICAL_ODTU_INSCRIPTIONS)
+        title, text = HISTORICAL_ODTU_INSCRIPTIONS[idx]
+        self.read_kitabes.add(kitabe_idx)
+        self.trigger_dialogue(
+            speaker="ODTÜ KADİM TARİH KİTABESİ",
+            title=title,
+            text=text,
+            duration=8.5,
+            accent_type="birch",
+            avatar_key="kitabe",
+        )
+        return title, text
 
     def get_chapter_meta(self) -> tuple[str, str]:
         ch_key = min(3, max(1, self.chapter))

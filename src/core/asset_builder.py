@@ -654,6 +654,37 @@ def _build_bilim_agaci_sprite() -> np.ndarray:
     return arr
 
 
+def _build_kitabe_sprite() -> np.ndarray:
+    """
+    Renders a 16x24 Ancient ODTÜ Historical Inscription Stele (Tarih Kitabesi)
+    with slate stone pedestal, engraved glowing runes, and golden autumn ivy.
+    """
+    arr = np.zeros((24, 16, 4), dtype=np.uint8)
+    # Slate pedestal base
+    for x in range(2, 14):
+        arr[22, x] = (*DEEP_VOID, 255)
+        arr[21, x] = (*WITHERED_BARK, 255)
+        arr[20, x] = (*SLATE_FOG, 255)
+    # Arched stone tablet body
+    for y in range(4, 20):
+        arch_cut = 2 if y <= 5 else (1 if y <= 6 else 0)
+        for x in range(3 + arch_cut, 13 - arch_cut):
+            if y == 4 or x in (3 + arch_cut, 12 - arch_cut):
+                arr[y, x] = (*DEEP_VOID, 255)
+            elif (y in (8, 11, 14, 17)) and (5 <= x <= 10):
+                # Glowing engraved golden inscription line
+                rune_c = HARVEST_GOLD if (x + y) % 2 == 0 else PALE_SUNBEAM
+                arr[y, x] = (*rune_c, 255)
+            else:
+                c = SLATE_FOG if (x + y) % 2 == 0 else AUTUMN_MIST
+                arr[y, x] = (*c, 255)
+    # Autumn golden ivy leaf accents
+    arr[18, 4] = (*SUNLIT_BIRCH, 255)
+    arr[19, 5] = (*RUST_TERRACOTTA, 255)
+    arr[17, 11] = (*HARVEST_GOLD, 255)
+    return arr
+
+
 def _build_shrine_sprite(awakened: bool = False) -> np.ndarray:
     """Renders the 32x32 Ancient Autumn Shrine (dormant or awakened with golden fire)."""
     arr = np.zeros((32, 32, 4), dtype=np.uint8)
@@ -769,6 +800,7 @@ class AssetBank:
         ]
         self.boardwalk_surf = _ndarray_to_surface(_build_boardwalk_sprite())
         self.bilim_agaci_surf = _ndarray_to_surface(_build_bilim_agaci_sprite())
+        self.kitabe_surf = _ndarray_to_surface(_build_kitabe_sprite())
 
         shrine_dormant = _build_shrine_sprite(False)
         shrine_awake = _build_shrine_sprite(True)

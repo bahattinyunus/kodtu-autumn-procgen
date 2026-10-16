@@ -132,9 +132,11 @@ class ModernStoryOverlay:
         if banner_timer > 0.0 and banner_text and not story.show_intro_card:
             self._render_banner_toast(screen, sw, banner_text)
 
-        # 6. Interactive Modals ([C] Story & Boon Codex, [TAB] Seed Input, or Story Intro Card)
+        # 6. Interactive Modals ([C] Story & Boon Codex, [TAB] Seed Input, Victory Modal, or Story Intro Card)
         if story.show_intro_card:
             self._render_story_intro_card(screen, sw, sh, world)
+        elif getattr(story, "show_victory_modal", False):
+            self._render_victory_modal_hd(screen, sw, sh, world, player, story)
         elif codex_open:
             self._render_codex_modal_hd(screen, sw, sh, world, player, story)
         elif seed_modal_open:
@@ -363,6 +365,8 @@ class ModernStoryOverlay:
             raw_icon = self.assets.entity_surfaces[("relic", 0)]
         elif avatar_k == "campfire" or "KAMP" in dlg.speaker:
             raw_icon = self.assets.campfire_frames[0]
+        elif avatar_k == "kitabe" or "KİTABE" in dlg.speaker or "KEMAL" in dlg.speaker:
+            raw_icon = self.assets.kitabe_surf
         elif avatar_k == "warden" or "GEYİK" in dlg.speaker:
             raw_icon = self.assets.entity_surfaces[("warden", 0)]
         else:
@@ -661,4 +665,117 @@ class ModernStoryOverlay:
             HARVEST_GOLD,
         )
         card.blit(t3, ((cw - t3.get_width()) // 2, 166))
+        screen.blit(card, (cx, cy))
+
+    def _render_victory_modal_hd(
+        self,
+        screen: pygame.Surface,
+        sw: int,
+        sh: int,
+        world: WorldData,
+        player: Player,
+        story: StoryManager,
+    ) -> None:
+        dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        dim.fill((*DEEP_VOID, 220))
+        screen.blit(dim, (0, 0))
+
+        cw = min(980, sw - 40)
+        ch = min(610, sh - 40)
+        cx = (sw - cw) // 2
+        cy = (sh - ch) // 2
+        card = pygame.Surface((cw, ch), pygame.SRCALPHA)
+        card.fill((*PLUM_SHADOW, 252))
+        pygame.draw.rect(card, HARVEST_GOLD, (0, 0, cw, ch), 3, border_radius=12)
+        pygame.draw.rect(card, SUNLIT_BIRCH, (6, 6, cw - 12, ch - 12), 1, border_radius=9)
+
+        # Header Title with Bilim Ağacı and Awakened Shrine sprites
+        t_main = self.f_title.render("ODTÜ : DEVRİM VE EBEDİ DÖNGÜ TAMAMLANDI!", True, PALE_SUNBEAM)
+        tw = t_main.get_width()
+        tx = (cw - tw) // 2
+        card.blit(t_main, (tx, 18))
+
+        s_bilim = pygame.transform.scale(self.assets.bilim_agaci_surf, (40, 40))
+        s_shrine = pygame.transform.scale(self.assets.shrine_awake_surf, (40, 40))
+        card.blit(s_bilim, (max(16, tx - 52), 14))
+        card.blit(s_shrine, (min(cw - 56, tx + tw + 12), 14))
+
+        t_sub = self.f_subtitle.render(
+            ">> Sonbaharın Son Işığı Bozkırda Ebediyen Parlayacak • KODTÜ Şampiyonluk Seferi <<",
+            True,
+            HARVEST_GOLD,
+        )
+        card.blit(t_sub, ((cw - t_sub.get_width()) // 2, 58))
+
+        # Poetic Epilogue Box
+        pw, ph = cw - 64, 115
+        px = 32
+        py = 92
+        p_surf = pygame.Surface((pw, ph), pygame.SRCALPHA)
+        p_surf.fill((*DEEP_VOID, 235))
+        pygame.draw.rect(p_surf, BURNT_AMBER, (0, 0, pw, ph), 2, border_radius=8)
+
+        poem_lines = [
+            "Bozkırın ortasına 1956'dan beri ellerle dikilen fidanlar bugün bir ormana, o orman ise ebedi bir hakikate dönüştü.",
+            "Kemal Kurdaş'ın ve binlerce gencin inancı, tabiatın entropisini aklın ve emeğin zaferine dönüştürdü.",
+            "Sen, Devrim Feneri'nin közünü taşıyarak soğuğu yendin; Ouroboros ebedi döngüsü mühürlendi.",
+            "Artık orman güvende. Dökülen her sarı yaprak, baharın yeniden doğuşuna adanmış bir selamdır!",
+        ]
+        for i, line in enumerate(poem_lines):
+            l_s = self.f_body.render(line, True, PALE_SUNBEAM if i == 3 else SUNLIT_BIRCH)
+            p_surf.blit(l_s, (16, 12 + i * 24))
+        card.blit(p_surf, (px, py))
+
+        # 4 Statistical Cards Grid
+        stat_y = 226
+        stat_w = (cw - 64 - 36) // 4
+        stat_h = 95
+        stats = [
+            ("TOPLAM SEFER", f"KORU {world.depth_level} (TAMAM)", HARVEST_GOLD),
+            ("SONBAHAR ANILARI", f"{player.relics_collected} / {world.total_relics} Kristal", SUNLIT_BIRCH),
+            ("ODTÜ KUTSAMALARI", f"{len(player.active_boons)} / 5 Sinerji", PALE_SUNBEAM),
+            ("MERMİ YANSITMA", f"{player.orbs_deflected} Deflect", HARVEST_GOLD),
+        ]
+        for i, (stitle, sval, scol) in enumerate(stats):
+            sx = 32 + i * (stat_w + 12)
+            sb = pygame.Surface((stat_w, stat_h), pygame.SRCALPHA)
+            sb.fill((*DEEP_VOID, 230))
+            pygame.draw.rect(sb, WITHERED_BARK, (0, 0, stat_w, stat_h), 1, border_radius=6)
+            lbl_st = self.f_small.render(stitle, True, AUTUMN_MIST)
+            lbl_sv = self.f_subtitle.render(sval, True, scol)
+            sb.blit(lbl_st, ((stat_w - lbl_st.get_width()) // 2, 20))
+            sb.blit(lbl_sv, ((stat_w - lbl_sv.get_width()) // 2, 50))
+            card.blit(sb, (sx, stat_y))
+
+        # Seed Sharing Strip
+        strip_y = 340
+        strip_w = cw - 64
+        strip = pygame.Surface((strip_w, 36), pygame.SRCALPHA)
+        strip.fill((*DEEP_VOID, 240))
+        pygame.draw.rect(strip, HARVEST_GOLD, (0, 0, strip_w, 36), 1, border_radius=6)
+        lbl_seed = self.f_body_bold.render(
+            f"MÜHÜRLENEN ŞAMPİYONLUK TOHUMU: {world.seed_code}  (Arkadaşlarınla Paylaş)",
+            True,
+            PALE_SUNBEAM,
+        )
+        strip.blit(lbl_seed, ((strip_w - lbl_seed.get_width()) // 2, 8))
+        card.blit(strip, (32, strip_y))
+
+        # Bottom 3 Action Buttons
+        btn_y = ch - 78
+        btn_h = 44
+        btn_w = (cw - 64 - 24) // 3
+
+        btn_specs = [
+            ("[R / ENTER] YENİ BİR DÖNGÜ BAŞLAT", CRIMSON_DECAY, PALE_SUNBEAM),
+            ("[F5] BAŞKA BİR ODTÜ BÖLGESİ", PLUM_SHADOW, SUNLIT_BIRCH),
+            ("[ESC] SONSUZ KEŞFE DEVAM ET", DEEP_VOID, AUTUMN_MIST),
+        ]
+        for i, (blbl, bg_col, border_col) in enumerate(btn_specs):
+            bx = 32 + i * (btn_w + 12)
+            pygame.draw.rect(card, bg_col, (bx, btn_y, btn_w, btn_h), border_radius=8)
+            pygame.draw.rect(card, border_col, (bx, btn_y, btn_w, btn_h), 2, border_radius=8)
+            b_text = self.f_small.render(blbl, True, PALE_SUNBEAM)
+            card.blit(b_text, (bx + (btn_w - b_text.get_width()) // 2, btn_y + 12))
+
         screen.blit(card, (cx, cy))

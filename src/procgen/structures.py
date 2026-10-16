@@ -189,6 +189,29 @@ def synthesize_autumn_structures(
                 )
             )
 
+    # Select 1 or 2 open clearings for Historical ODTÜ Inscription Steles (Tarih Kitabeleri)
+    placed_kitabes: List[Tuple[int, int]] = []
+    for kx, ky in candidates:
+        if len(placed_kitabes) >= 2:
+            break
+        if (kx, ky) in placed_camps:
+            continue
+        if (kx - spawn_tile[0]) ** 2 + (ky - spawn_tile[1]) ** 2 < 20:
+            continue
+        if (kx - shrine_tile[0]) ** 2 + (ky - shrine_tile[1]) ** 2 < 20:
+            continue
+        if all((kx - px) ** 2 + (ky - py) ** 2 >= 36 for px, py in placed_camps):
+            if all((kx - kpx) ** 2 + (ky - kpy) ** 2 >= 49 for kpx, kpy in placed_kitabes):
+                placed_kitabes.append((kx, ky))
+                structures.append(
+                    StructurePlacement(
+                        tile_x=kx,
+                        tile_y=ky,
+                        structure_type="odtu_kitabe",
+                        radius_tiles=1,
+                    )
+                )
+
     # Place wooden boardwalk tiles along a segment of the shortest path
     if len(shortest_path) > 10:
         mid_idx = len(shortest_path) // 2

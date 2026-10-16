@@ -310,8 +310,27 @@ KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation**
      - **[2] KONTROLLER**: `[WASD]` yürü, `[Sol Tık / Space]` kılıç salla (mor mermileri geri yansıt!), `[Sağ Tık / F]` köz mermisi fırlat, `[Shift]` hızlıca atıl.
      - **[3] ÖLMEME REHBERİ**: Fener ısısı senin canındır. Donmamak için devasa **ODTÜ Bilim Ağacı Anıtı** veya **Kamp Ateşlerine** koş! Çalı ve balkabaklarını kesip palamut topla.
 
+8. **🗿 Kadim ODTÜ Tarih Kitabeleri (`odtu_kitabe` — `[E]` ile Oku):**
+   - Prosedürel olarak koruya yerleştirilen antik taş kitabeler. Oyuncu yaklaşıp **`[E]`** tuşuna bastığında ODTÜ'nün gerçek tarihi daktilo efektiyle açılır:
+     - **1961 Kemal Kurdaş ve İlk Ağaç Bayramı**: 3 Aralık 1961'de bozkıra inen binlerce öğrenci ve hocanın imkansıza meydan okuyuşu.
+     - **Yalıncak Höyüğü ve Anadolu Mirası**: Kampüs topraklarının binlerce yıllık Hitit ve Frig arkeolojik hafızası.
+     - **Eymir Gölü ve Bozkırdaki Mavi Gerdanlık**: Sabah ayazında çalışan ODTÜ kürekçilerinin suyla kurduğu ahenk.
+     - **1968 Devrim Stadyumu ve Özgürlük Ruhu**: Basamaklara kazınan ve rüzgarın silemediği kolektif irade manifestosu.
+   - Her kitabe okunduğunda fener ısısını tazeler (`+15 Isı`) ve oyuncuya geçici ilham hızı kazandırır!
+
+9. **✨ Prosedürel Hacimsel Güneş Huzmeleri (God Rays) & Bozkır Ateşböcekleri:**
+   - Kanopinin arasından süzülen 3 adet dinamik açılı hacimsel ışık demeti (`#FAEBAC`) rüzgarın frekansıyla nefes alır gibi parıldar.
+   - ODTÜ Bilim Ağacı ve Kamp Ateşleri çevresinde rüzgarda yükselen 12 adet altın spor parçacığı sahneye canlı bir sonbahar nefesi katar.
+
+10. **🏆 Ebedi Döngü Zafer & Epilog Sekansı (Grand Victory Sequence):**
+    - 3. Koru tamamlandığında ve Kadim Tapınak mühürlendiğinde devreye giren epilog ekranı:
+      - ODTÜ mirasını özetleyen epilog şiiri ve felsefi kapanış.
+      - 4'lü Sefer İstatistiği kartları (Toplam Sefer, Sonbahar Anıları, Kutsamalar, Deflect Sayısı).
+      - Paylaşılabilir şampiyonluk tohum kodu (`KODTU-XXXX-LEAF`).
+      - Hızlı aksiyonlar: `[R / Enter] Yeni Döngü` • `[F5] Başka ODTÜ Bölgesi` • `[ESC] Sonsuz Keşif`.
+
 <div align="center">
-  <img src="docs/preview_intro_tutorial.png" alt="ODTÜ Sonbaharın Son Işığı Başlangıç Kılavuzu" width="90%" />
+  <img src="docs/preview_victory_epilogue.png" alt="ODTÜ Sonbaharın Son Işığı Zafer ve Epilog Ekranı" width="90%" />
 </div>
 
 ---
@@ -465,7 +484,7 @@ python src/main.py --seed "METU-BILIM-AGACI"
 
 ### 3. Otomatik Test Paketi (`pytest`)
 
-Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, parçalanabilir flora/palamut ganimetlerini, Türkçe Hikaye Bölümlerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **17 birim testini** çalıştırın:
+Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı ve Kadim Tarih Kitabelerini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, parçalanabilir flora/palamut ganimetlerini, Türkçe Hikaye Bölümlerini, 1280x720 Modern HD arayüzü, Ebedi Döngü Zafer Epilogunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **18 birim testini** çalıştırın:
 
 ```bash
 pytest tests/ -v

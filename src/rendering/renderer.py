@@ -180,6 +180,15 @@ class WorldRenderer:
                         pygame.draw.circle(canvas, SUNLIT_BIRCH, (dx, dy), 11, 1)
                         canvas.blit(bilim_surf, (dx - 16, dy - 26))
                     y_sort_queue.append((by_px, _draw_bilim))
+            elif st.structure_type == "odtu_kitabe":
+                kx_px = (st.tile_x + 0.5) * TILE_SIZE
+                ky_px = (st.tile_y + 0.5) * TILE_SIZE
+                ksx, ksy = camera.world_to_screen(kx_px, ky_px)
+                if -24 <= ksx <= NATIVE_WIDTH + 24 and -24 <= ksy <= NATIVE_HEIGHT + 24:
+                    def _draw_kitabe(dx: int = ksx, dy: int = ksy) -> None:
+                        pygame.draw.circle(canvas, HARVEST_GOLD, (dx, dy), 10, 1)
+                        canvas.blit(self.assets.kitabe_surf, (dx - 8, dy - 20))
+                    y_sort_queue.append((ky_px, _draw_kitabe))
 
         # 3c. Ancient Autumn Shrine (32x32)
         shx = (world.shrine_tile[0] + 0.5) * TILE_SIZE
@@ -335,7 +344,11 @@ class WorldRenderer:
         # 7. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
         self._render_autumn_mist_wisps(canvas, camera.x, camera.y, time_sec)
 
-        # 8. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
+        # 8. Procedural Volumetric God Rays (Güneş Huzmeleri) & Steppe Firefly Spores
+        self._render_autumn_god_rays(canvas, time_sec)
+        self._render_steppe_fireflies(canvas, camera, time_sec)
+
+        # 9. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
         if debug_mode == DEBUG_BITMASK_GRID:
             self._render_f2_bitmask_grid_overlay(
                 canvas, world, camera, spatial_hash, player, enemies, visible_props, x0, y0, x1, y1
@@ -420,6 +433,44 @@ class WorldRenderer:
                 px = mx + dx
                 if 0 <= px < NATIVE_WIDTH and 0 <= my < NATIVE_HEIGHT:
                     canvas.set_at((px, my), AUTUMN_MIST)
+
+    def _render_autumn_god_rays(self, canvas: pygame.Surface, time_sec: float) -> None:
+        """
+        Draws soft, procedural volumetric god rays (Güneş Huzmeleri) slicing diagonally
+        through the autumn canopy in 16-color PALE_SUNBEAM (#FAEBAC).
+        """
+        rays_surf = pygame.Surface((NATIVE_WIDTH, NATIVE_HEIGHT), pygame.SRCALPHA)
+        for i in range(3):
+            pulse = 0.5 + 0.5 * math.sin(time_sec * 0.8 + i * 1.9)
+            alpha = int(round(10 + pulse * 14))
+            color = (*PALE_SUNBEAM, alpha)
+            top_x = int(50 + i * 105 + math.sin(time_sec * 0.35 + i) * 14)
+            poly = [
+                (top_x, 0),
+                (top_x + 24, 0),
+                (top_x - 55 + 50, NATIVE_HEIGHT),
+                (top_x - 55, NATIVE_HEIGHT),
+            ]
+            pygame.draw.polygon(rays_surf, color, poly)
+        canvas.blit(rays_surf, (0, 0))
+
+    def _render_steppe_fireflies(
+        self, canvas: pygame.Surface, camera: PixelCamera, time_sec: float
+    ) -> None:
+        """Renders drifting golden spore motes that oscillate gently in the steppe wind."""
+        for i in range(12):
+            seed_off = i * 29.3
+            fx = int(
+                (seed_off * 11 + time_sec * 8 + math.sin(time_sec * 1.4 + i) * 10 - camera.x * 0.25)
+                % (NATIVE_WIDTH + 20)
+            ) - 10
+            fy = int(
+                (seed_off * 17 - time_sec * 6 + math.cos(time_sec * 1.1 + i) * 8 - camera.y * 0.25)
+                % (NATIVE_HEIGHT + 20)
+            ) - 10
+            if 0 <= fx < NATIVE_WIDTH and 0 <= fy < NATIVE_HEIGHT:
+                col = PALE_SUNBEAM if (i + int(time_sec * 4)) % 3 == 0 else HARVEST_GOLD
+                canvas.set_at((fx, fy), col)
 
     def _render_f1_noise_biome_overlay(
         self,
