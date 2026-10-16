@@ -17,7 +17,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 24/24 Passed](https://img.shields.io/badge/Pytest_Suite-24%2F24_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 26/26 Passed](https://img.shields.io/badge/Pytest_Suite-26%2F26_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -294,10 +294,12 @@ Her Hasat Reliği bulunduğunda ODTÜ efsanelerinden ilham alan 5 kalıcı kutsa
 
 > *"Dünyanın kendisi 100% piksel-kusursuz ve 16-renk Sonbahar paletine sadık kalırken; arayüz ve hikaye anlatımı Celeste, Eastward ve Sea of Stars standardında ultra-net ve modern 1280×720 HD çözünürlükte sunulur."*
 
-1. **🏛️ 3 Aşamalı Felsefi Anlatı Katmanı (`story.py`):**
+1. **🏛️ 5 Aşamalı Felsefi Anlatı Katmanı (`story.py`):**
    - **Bölüm I: Yalıncak ve Bozkırın Entropisi (Koru 1):** Bozkırın unutuşuna karşı insan iradesinin ilk fidanla başlayan varoluşsal direnişi.
    - **Bölüm II: Eymir'in Dinginliği ve Zamanın Akışı (Koru 2):** Geçmişin melankolisi ile geleceğin kaygısı arasında şimdiki anın meşalesi.
-   - **Bölüm III: Devrim Korusu ve Ebedi Döngü (Koru 3+):** Elder Stag Warden ile yüzleşme; sonbaharın bir ölüm değil Ouroboros gibi sonsuz döngü olduğunu anlama.
+   - **Bölüm III: Devrim Korusu ve Ebedi Döngü (Koru 3):** Elder Stag Warden ile yüzleşme; sonbaharın bir ölüm değil Ouroboros gibi sonsuz döngü olduğunu anlama.
+   - **Bölüm IV: Bozkır Kütüphanesi ve Zamanın Hafızası (Koru 4):** Kemal Kurdaş'ın fidanları ile CClub'ın ilk kod satırlarının birleşimi; yazılan her satırın unutuşa meydan okuyuşu.
+   - **Bölüm V: Altın Şafak ve Sonsuz Diriliş (Koru 5+):** 1956'da dikilen fidanın evrensel akla ve özgürlüğe dönüşmesi; oyuncunun bozkır efsanesinin ebedi anlatıcısı olması.
 
 2. **📜 5 Varoluşsal Hatıra Parçacığı:**
    - *1. Hatıra (İlk Kıvılcım):* "Çorak bozkırda tohum olmak, rüzgara rağmen çatlamaya cüret etmektir."
@@ -461,37 +463,39 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 24/24 Otomatik Test Paketini Çalıştırma (`pytest`)
+### 🧪 3. 26/26 Otomatik Test Paketini Çalıştırma (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü görsel flurry şok dalgalarını, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane aurasını, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü görsel flurry şok dalgalarını, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane aurasını, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Felsefi Hikaye İlerlemesini, Kadim Boss Kükremesi & Parry Kıvılcımı ses sentezleyicilerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
 ```
 
 ```text
-tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  4%]
-tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  8%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 29%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 33%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 37%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 41%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 45%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 50%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 54%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 58%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 62%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 66%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 70%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 75%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 79%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 83%]
-tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 87%]
-tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 91%]
-tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 95%]
-tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [100%]
+tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  3%]
+tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  7%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 26%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 30%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 34%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 38%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 42%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 46%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 50%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 53%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 57%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 61%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 65%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 69%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 73%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 76%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 80%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 84%]
+tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 88%]
+tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 92%]
+tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 96%]
+tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [100%]
 
-============================= 24 passed in 2.62s ==============================
+============================= 26 passed in 3.11s ==============================
 ```
 
 ---

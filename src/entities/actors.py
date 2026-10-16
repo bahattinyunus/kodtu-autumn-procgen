@@ -131,6 +131,7 @@ class EnemyAgent:
             self.damage = 26.0
 
         self.hp = self.max_hp
+        self.has_roared = False
 
     @property
     def is_enraged(self) -> bool:

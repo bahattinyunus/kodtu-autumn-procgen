@@ -602,6 +602,69 @@ def test_cclub_and_altug_kitabe_inscriptions() -> None:
         assert sm.active_dialogue.title == title
 
 
+def test_five_chapters_story_progression() -> None:
+    """
+    Verifies:
+    1. Narrative engine supports full 5-chapter story progression (Chapters I through V).
+    2. Chapter titles and themes conform to Yalıncak, Eymir, Devrim, Bozkır Kütüphanesi & Altın Şafak.
+    """
+    from src.core.story import StoryManager, CHAPTER_INFO
+
+    assert len(CHAPTER_INFO) == 5
+    sm = StoryManager(show_intro_card=False)
+    for ch in range(1, 6):
+        sm.chapter = ch
+        title, text = sm.get_chapter_meta()
+        assert len(title) > 0
+        assert len(text) > 0
+        assert f"BÖLÜM" in title
+
+    sm.start_chapter(4, "ODTU-CHAPTER-4")
+    assert sm.chapter == 4
+    assert sm.active_dialogue is not None
+    assert "KÜTÜPHANESİ" in sm.active_dialogue.title
+
+    sm.start_chapter(5, "ODTU-CHAPTER-5")
+    assert sm.chapter == 5
+    assert sm.active_dialogue is not None
+    assert "ŞAFAK" in sm.active_dialogue.title
+
+
+def test_boss_roar_and_parry_spark_synthesizers() -> None:
+    """
+    Verifies:
+    1. Primal boss roar synthesizer outputs valid sub-bass growl PCM data.
+    2. Golden parry spark synthesizer outputs high-frequency clash PCM data.
+    3. Headless game loop triggers boss roar upon warden entering enraged phase.
+    """
+    from src.core.audio_synth import synth_boss_roar, synth_parry_spark
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+    import numpy as np
+
+    roar = synth_boss_roar()
+    spark = synth_parry_spark()
+    assert len(roar) > 0
+    assert len(spark) > 0
+    assert np.max(np.abs(roar)) <= 1.0
+    assert np.max(np.abs(spark)) <= 1.0
+
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+    warden = EnemyAgent(x=game.player.x + 2.0, y=game.player.y, kind="warden")
+    warden.hp = 12
+    game.enemies.append(warden)
+
+    # Damage warden below 50%
+    warden.apply_hit(7, source_x=game.player.x, source_y=game.player.y)
+    assert warden.is_enraged
+    assert not warden.has_roared
+
+    # Advance game loop -> should trigger roar and set has_roared to True
+    game.update(0.016)
+    assert warden.has_roared is True
+
+
+
 
 
 

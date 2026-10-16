@@ -290,6 +290,30 @@ def synth_blade_dance() -> np.ndarray:
     return (tone1 * 0.4 + tone2 * 0.3 + noise * 0.3) * env * 0.45
 
 
+def synth_boss_roar() -> np.ndarray:
+    """Synthesizes a low-frequency guttural primal roar for the Enraged Warden phase transition."""
+    rng = np.random.default_rng(999)
+    duration = int(SAMPLE_RATE * 0.85)
+    t = np.linspace(0.0, 0.85, duration, endpoint=False)
+    env = np.sin(np.pi * np.minimum(1.0, t / 0.12)) * np.exp(-t * 2.8)
+    sweep = np.linspace(95.0, 48.0, duration)
+    growl = np.sin(2.0 * np.pi * np.cumsum(sweep) / SAMPLE_RATE)
+    sub = np.sin(2.0 * np.pi * 38.0 * t)
+    noise = rng.normal(0.0, 0.45, duration) * np.exp(-t * 4.0)
+    return (growl * 0.5 + sub * 0.35 + noise * 0.25) * env * 0.55
+
+
+def synth_parry_spark() -> np.ndarray:
+    """Synthesizes an ultra-crisp golden parry/clash spark for perfect frame deflections."""
+    duration = int(SAMPLE_RATE * 0.22)
+    t = np.linspace(0.0, 0.22, duration, endpoint=False)
+    env = np.exp(-t * 18.0)
+    spark1 = np.sin(2.0 * np.pi * 1760.0 * t)
+    spark2 = np.sin(2.0 * np.pi * 2640.0 * t)
+    ping = np.sin(2.0 * np.pi * 3520.0 * np.exp(-t * 12.0) * t)
+    return (spark1 * 0.4 + spark2 * 0.3 + ping * 0.4) * env * 0.42
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -308,6 +332,8 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "autumn_theme": audio_dir / "autumn_theme.wav",
         "campfire_sizzle": audio_dir / "campfire_sizzle.wav",
         "blade_dance": audio_dir / "blade_dance.wav",
+        "boss_roar": audio_dir / "boss_roar.wav",
+        "parry_spark": audio_dir / "parry_spark.wav",
         "dialogue_blip": audio_dir / "dialogue_blip.wav",
         "deflect_clash": audio_dir / "deflect_clash.wav",
         "level_up": audio_dir / "level_up.wav",
@@ -337,6 +363,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["campfire_sizzle"], synth_campfire_sizzle())
     if not files["blade_dance"].exists():
         _save_wav_int16(files["blade_dance"], synth_blade_dance())
+    if not files["boss_roar"].exists():
+        _save_wav_int16(files["boss_roar"], synth_boss_roar())
+    if not files["parry_spark"].exists():
+        _save_wav_int16(files["parry_spark"], synth_parry_spark())
     if not files["hit_hurt"].exists():
         _save_wav_int16(files["hit_hurt"], synth_hit_hurt())
     if not files["wind_ambience"].exists():

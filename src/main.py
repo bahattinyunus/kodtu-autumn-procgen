@@ -438,7 +438,9 @@ class AutumnProcGenGame:
                 self.player.recharge_bolt_on_melee()
                 if self.player.has_boon("EYMIR_REFLECT"):
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 6.0)
+                self.sound.play("parry_spark")
                 self.sound.play("deflect_clash")
+                self.leaf_system.spawn_burst(proj.x * TILE_SIZE, proj.y * TILE_SIZE, count=8, golden_bias=True)
                 self.hit_stop_timer = max(self.hit_stop_timer, 0.04)
                 self.camera.add_trauma(0.28)
                 self.spawn_floating_text(proj.x, proj.y - 0.3, "DEFLECT!", PALE_SUNBEAM)
@@ -768,8 +770,15 @@ class AutumnProcGenGame:
         for enemy in self.enemies:
             if not enemy.alive:
                 continue
-            if enemy.kind == "warden" and math.hypot(self.player.x - enemy.x, self.player.y - enemy.y) <= 8.5:
-                self.story.on_boss_encounter()
+            if enemy.kind == "warden":
+                if math.hypot(self.player.x - enemy.x, self.player.y - enemy.y) <= 8.5:
+                    self.story.on_boss_encounter()
+                if enemy.is_enraged and not getattr(enemy, "has_roared", False):
+                    enemy.has_roared = True
+                    self.sound.play("boss_roar")
+                    self.camera.add_trauma(0.55)
+                    self.spawn_floating_text(enemy.x, enemy.y - 0.8, "KADİM ÖFKE UYANDI!", PALE_SUNBEAM)
+                    self.leaf_system.spawn_burst(enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=36, golden_bias=True)
             enemy.update(
                 dt,
                 self.player.x,

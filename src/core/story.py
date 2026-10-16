@@ -50,6 +50,20 @@ CHAPTER_INFO: Dict[int, Tuple[str, str, str]] = {
         "Sen ormanda yürüyen bir yabancı değilsin; sen ormanın ta kendisisin, düşen yaprağın ve yanan közün kardeşisin.",
         "Görev: Son 5 Bilgelik Hatırasını mühürle, Orman Bekçisinin sınavını geç ve Sonbahar Kalbini ebediyete ada.",
     ),
+    4: (
+        "BÖLÜM IV : BOZKIR KÜTÜPHANESİ VE ZAMANIN HAFIZASI",
+        "Sayfalar sararır, tıpkı ağaçların yaprak döktüğü gibi. Fakat yazılan her satır, zamanın nehrine atılmış bir çapadır. "
+        "Kemal Kurdaş'ın fidanları ile CClub'ın ilk kod satırları aynı kökten beslenir: Unutuşa boyun eğmeyen insan zihninden. "
+        "Bozkırın derinliklerinde yankılanan kadim kitabeler, sana sadece yolu değil; neden yürüdüğünü fısıldar.",
+        "Görev: Bozkır kütüphanesinin derinliklerindeki 5 Hatırayı topla ve fenerin ışığıyla karanlığı aydınlat.",
+    ),
+    5: (
+        "BÖLÜM V : ALTIN ŞAFAK VE SONSUZ DİRİLİŞ (METU SAGA)",
+        "Gecenin en soğuk saati, şafaktan hemen önceki andır. Fenerindeki son köz, artık koca bir ormanın can damarıdır. "
+        "Bozkır teslim oldu, ayaz geri çekildi. 1956'da dikilen ilk fidan, bugün evrensel aklın ve özgürlüğün gölgesine dönüştü. "
+        "Sen bu yolculuğu tamamlamadın; sen bu sonsuz hikayenin ebedi anlatıcısı oldun.",
+        "Görev: Sonbahar Kalbini Kadim Tapınağa sun ve Bozkır Efsanesini ebediyete mühürle.",
+    ),
 }
 
 RELIC_STORY_FRAGMENTS: List[Tuple[str, str, str]] = [
@@ -154,7 +168,7 @@ class StoryManager:
         return title, text
 
     def get_chapter_meta(self) -> tuple[str, str]:
-        ch_key = min(3, max(1, self.chapter))
+        ch_key = min(5, max(1, self.chapter))
         title, text, _ = CHAPTER_INFO[ch_key]
         return title, text
 
