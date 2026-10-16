@@ -11,7 +11,6 @@ import math
 import os
 from pathlib import Path
 import sys
-import time
 from typing import List, Optional
 
 # Ensure repository root is on sys.path when invoked as `python src/main.py`
@@ -24,9 +23,21 @@ import pygame
 from src.core.asset_builder import AssetBank
 from src.core.audio_synth import SoundEngine
 from src.core.camera import PixelCamera, NATIVE_WIDTH, NATIVE_HEIGHT, TILE_SIZE
-from src.core.palette import DEEP_VOID
+from src.core.palette import (
+    DEEP_VOID,
+    CRIMSON_DECAY,
+    HARVEST_GOLD,
+    SUNLIT_BIRCH,
+    PALE_SUNBEAM,
+)
 from src.core.spatial_hash import ChunkSpatialHash
-from src.entities.actors import Player, EnemyAgent, CollectibleItem, spawn_world_entities
+from src.entities.actors import (
+    Player,
+    EnemyAgent,
+    CollectibleItem,
+    FloatingText,
+    spawn_world_entities,
+)
 from src.procgen.noise import compute_wind_vector_field
 from src.procgen.pipeline import generate_autumn_world, WorldData
 from src.procgen.prng import Xoshiro256StarStar, format_seed_code
@@ -91,10 +102,16 @@ class AutumnProcGenGame:
         self.player: Player
         self.items: List[CollectibleItem] = []
         self.enemies: List[EnemyAgent] = []
+        self.floating_texts: List[FloatingText] = []
         self.leaf_system: VerletLeafSystem
 
         self.load_seed(initial_seed, depth_level=1)
         self.sound.start_ambience()
+
+    def spawn_floating_text(
+        self, x: float, y: float, text: str, color: tuple[int, int, int] = SUNLIT_BIRCH
+    ) -> None:
+        self.floating_texts.append(FloatingText(x=x, y=y, text=text, color=color))
 
     def load_seed(self, seed_str: str, depth_level: int = 1) -> None:
         """
@@ -110,6 +127,7 @@ class AutumnProcGenGame:
         sx, sy = self.world.spawn_tile
         self.player = Player(float(sx) + 0.5, float(sy) + 0.5)
         self.items, self.enemies = spawn_world_entities(self.world.spawns)
+        self.floating_texts.clear()
 
         self.leaf_system = VerletLeafSystem(self.world.seed_uint64, max_leaves=160)
         world_px_w = self.world.width * TILE_SIZE
@@ -133,7 +151,8 @@ class AutumnProcGenGame:
         if self.debug_procgen:
             print(
                 f"[PCG] Seed='{self.world.seed_input}' (0x{self.world.seed_uint64:016X} / {self.world.seed_code}) "
-                f"| Total={self.world.total_gen_ms:.2f}ms | Props={len(self.world.props)} | Spawns={len(self.world.spawns)}"
+                f"| Total={self.world.total_gen_ms:.2f}ms | Props={len(self.world.props)} "
+                f"| Structs={len(self.world.structures)} | Spawns={len(self.world.spawns)}"
             )
 
     def instant_reseed(self) -> None:
@@ -154,7 +173,6 @@ class AutumnProcGenGame:
             elif event.type == pygame.VIDEORESIZE:
                 self.window_w, self.window_h = event.w, event.h
             elif event.type == pygame.KEYDOWN:
-                # If Seed Input Modal is open, handle typing
                 if self.hud.seed_modal_open:
                     if event.key in (pygame.K_ESCAPE, pygame.K_TAB):
                         self.hud.seed_modal_open = False
@@ -174,12 +192,13 @@ class AutumnProcGenGame:
                             self.hud.seed_input_buffer += ch
                     continue
 
-                # Standard in-game hotkeys
                 if event.key == pygame.K_ESCAPE:
                     return False
                 elif event.key == pygame.K_TAB:
                     self.hud.seed_modal_open = True
                     self.hud.seed_input_buffer = self.world.seed_input
+                elif event.key == pygame.K_m:
+                    self.hud.show_minimap = not self.hud.show_minimap
                 elif event.key == pygame.K_F1:
                     self.debug_mode = (
                         DEBUG_NONE if self.debug_mode == DEBUG_NOISE_BIOME else DEBUG_NOISE_BIOME
@@ -205,12 +224,14 @@ class AutumnProcGenGame:
                         DEBUG_NONE if self.debug_mode == DEBUG_PATHFINDING else DEBUG_PATHFINDING
                     )
                     self.hud.show_banner(
-                        "[F4] DIJKSTRA DISTANCE & FLOOD-FILL GRAPH"
+                        "[F4] DIJKSTRA DISTANCE & FLOW-FIELD"
                         if self.debug_mode == DEBUG_PATHFINDING
                         else "STANDARD RENDER"
                     )
                 elif event.key == pygame.K_SPACE:
                     self._perform_ember_attack()
+                elif event.key == pygame.K_q:
+                    self._perform_harvest_nova()
                 elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
                     self._perform_gust_dash()
                 elif event.key == pygame.K_e:
@@ -219,6 +240,8 @@ class AutumnProcGenGame:
             elif event.type == pygame.MOUSEBUTTONDOWN and not self.hud.seed_modal_open:
                 if event.button == 1:
                     self._perform_ember_attack()
+                elif event.button == 2:
+                    self._perform_harvest_nova()
                 elif event.button == 3:
                     self._perform_gust_dash()
 
@@ -253,32 +276,63 @@ class AutumnProcGenGame:
         if not self.player.trigger_attack():
             return
         self.sound.play("slash_ember")
+        is_crit = self.player.combo_step == 2
+        dmg = 4 if is_crit else 2
+        reach = 2.15 if is_crit else 1.85
+
         px_x = self.player.x * TILE_SIZE
         px_y = self.player.y * TILE_SIZE
-        # Push falling/settled leaves with the lantern sweep
         sweep_cx = px_x + self.player.facing_x * 14.0
         sweep_cy = px_y + self.player.facing_y * 14.0
-        self.leaf_system.apply_radial_impulse(sweep_cx, sweep_cy, radius_px=44.0, strength=3.2)
-        self.leaf_system.spawn_burst(sweep_cx, sweep_cy, count=8, golden_bias=True)
+        self.leaf_system.apply_radial_impulse(
+            sweep_cx, sweep_cy, radius_px=52.0 if is_crit else 42.0, strength=3.6 if is_crit else 3.0
+        )
+        self.leaf_system.spawn_burst(sweep_cx, sweep_cy, count=12 if is_crit else 7, golden_bias=True)
 
-        # Check enemy hits within the Solar Ember arc
         for enemy in self.enemies:
             if not enemy.alive:
                 continue
             dx = enemy.x - self.player.x
             dy = enemy.y - self.player.y
             dist = math.hypot(dx, dy)
-            if dist <= 1.85:
+            if dist <= reach:
                 dot = (dx * self.player.facing_x + dy * self.player.facing_y) / max(1e-5, dist)
-                if dot >= -0.25 or dist < 0.85:
-                    defeated = enemy.apply_hit(2, self.player.x, self.player.y, knockback=8.0)
-                    self.camera.add_trauma(0.22)
+                if dot >= (-0.45 if is_crit else -0.25) or dist < 0.85:
+                    defeated = enemy.apply_hit(dmg, self.player.x, self.player.y, knockback=8.5)
+                    self.camera.add_trauma(0.32 if is_crit else 0.20)
+                    label = f"CRIT -{dmg}!" if is_crit else f"-{dmg}"
+                    self.spawn_floating_text(
+                        enemy.x, enemy.y - 0.3, label, PALE_SUNBEAM if is_crit else HARVEST_GOLD
+                    )
                     if defeated:
                         self.player.enemies_defeated += 1
                         self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
                         self.leaf_system.spawn_burst(
                             enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=16, golden_bias=False
                         )
+
+    def _perform_harvest_nova(self) -> None:
+        """[Q] / Middle Click: Unleashes a 360-degree Harvest Nova shockwave."""
+        if not self.player.trigger_nova():
+            return
+        self.sound.play("slash_ember")
+        self.camera.add_trauma(0.38)
+        px_x = self.player.x * TILE_SIZE
+        px_y = self.player.y * TILE_SIZE
+        self.leaf_system.spawn_burst(px_x, px_y, count=28, golden_bias=True)
+        self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=72.0, strength=4.8)
+        self.spawn_floating_text(self.player.x, self.player.y - 0.5, "HARVEST NOVA!", PALE_SUNBEAM)
+
+        for enemy in self.enemies:
+            if not enemy.alive:
+                continue
+            dist = math.hypot(enemy.x - self.player.x, enemy.y - self.player.y)
+            if dist <= 2.85:
+                defeated = enemy.apply_hit(3, self.player.x, self.player.y, knockback=11.0)
+                self.spawn_floating_text(enemy.x, enemy.y - 0.3, "-3 NOVA", SUNLIT_BIRCH)
+                if defeated:
+                    self.player.enemies_defeated += 1
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
 
     def _try_interact_shrine(self) -> None:
         sx, sy = self.world.shrine_tile
@@ -297,6 +351,15 @@ class AutumnProcGenGame:
         self.time_sec += dt
         self.hud.update(dt)
 
+        # Update floating combat texts
+        alive_texts: List[FloatingText] = []
+        for ft in self.floating_texts:
+            ft.timer -= dt
+            ft.y -= dt * 0.9
+            if ft.timer > 0.0:
+                alive_texts.append(ft)
+        self.floating_texts = alive_texts
+
         # Periodically evolve the 2D Wind Vector Field with time
         self.wind_refresh_timer += dt
         if self.wind_refresh_timer >= 0.25:
@@ -309,6 +372,12 @@ class AutumnProcGenGame:
         stepped_leaves, stepped_mud = self.player.update(
             dt, mx, my, self.spatial_hash, self.world.biome_grid
         )
+
+        # Warmth regeneration near Alchemist Campfires
+        for st in self.world.structures:
+            if st.structure_type == "campfire":
+                if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 1.8:
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 9.0)
 
         if stepped_leaves:
             self.sound.play_leaf_crunch()
@@ -334,6 +403,7 @@ class AutumnProcGenGame:
                     self.player.relics_collected += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 20.0)
                     self.sound.play("harvest_chime")
+                    self.spawn_floating_text(item.x, item.y, "+RELIC!", PALE_SUNBEAM)
                     self.leaf_system.spawn_burst(
                         item.x * TILE_SIZE, item.y * TILE_SIZE, count=18, golden_bias=True
                     )
@@ -347,6 +417,7 @@ class AutumnProcGenGame:
                 else:
                     self.player.acorns_collected += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 10.0)
+                    self.spawn_floating_text(item.x, item.y, "+10 WARMTH", HARVEST_GOLD)
                     self.sound.play("harvest_chime")
 
         # Update Enemies & check player contact
@@ -369,8 +440,10 @@ class AutumnProcGenGame:
                 self.player.invuln_timer = 0.75
                 self.camera.add_trauma(0.40)
                 self.sound.play("hit_hurt")
+                self.spawn_floating_text(
+                    self.player.x, self.player.y - 0.3, f"-{int(enemy.damage)} WARMTH", CRIMSON_DECAY
+                )
                 if self.player.warmth <= 0.0:
-                    # Rekindle at spawn clearing with full warmth
                     sx, sy = self.world.spawn_tile
                     self.player.x = float(sx) + 0.5
                     self.player.y = float(sy) + 0.5
@@ -403,6 +476,7 @@ class AutumnProcGenGame:
             leaf_system=self.leaf_system,
             time_sec=self.time_sec,
             debug_mode=self.debug_mode,
+            floating_texts=self.floating_texts,
         )
         self.hud.render(
             canvas=self.canvas,
@@ -425,10 +499,36 @@ class AutumnProcGenGame:
         self.screen.blit(scaled_surf, (ox, oy))
         pygame.display.flip()
 
+    def export_debug_quad_showcase(self, output_path: Path) -> None:
+        """
+        Renders a 1280x720 2x2 showcase grid comparing:
+        - Top-Left: Standard 16-Bit Pixel-Perfect Render (Y-Sorted + Minimap + Ember Sweep)
+        - Top-Right: [F1] Multi-Octave Simplex fBm Noise, Biome & 2D Wind Vector Field
+        - Bottom-Left: [F2] 47-Tile Blob Bitmask Indices & 16x16 Spatial Hash Chunks
+        - Bottom-Right: [F4] Dijkstra Geodesic Distance Field, Flow-Field & Shortest Path
+        """
+        quad_surf = pygame.Surface((NATIVE_WIDTH * 4, NATIVE_HEIGHT * 4))
+        modes = [
+            (DEBUG_NONE, (0, 0)),
+            (DEBUG_NOISE_BIOME, (NATIVE_WIDTH * 2, 0)),
+            (DEBUG_BITMASK_GRID, (0, NATIVE_HEIGHT * 2)),
+            (DEBUG_PATHFINDING, (NATIVE_WIDTH * 2, NATIVE_HEIGHT * 2)),
+        ]
+        prev_mode = self.debug_mode
+        for mode, dest in modes:
+            self.debug_mode = mode
+            self.render()
+            panel = pygame.transform.scale(self.canvas, (NATIVE_WIDTH * 2, NATIVE_HEIGHT * 2))
+            quad_surf.blit(panel, dest)
+        self.debug_mode = prev_mode
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        pygame.image.save(quad_surf, str(output_path))
+
     def run(
         self,
         max_frames: Optional[int] = None,
         export_screenshot: Optional[Path] = None,
+        export_quad_showcase: Optional[Path] = None,
     ) -> None:
         frame_count = 0
         running = True
@@ -444,6 +544,8 @@ class AutumnProcGenGame:
                 if export_screenshot is not None:
                     export_screenshot.parent.mkdir(parents=True, exist_ok=True)
                     pygame.image.save(self.screen, str(export_screenshot))
+                if export_quad_showcase is not None:
+                    self.export_debug_quad_showcase(export_quad_showcase)
                 break
 
         pygame.quit()
@@ -476,6 +578,12 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
         default=None,
         help="Optional file path to save a rendered PNG screenshot when finishing",
     )
+    parser.add_argument(
+        "--export-quad-showcase",
+        type=str,
+        default=None,
+        help="Optional file path to save a 2x2 [F1]-[F4] debug showcase PNG",
+    )
     return parser.parse_args(argv)
 
 
@@ -488,7 +596,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         headless=headless,
     )
     preview_path = Path(args.export_preview) if args.export_preview else None
-    game.run(max_frames=args.headless_frames, export_screenshot=preview_path)
+    quad_path = Path(args.export_quad_showcase) if args.export_quad_showcase else None
+    game.run(
+        max_frames=args.headless_frames,
+        export_screenshot=preview_path,
+        export_quad_showcase=quad_path,
+    )
 
 
 if __name__ == "__main__":

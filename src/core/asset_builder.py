@@ -543,6 +543,23 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
         # Crimson thorns
         for tx, ty in ((2, 5), (13, 5), (3, 12), (12, 12), (8, 2)):
             arr[ty, tx] = (*BURNT_AMBER, 255)
+    elif kind == "warden":
+        # Elder Stag Warden (Crowned Shrine Guardian with Golden Antlers)
+        for y in range(4 + bob, 15):
+            for x in range(3, 13):
+                if y in (4 + bob, 14) or x in (3, 12):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                elif y == 6 + bob and x in (5, 10):
+                    arr[y, x] = (*PALE_SUNBEAM, 255)
+                elif 8 + bob <= y <= 11 + bob and 6 <= x <= 9:
+                    arr[y, x] = (*HARVEST_GOLD, 255)
+                else:
+                    w_col = CRIMSON_DECAY if (x + y) % 2 == 0 else WITHERED_BARK
+                    arr[y, x] = (*w_col, 255)
+        # Golden Stag Antlers
+        for ax, ay in ((4, 1), (3, 2), (5, 2), (6, 3), (11, 1), (12, 2), (10, 2), (9, 3)):
+            py = min(15, ay + bob)
+            arr[py, ax] = (*SUNLIT_BIRCH, 255)
     else:  # golem
         # Heavy Hollow Bark Golem
         for y in range(2 + bob, 15):
@@ -557,6 +574,46 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
                     bark_c = WITHERED_BARK if (x + y) % 2 == 0 else PLUM_SHADOW
                     arr[y, x] = (*bark_c, 255)
 
+    return arr
+
+
+def _build_campfire_sprite(frame: int = 0) -> np.ndarray:
+    """Renders a 16x16 flickering Alchemist Campfire with charred logs and golden flames."""
+    arr = np.zeros((16, 16, 4), dtype=np.uint8)
+    # Stone ring & crossed logs
+    _draw_circle_px(arr, 8, 11, 5, WITHERED_BARK)
+    for x in range(4, 13):
+        arr[12, x] = (*DEEP_VOID, 255)
+        arr[11, x] = (*OCHRE_CLAY, 255)
+    # Flickering flame pyramid
+    flame_top = 3 + (frame % 2)
+    for y in range(flame_top, 12):
+        half_w = max(1, (y - flame_top + 1) // 2)
+        for x in range(8 - half_w, 8 + half_w + 1):
+            if y <= flame_top + 1:
+                col = SUNLIT_BIRCH
+            elif abs(x - 8) <= 1 and y >= 8:
+                col = PALE_SUNBEAM
+            elif abs(x - 8) == half_w:
+                col = CRIMSON_DECAY
+            else:
+                col = HARVEST_GOLD if (x + y + frame) % 2 == 0 else BURNT_AMBER
+            arr[y, x] = (*col, 255)
+    return arr
+
+
+def _build_boardwalk_sprite() -> np.ndarray:
+    """Renders a 16x16 rustic wooden boardwalk plank tile."""
+    arr = np.zeros((16, 16, 4), dtype=np.uint8)
+    for y in range(2, 14):
+        for x in range(1, 15):
+            if y in (2, 5, 6, 9, 10, 13) or x in (1, 14):
+                arr[y, x] = (*DEEP_VOID, 255)
+            elif x in (3, 12) and y in (3, 7, 11):
+                arr[y, x] = (*SLATE_FOG, 255)  # Iron nail head
+            else:
+                plank_c = OCHRE_CLAY if ((x + y) % 3 != 0) else WITHERED_BARK
+                arr[y, x] = (*plank_c, 255)
     return arr
 
 
@@ -658,16 +715,22 @@ class AssetBank:
             self.player_frames_left.append(surf_l)
         Image.fromarray(player_sheet, mode="RGBA").save(sprites_dir / "player_sheet.png")
 
-        # 5. Build Entities & Shrine Sheet
+        # 5. Build Entities, Structures & Shrine Sheet
         self.entity_surfaces: Dict[Tuple[str, int], pygame.Surface] = {}
-        entities_sheet = np.zeros((32, 16 * 12, 4), dtype=np.uint8)
+        entities_sheet = np.zeros((32, 16 * 14, 4), dtype=np.uint8)
         ec = 0
-        for ekind in ("relic", "acorn", "wisp", "stalker", "golem"):
+        for ekind in ("relic", "acorn", "wisp", "stalker", "golem", "warden"):
             for f in range(2):
                 e_arr = _build_entity_sprite(ekind, f)
                 self.entity_surfaces[(ekind, f)] = _ndarray_to_surface(e_arr)
                 entities_sheet[0:16, ec * 16 : (ec + 1) * 16] = e_arr
                 ec += 1
+
+        self.campfire_frames = [
+            _ndarray_to_surface(_build_campfire_sprite(0)),
+            _ndarray_to_surface(_build_campfire_sprite(1)),
+        ]
+        self.boardwalk_surf = _ndarray_to_surface(_build_boardwalk_sprite())
 
         shrine_dormant = _build_shrine_sprite(False)
         shrine_awake = _build_shrine_sprite(True)

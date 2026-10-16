@@ -1,6 +1,6 @@
 """
-Pixel-Art HUD, Directional Relic/Shrine Compass, PCG Telemetry Panel,
-and Interactive Seed Entry/Share Modal.
+Pixel-Art HUD, Live Minimap Radar, Directional Relic/Shrine Compass,
+PCG Telemetry Panel, and Interactive Seed Entry/Share Modal.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ from src.ui.pixel_font import PixelFontRenderer
 
 
 class GameHUD:
-    """Renders the pixel-perfect HUD, telemetry overlay, and interactive Seed Modal."""
+    """Renders the pixel-perfect HUD, live minimap radar, telemetry overlay, and Seed Modal."""
 
     def __init__(self) -> None:
         self.font = PixelFontRenderer()
@@ -41,6 +41,9 @@ class GameHUD:
         self.seed_input_buffer = ""
         self.banner_text = ""
         self.banner_timer = 0.0
+        self.show_minimap = True
+        self._minimap_base_surf: Optional[pygame.Surface] = None
+        self._minimap_seed_u64: Optional[int] = None
 
     def show_banner(self, text: str, duration: float = 2.6) -> None:
         self.banner_text = text
@@ -49,6 +52,26 @@ class GameHUD:
     def update(self, dt: float) -> None:
         if self.banner_timer > 0.0:
             self.banner_timer = max(0.0, self.banner_timer - dt)
+
+    def _ensure_minimap_base(self, world: WorldData) -> pygame.Surface:
+        if self._minimap_base_surf is None or self._minimap_seed_u64 != world.seed_uint64:
+            surf = pygame.Surface((world.width, world.height))
+            surf.fill(DEEP_VOID)
+            for ty in range(world.height):
+                for tx in range(world.width):
+                    b = int(world.biome_grid[ty, tx])
+                    if b == 1:
+                        surf.set_at((tx, ty), CRIMSON_DECAY)
+                    elif b == 2:
+                        surf.set_at((tx, ty), WITHERED_BARK)
+                    elif b == 3:
+                        surf.set_at((tx, ty), RUST_TERRACOTTA)
+            for st in world.structures:
+                if st.structure_type == "campfire":
+                    surf.set_at((st.tile_x, st.tile_y), BURNT_AMBER)
+            self._minimap_base_surf = surf
+            self._minimap_seed_u64 = world.seed_uint64
+        return self._minimap_base_surf
 
     def render(
         self,
@@ -63,16 +86,16 @@ class GameHUD:
         culled_props: int,
     ) -> None:
         # 1. Top-Left: Lantern Warmth Bar & Relic Status
-        pygame.draw.rect(canvas, DEEP_VOID, (4, 4, 92, 24))
-        pygame.draw.rect(canvas, WITHERED_BARK, (4, 4, 92, 24), 1)
+        pygame.draw.rect(canvas, DEEP_VOID, (4, 4, 102, 24))
+        pygame.draw.rect(canvas, WITHERED_BARK, (4, 4, 102, 24), 1)
 
         # Warmth bar
-        bar_w = int(round(62 * (player.warmth / max(1.0, player.max_warmth))))
+        bar_w = int(round(68 * (player.warmth / max(1.0, player.max_warmth))))
         bar_col = HARVEST_GOLD if player.warmth > 35.0 else CRIMSON_DECAY
-        pygame.draw.rect(canvas, PLUM_SHADOW, (30, 7, 62, 6))
+        pygame.draw.rect(canvas, PLUM_SHADOW, (32, 7, 68, 6))
         if bar_w > 0:
-            pygame.draw.rect(canvas, bar_col, (30, 7, bar_w, 6))
-            pygame.draw.line(canvas, SUNLIT_BIRCH, (30, 7), (30 + max(0, bar_w - 1), 7))
+            pygame.draw.rect(canvas, bar_col, (32, 7, bar_w, 6))
+            pygame.draw.line(canvas, SUNLIT_BIRCH, (32, 7), (32 + max(0, bar_w - 1), 7))
         self.font.draw_text(canvas, "WARM", 7, 5, SUNLIT_BIRCH)
 
         # Relic count & Shrine state
@@ -80,12 +103,12 @@ class GameHUD:
         relic_str = (
             "SHRINE AWAKE [E]"
             if awakened
-            else f"RELICS {player.relics_collected}/{world.total_relics}  ACORN {player.acorns_collected}"
+            else f"RELIC {player.relics_collected}/{world.total_relics} ACORN {player.acorns_collected}"
         )
         relic_col = PALE_SUNBEAM if awakened else HARVEST_GOLD
         self.font.draw_text(canvas, relic_str, 7, 16, relic_col)
 
-        # 2. Top-Right: Seed String & Share Code
+        # 2. Top-Right: Seed String & Share Code + Live Minimap Radar
         seed_box_w = 126
         seed_box_x = NATIVE_WIDTH - seed_box_w - 4
         pygame.draw.rect(canvas, DEEP_VOID, (seed_box_x, 4, seed_box_w, 24))
@@ -103,6 +126,31 @@ class GameHUD:
             AUTUMN_MIST,
             align_right=True,
         )
+
+        if self.show_minimap and not self.seed_modal_open:
+            mm_base = self._ensure_minimap_base(world)
+            mm_x = NATIVE_WIDTH - world.width - 5
+            mm_y = 31
+            pygame.draw.rect(
+                canvas, DEEP_VOID, (mm_x - 1, mm_y - 1, world.width + 2, world.height + 2)
+            )
+            pygame.draw.rect(
+                canvas, WITHERED_BARK, (mm_x - 1, mm_y - 1, world.width + 2, world.height + 2), 1
+            )
+            canvas.blit(mm_base, (mm_x, mm_y))
+
+            # Draw uncollected relics on minimap
+            for it in items:
+                if not it.collected and it.kind == "relic":
+                    canvas.set_at((mm_x + int(it.x), mm_y + int(it.y)), HARVEST_GOLD)
+
+            # Draw Shrine on minimap
+            sx, sy = world.shrine_tile
+            canvas.set_at((mm_x + sx, mm_y + sy), PALE_SUNBEAM)
+
+            # Draw Player on minimap
+            px, py = max(0, min(world.width - 1, int(player.x))), max(0, min(world.height - 1, int(player.y)))
+            canvas.set_at((mm_x + px, mm_y + py), SUNLIT_BIRCH)
 
         # 3. Directional Compass Arrow toward nearest uncollected Relic or Awakened Shrine
         target_xy = self._find_guidance_target(world, player, items)
@@ -123,22 +171,21 @@ class GameHUD:
                 pygame.draw.line(canvas, col, (cx, cy), (ax, ay), 2)
                 canvas.set_at((ax, ay), SUNLIT_BIRCH)
 
-        # 4. PCG Telemetry & Debug Overlay Bar (Bottom or Top-Left Subpanel)
+        # 4. PCG Telemetry & Debug Overlay Bar
         if show_procgen_telemetry or debug_mode != DEBUG_NONE:
             self._render_telemetry_panel(canvas, world, fps, debug_mode, draw_calls, culled_props)
         else:
-            # Compact bottom control hint bar
             pygame.draw.rect(canvas, DEEP_VOID, (4, NATIVE_HEIGHT - 14, NATIVE_WIDTH - 8, 11))
             self.font.draw_text(
                 canvas,
-                "[F1]Noise [F2]Bitmask [F3]ReSeed [F4]Dijkstra [TAB]Seed [SPC]Slash",
+                "[F1-F4]Debug [SPC]Slash [Q]Nova [SHF]Dash [TAB]Seed [M]Map",
                 NATIVE_WIDTH // 2,
                 NATIVE_HEIGHT - 13,
                 AUTUMN_MIST,
                 align_center=True,
             )
 
-        # 5. Floating Banner Notification (e.g. on Re-Seed or Shrine Awakening)
+        # 5. Floating Banner Notification
         if self.banner_timer > 0.0 and self.banner_text:
             bw = min(NATIVE_WIDTH - 20, len(self.banner_text) * 6 + 16)
             bx = (NATIVE_WIDTH - bw) // 2
@@ -182,9 +229,9 @@ class GameHUD:
 
         mode_names = {
             DEBUG_NONE: "STANDARD RENDER (Y-SORT + LUT)",
-            DEBUG_NOISE_BIOME: "[F1] FBM NOISE & BIOME + WIND FIELD",
-            DEBUG_BITMASK_GRID: "[F2] 47-TILE BLOB BITMASK & SPATIAL CHUNKS",
-            DEBUG_PATHFINDING: "[F4] DIJKSTRA DISTANCE & BFS FLOOD-FILL",
+            DEBUG_NOISE_BIOME: "[F1] FBM NOISE & BIOME + WIND",
+            DEBUG_BITMASK_GRID: "[F2] 47-BLOB BITMASK & CHUNKS",
+            DEBUG_PATHFINDING: "[F4] DIJKSTRA & FLOW-FIELD",
         }
         m_label = mode_names.get(debug_mode, "DEBUG")
         self.font.draw_text(canvas, m_label, panel_x + 4, panel_y + 3, SUNLIT_BIRCH)
@@ -197,7 +244,6 @@ class GameHUD:
             align_right=True,
         )
 
-        # Stage timings summary
         t_fbm = world.timings_ms.get("1_fbm_noise", 0.0)
         t_ca = world.timings_ms.get("2_automata_bfs", 0.0)
         t_auto = world.timings_ms.get("3_autotile_47", 0.0)
@@ -244,7 +290,6 @@ class GameHUD:
             align_center=True,
         )
 
-        # Input text box
         pygame.draw.rect(canvas, PLUM_SHADOW, (mx + 14, my + 35, mw - 28, 16))
         pygame.draw.rect(canvas, BURNT_AMBER, (mx + 14, my + 35, mw - 28, 16), 1)
         cursor = "_" if (pygame.time.get_ticks() // 400) % 2 == 0 else " "

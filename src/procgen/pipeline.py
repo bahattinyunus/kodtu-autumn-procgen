@@ -34,6 +34,11 @@ from src.procgen.poisson import (
     PropPlacement,
     distribute_ecological_props,
 )
+from src.procgen.structures import (
+    StructurePlacement,
+    synthesize_autumn_structures,
+    compute_flow_field_vectors,
+)
 
 
 @dataclass(frozen=True)
@@ -42,7 +47,7 @@ class EntitySpawn:
 
     x: float
     y: float
-    entity_type: str   # 'relic', 'acorn', 'wisp', 'stalker', 'golem'
+    entity_type: str   # 'relic', 'acorn', 'wisp', 'stalker', 'golem', 'warden'
     threat_cost: int
     dijkstra_norm: float
 
@@ -63,7 +68,7 @@ class WorldData:
     moisture: np.ndarray         # float64 [0.0, 1.0]
     biome_grid: np.ndarray       # int32 (0=Wall, 1=Damp, 2=Amber, 3=Golden)
 
-    # Stage 2: Topology & Dijkstra Connectivity
+    # Stage 2: Topology, Dijkstra Connectivity & Vector Flow-Field
     walkable_grid: np.ndarray    # int32 (0=Walkable floor, 1=Solid cliff/canopy wall)
     corridor_tiles: List[Tuple[int, int]]
     spawn_tile: Tuple[int, int]
@@ -71,14 +76,17 @@ class WorldData:
     dijkstra_dist: np.ndarray    # int32 step distance (-1 for walls)
     dijkstra_norm: np.ndarray    # float64 [0.0, 1.0] normalized distance
     shortest_path: List[Tuple[int, int]]
+    flow_vx: np.ndarray          # float64 downhill geodesic flow X
+    flow_vy: np.ndarray          # float64 downhill geodesic flow Y
 
     # Stage 3: Bitmask Autotiling
     wall_mask_8bit: np.ndarray   # int32 sanitized 8-bit mask
     wall_blob_47: np.ndarray     # int32 47-tile index (0..46)
     biome_mask_4dir: np.ndarray  # int32 4-dir mask (0..15) for golden leaf transitions
 
-    # Stage 4: Poisson Disk Ecological Props
+    # Stage 4: Poisson Disk Ecological Props & Procedural Micro-Structures
     props: List[PropPlacement]
+    structures: List[StructurePlacement]
 
     # Stage 5: Threat-Budgeted Entities & Relics
     spawns: List[EntitySpawn]
@@ -227,6 +235,22 @@ def _budget_entities_and_relics(
             )
         )
 
+    # 4. Place an Elder Stag Warden guardian near the Ancient Autumn Shrine
+    for cx, cy, cd in candidates:
+        if (cx, cy) not in occupied and cd >= 0.78:
+            if 4 <= (cx - shrine_tile[0]) ** 2 + (cy - shrine_tile[1]) ** 2 <= 25:
+                occupied.add((cx, cy))
+                spawns.append(
+                    EntitySpawn(
+                        x=float(cx) + 0.5,
+                        y=float(cy) + 0.5,
+                        entity_type="warden",
+                        threat_cost=5,
+                        dijkstra_norm=cd,
+                    )
+                )
+                break
+
     return spawns
 
 
@@ -260,7 +284,7 @@ def generate_autumn_world(
     )
     timings["1_fbm_noise"] = (time.perf_counter() - t0) * 1000.0
 
-    # --- STAGE 2: Cellular Automata (B678/S345678) & Flood-Fill Connectivity ---
+    # --- STAGE 2: Cellular Automata (B678/S345678), Flood-Fill & Flow-Field ---
     t0 = time.perf_counter()
     topo_prng = root_prng.fork("topology")
     walkable_grid, corridor_tiles = sculpt_connected_topology(
@@ -270,6 +294,7 @@ def generate_autumn_world(
     dijkstra_dist, dijkstra_norm, shrine_tile, shortest_path = compute_dijkstra_distance_field(
         walkable_grid, spawn_tile
     )
+    flow_vx, flow_vy = compute_flow_field_vectors(dijkstra_dist)
     biome_grid = classify_autumn_biomes(elevation, moisture, walkable_grid)
     timings["2_automata_bfs"] = (time.perf_counter() - t0) * 1000.0
 
@@ -279,9 +304,18 @@ def generate_autumn_world(
     biome_mask_4dir = compute_4dir_mask_grid((biome_grid == 3).astype(np.int32), target_value=1)
     timings["3_autotile_47"] = (time.perf_counter() - t0) * 1000.0
 
-    # --- STAGE 4: Bridson's Fast Poisson Disk Sampling ---
+    # --- STAGE 4: Bridson's Fast Poisson Disk Sampling & Micro-Structures ---
     t0 = time.perf_counter()
     poisson_prng = root_prng.fork("poisson")
+    struct_prng = root_prng.fork("structures")
+    structures = synthesize_autumn_structures(
+        walkable_grid=walkable_grid,
+        dijkstra_norm=dijkstra_norm,
+        spawn_tile=spawn_tile,
+        shrine_tile=shrine_tile,
+        shortest_path=shortest_path,
+        prng=struct_prng,
+    )
     props = distribute_ecological_props(
         walkable_grid=walkable_grid,
         biome_grid=biome_grid,
@@ -334,10 +368,13 @@ def generate_autumn_world(
         dijkstra_dist=dijkstra_dist,
         dijkstra_norm=dijkstra_norm,
         shortest_path=shortest_path,
+        flow_vx=flow_vx,
+        flow_vy=flow_vy,
         wall_mask_8bit=wall_mask_8bit,
         wall_blob_47=wall_blob_47,
         biome_mask_4dir=biome_mask_4dir,
         props=props,
+        structures=structures,
         spawns=spawns,
         total_relics=total_relics,
         wind_vx=wind_vx,

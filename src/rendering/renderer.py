@@ -1,6 +1,6 @@
 """
 Pixel-Perfect World Renderer, Y-Sorting (Painter's Algorithm), Frustum Culling,
-and Live PCG Debug Overlays ([F1], [F2], [F4]).
+Procedural Micro-Structure Rendering, and Live PCG Debug Overlays ([F1], [F2], [F4]).
 """
 
 from __future__ import annotations
@@ -25,16 +25,17 @@ from src.core.palette import (
     hue_shift_toward_shadow,
 )
 from src.core.spatial_hash import ChunkSpatialHash, CHUNK_SIZE_TILES
-from src.entities.actors import Player, EnemyAgent, CollectibleItem
+from src.entities.actors import Player, EnemyAgent, CollectibleItem, FloatingText
 from src.procgen.pipeline import WorldData
 from src.procgen.prng import hash_coords_2d
+
 DEBUG_NONE = 0
 DEBUG_NOISE_BIOME = 1      # [F1] Elevation, Moisture & Biome Overlay + Wind Vectors
 DEBUG_BITMASK_GRID = 2     # [F2] 47-Tile Blob Bitmask Indices, Chunk Bounds & Colliders
-DEBUG_PATHFINDING = 4      # [F4] Dijkstra Distance Field Heatmap & BFS Shortest Path
+DEBUG_PATHFINDING = 4      # [F4] Dijkstra Distance Field Heatmap, Flow-Field & BFS Shortest Path
 
 from src.rendering.particles import VerletLeafSystem
-from src.ui.pixel_font import draw_micro_number
+from src.ui.pixel_font import draw_micro_number, PixelFontRenderer
 
 
 class WorldRenderer:
@@ -44,6 +45,7 @@ class WorldRenderer:
 
     def __init__(self, assets: AssetBank) -> None:
         self.assets = assets
+        self.font = PixelFontRenderer()
         self.baked_terrain: Optional[pygame.Surface] = None
         self.baked_seed_uint64: Optional[int] = None
         self.last_draw_calls = 0
@@ -51,8 +53,8 @@ class WorldRenderer:
 
     def bake_world_terrain(self, world: WorldData) -> None:
         """
-        Pre-bakes the static biome floor tiles and 47-Tile Blob Bitmask cliff/canopy tiles
-        onto a world surface for O(1) frustum blitting.
+        Pre-bakes the static biome floor tiles, boardwalk planks, and 47-Tile Blob Bitmask
+        cliff/canopy tiles onto a world surface for O(1) frustum blitting.
         """
         px_w = world.width * TILE_SIZE
         px_h = world.height * TILE_SIZE
@@ -62,16 +64,22 @@ class WorldRenderer:
         for ty in range(world.height):
             for tx in range(world.width):
                 dest = (tx * TILE_SIZE, ty * TILE_SIZE)
-                # Always draw biome floor underneath so rounded outer wall corners show rich earth
                 b_id = int(world.biome_grid[ty, tx])
                 floor_biome = b_id if b_id in (1, 2, 3) else 2
                 var_idx = int(hash_coords_2d(tx, ty, world.seed_uint64 & 0xFFFF) * 4) % 4
                 surf.blit(self.assets.floor_surfaces[floor_biome][var_idx], dest)
 
-                # If solid wall/canopy, overlay the 47-Tile Blob Bitmask sprite
                 if world.walkable_grid[ty, tx] == 1:
                     blob_idx = int(world.wall_blob_47[ty, tx])
                     surf.blit(self.assets.blob_47_surfaces[blob_idx], dest)
+
+        # Bake boardwalk structures onto the terrain
+        for st in world.structures:
+            if st.structure_type == "boardwalk":
+                surf.blit(
+                    self.assets.boardwalk_surf,
+                    (st.tile_x * TILE_SIZE, st.tile_y * TILE_SIZE),
+                )
 
         self.baked_terrain = surf
         self.baked_seed_uint64 = world.seed_uint64
@@ -88,6 +96,7 @@ class WorldRenderer:
         leaf_system: VerletLeafSystem,
         time_sec: float,
         debug_mode: int = DEBUG_NONE,
+        floating_texts: Optional[List[FloatingText]] = None,
     ) -> None:
         if self.baked_terrain is None or self.baked_seed_uint64 != world.seed_uint64:
             self.bake_world_terrain(world)
@@ -126,20 +135,33 @@ class WorldRenderer:
                 continue
 
             if prop.prop_type.startswith("tree"):
-                # 32x32 tree anchored at trunk base (px_x, px_y)
                 sway = int(round(math.sin(time_sec * 2.2 + prop.x * 0.9) * 1.0))
                 draw_x = sx - 16 + sway
                 draw_y = sy - 28
                 sort_y = px_y
                 y_sort_queue.append((sort_y, lambda s=sprite, dx=draw_x, dy=draw_y: canvas.blit(s, (dx, dy))))
             else:
-                # 16x16 low prop (leaf_pile rendered slightly earlier in Y so player stands over it)
                 draw_x = sx - 8
                 draw_y = sy - 12
                 sort_y = (px_y - 6.0) if prop.prop_type == "leaf_pile" else px_y
                 y_sort_queue.append((sort_y, lambda s=sprite, dx=draw_x, dy=draw_y: canvas.blit(s, (dx, dy))))
 
-        # 3b. Ancient Autumn Shrine (32x32)
+        # 3b. Alchemist Campfires (Procedural Micro-Structures)
+        camp_frame = int(time_sec * 6.0) % 2
+        camp_surf = self.assets.campfire_frames[camp_frame]
+        for st in world.structures:
+            if st.structure_type == "campfire":
+                cx_px = (st.tile_x + 0.5) * TILE_SIZE
+                cy_px = (st.tile_y + 0.5) * TILE_SIZE
+                csx, csy = camera.world_to_screen(cx_px, cy_px)
+                if -24 <= csx <= NATIVE_WIDTH + 24 and -24 <= csy <= NATIVE_HEIGHT + 24:
+                    def _draw_camp(dx: int = csx, dy: int = csy) -> None:
+                        pygame.draw.circle(canvas, BURNT_AMBER, (dx, dy), 14, 1)
+                        pygame.draw.circle(canvas, HARVEST_GOLD, (dx, dy), 9, 1)
+                        canvas.blit(camp_surf, (dx - 8, dy - 10))
+                    y_sort_queue.append((cy_px, _draw_camp))
+
+        # 3c. Ancient Autumn Shrine (32x32)
         shx = (world.shrine_tile[0] + 0.5) * TILE_SIZE
         shy = (world.shrine_tile[1] + 0.5) * TILE_SIZE
         sh_sx, sh_sy = camera.world_to_screen(shx, shy)
@@ -150,7 +172,7 @@ class WorldRenderer:
                 (shy, lambda s=sh_surf, dx=sh_sx - 16, dy=sh_sy - 20: canvas.blit(s, (dx, dy)))
             )
 
-        # 3c. Collectibles (Relics & Acorns)
+        # 3d. Collectibles (Relics & Acorns)
         for item in items:
             if item.collected:
                 continue
@@ -166,7 +188,7 @@ class WorldRenderer:
                 (iy, lambda s=isurf, dx=isx - 8, dy=isy - 10 + bob_px: canvas.blit(s, (dx, dy)))
             )
 
-        # 3d. Autumn Enemies
+        # 3e. Autumn Enemies & Elder Stag Warden
         for enemy in enemies:
             if not enemy.alive:
                 continue
@@ -183,14 +205,24 @@ class WorldRenderer:
                 dx: int = esx - 8,
                 dy: int = esy - 12,
                 flash: bool = enemy.hit_flash > 0.0,
+                hp: int = enemy.hp,
+                max_hp: int = enemy.max_hp,
+                is_boss: bool = enemy.kind == "warden",
             ) -> None:
                 canvas.blit(s, (dx, dy))
                 if flash:
                     pygame.draw.rect(canvas, PALE_SUNBEAM, (dx + 3, dy + 3, 10, 10), 1)
+                if hp < max_hp or is_boss:
+                    bw = 14 if is_boss else 10
+                    bx = dx + 8 - bw // 2
+                    by = dy - 3
+                    fill_w = max(1, int(round(bw * (hp / max(1, max_hp)))))
+                    pygame.draw.rect(canvas, DEEP_VOID, (bx - 1, by - 1, bw + 2, 3))
+                    pygame.draw.rect(canvas, SUNLIT_BIRCH if is_boss else CRIMSON_DECAY, (bx, by, fill_w, 1))
 
             y_sort_queue.append((ey, _draw_enemy))
 
-        # 3e. Player (Autumn Keeper)
+        # 3f. Player (Autumn Keeper)
         pl_px_x = player.x * TILE_SIZE
         pl_px_y = player.y * TILE_SIZE
         pl_sx, pl_sy = camera.world_to_screen(pl_px_x, pl_px_y)
@@ -200,15 +232,26 @@ class WorldRenderer:
         def _draw_player() -> None:
             # Subtle warm lantern ground halo
             pygame.draw.circle(canvas, HARVEST_GOLD, (pl_sx, pl_sy), 9, 1)
+            if player.nova_timer > 0.0:
+                # 360-degree Harvest Nova expanding ring
+                nova_prog = 1.0 - (player.nova_timer / 0.30)
+                nr = int(round(8 + nova_prog * 34))
+                pygame.draw.circle(canvas, PALE_SUNBEAM, (pl_sx, pl_sy - 4), nr, 1)
+                pygame.draw.circle(canvas, HARVEST_GOLD, (pl_sx, pl_sy - 4), max(2, nr - 3), 1)
             if player.dash_timer > 0.0:
-                # Dash wind afterimage in Sunlit Birch
                 trail_x = int(round(pl_sx - player.dash_dir_x * 6))
                 trail_y = int(round(pl_sy - player.dash_dir_y * 6))
                 pygame.draw.circle(canvas, SUNLIT_BIRCH, (trail_x, trail_y - 4), 4, 1)
             canvas.blit(p_surf, (pl_sx - 8, pl_sy - 14))
-            # Solar Ember Sweep arc when attacking
             if player.attack_timer > 0.0:
-                self._draw_ember_sweep(canvas, pl_sx, pl_sy - 4, player.attack_angle, player.attack_timer)
+                self._draw_ember_sweep(
+                    canvas,
+                    pl_sx,
+                    pl_sy - 4,
+                    player.attack_angle,
+                    player.attack_timer,
+                    is_crit=(player.combo_step == 2),
+                )
 
         y_sort_queue.append((pl_px_y, _draw_player))
 
@@ -222,10 +265,17 @@ class WorldRenderer:
         drawn_leaves = leaf_system.render(canvas, camera.x, camera.y, NATIVE_WIDTH, NATIVE_HEIGHT)
         draw_calls += drawn_leaves
 
-        # 5. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
+        # 5. Floating Combat / Status Popups
+        if floating_texts:
+            for ft in floating_texts:
+                fsx, fsy = camera.world_to_screen(ft.x * TILE_SIZE, ft.y * TILE_SIZE)
+                if 0 <= fsx < NATIVE_WIDTH and 0 <= fsy < NATIVE_HEIGHT:
+                    self.font.draw_text(canvas, ft.text, fsx, fsy - 14, ft.color, align_center=True)
+
+        # 6. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
         self._render_autumn_mist_wisps(canvas, camera.x, camera.y, time_sec)
 
-        # 6. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
+        # 7. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
         if debug_mode == DEBUG_BITMASK_GRID:
             self._render_f2_bitmask_grid_overlay(
                 canvas, world, camera, spatial_hash, player, enemies, visible_props, x0, y0, x1, y1
@@ -234,19 +284,27 @@ class WorldRenderer:
         self.last_draw_calls = draw_calls
 
     def _draw_ember_sweep(
-        self, canvas: pygame.Surface, cx: int, cy: int, angle: float, timer: float
+        self,
+        canvas: pygame.Surface,
+        cx: int,
+        cy: int,
+        angle: float,
+        timer: float,
+        is_crit: bool = False,
     ) -> None:
         """Draws a pixel-art crescent Solar Ember wave in front of the player."""
-        progress = 1.0 - (timer / 0.18)
-        base_r = 14.0 + progress * 6.0
-        for step in range(-6, 7):
-            theta = angle + (step / 6.0) * 1.15
+        progress = 1.0 - (timer / (0.20 if is_crit else 0.17))
+        base_r = (16.0 if is_crit else 13.5) + progress * 7.0
+        half_steps = 8 if is_crit else 6
+        arc_span = 1.45 if is_crit else 1.15
+        for step in range(-half_steps, half_steps + 1):
+            theta = angle + (step / float(half_steps)) * arc_span
             px = int(round(cx + math.cos(theta) * base_r))
             py = int(round(cy + math.sin(theta) * base_r))
             px_in = int(round(cx + math.cos(theta) * (base_r - 3.0)))
             py_in = int(round(cy + math.sin(theta) * (base_r - 3.0)))
-            col_out = PALE_SUNBEAM if abs(step) <= 2 else SUNLIT_BIRCH
-            col_in = HARVEST_GOLD if abs(step) <= 3 else BURNT_AMBER
+            col_out = PALE_SUNBEAM if (is_crit or abs(step) <= 2) else SUNLIT_BIRCH
+            col_in = SUNLIT_BIRCH if is_crit else (HARVEST_GOLD if abs(step) <= 3 else BURNT_AMBER)
             if 0 <= px < NATIVE_WIDTH and 0 <= py < NATIVE_HEIGHT:
                 canvas.set_at((px, py), col_out)
                 if px + 1 < NATIVE_WIDTH:
@@ -292,15 +350,12 @@ class WorldRenderer:
                 if biome == 0:
                     col = (*DEEP_VOID, 175)
                 elif biome == 1:
-                    # Damp Decay: Crimson Decay modulated by moisture
                     c = hue_shift_toward_shadow(CRIMSON_DECAY, (1.0 - moist) * 0.4)
                     col = (*c, 155)
                 elif biome == 2:
-                    # Burnt Amber Grove
                     c = hue_shift_toward_light(BURNT_AMBER, (elev - 0.3) * 0.5)
                     col = (*c, 155)
                 else:
-                    # Crisp Golden Corridor
                     c = hue_shift_toward_light(HARVEST_GOLD, (0.5 - moist) * 0.6)
                     col = (*c, 165)
 
@@ -315,7 +370,10 @@ class WorldRenderer:
                     ex = int(round(cx + vx * 6.0))
                     ey = int(round(cy + vy * 6.0))
                     pygame.draw.line(overlay, (*SUNLIT_BIRCH, 210), (cx, cy), (ex, ey), 1)
-                    overlay.set_at((max(0, min(NATIVE_WIDTH - 1, ex)), max(0, min(NATIVE_HEIGHT - 1, ey))), (*PALE_SUNBEAM, 255))
+                    overlay.set_at(
+                        (max(0, min(NATIVE_WIDTH - 1, ex)), max(0, min(NATIVE_HEIGHT - 1, ey))),
+                        (*PALE_SUNBEAM, 255),
+                    )
 
         canvas.blit(overlay, (0, 0))
 
@@ -341,33 +399,27 @@ class WorldRenderer:
         for ty in range(y0, y1):
             for tx in range(x0, x1):
                 sx, sy = camera.world_to_screen(tx * TILE_SIZE, ty * TILE_SIZE)
-                # Tile grid outline
                 pygame.draw.rect(canvas, WITHERED_BARK, (sx, sy, TILE_SIZE, TILE_SIZE), 1)
 
-                # Spatial Hash Chunk boundary (16x16 tiles)
                 if tx % CHUNK_SIZE_TILES == 0:
                     pygame.draw.line(canvas, HARVEST_GOLD, (sx, sy), (sx, sy + TILE_SIZE), 1)
                 if ty % CHUNK_SIZE_TILES == 0:
                     pygame.draw.line(canvas, HARVEST_GOLD, (sx, sy), (sx + TILE_SIZE, sy), 1)
 
-                # Render 47-Tile Blob Index (0..46) on solid wall tiles
                 if world.walkable_grid[ty, tx] == 1:
                     blob_id = int(world.wall_blob_47[ty, tx])
                     draw_micro_number(canvas, str(blob_id), sx + 4, sy + 5, SUNLIT_BIRCH, DEEP_VOID)
                 else:
-                    # Show 4-dir golden transition mask if non-zero
                     m4 = int(world.biome_mask_4dir[ty, tx])
                     if m4 > 0:
                         draw_micro_number(canvas, str(m4), sx + 5, sy + 6, BURNT_AMBER, DEEP_VOID)
 
-        # Collision circles for solid Poisson props
         for prop in visible_props:
             if prop.solid:
                 psx, psy = camera.world_to_screen(prop.x * TILE_SIZE, prop.y * TILE_SIZE)
                 r_px = int(round((0.34 if prop.prop_type.startswith("tree") else 0.30) * TILE_SIZE))
                 pygame.draw.circle(canvas, CRIMSON_DECAY, (psx, psy), r_px, 1)
 
-        # Collision circles for Enemies & Player
         for enemy in enemies:
             if enemy.alive:
                 esx, esy = camera.world_to_screen(enemy.x * TILE_SIZE, enemy.y * TILE_SIZE)
@@ -391,7 +443,7 @@ class WorldRenderer:
         """
         [F4] Pathfinding / Flood-Fill Visualizer:
         Renders the Dijkstra Geodesic Distance Field heatmap across walkable tiles,
-        the guaranteed BFS shortest path from Spawn to Shrine, and AI pursuit vectors.
+        Flow-Field gradient arrows, the guaranteed BFS shortest path, and AI vectors.
         """
         overlay = pygame.Surface((NATIVE_WIDTH, NATIVE_HEIGHT), pygame.SRCALPHA)
         path_set = set(world.shortest_path)
@@ -404,7 +456,6 @@ class WorldRenderer:
                 d_norm = float(world.dijkstra_norm[ty, tx])
                 dist_steps = int(world.dijkstra_dist[ty, tx])
 
-                # Color ramp across Sonbahar LUT based on geodesic distance [0.0 -> 1.0]
                 if d_norm < 0.25:
                     col = PLUM_SHADOW
                 elif d_norm < 0.50:
@@ -422,8 +473,16 @@ class WorldRenderer:
 
                 if (tx + ty) % 2 == 0 and dist_steps >= 0:
                     draw_micro_number(overlay, str(dist_steps), sx + 3, sy + 5, AUTUMN_MIST, DEEP_VOID)
+                else:
+                    # Draw Flow-Field vector pointing down the geodesic gradient
+                    fvx = float(world.flow_vx[ty, tx])
+                    fvy = float(world.flow_vy[ty, tx])
+                    if abs(fvx) > 0.0 or abs(fvy) > 0.0:
+                        cx, cy = sx + 8, sy + 8
+                        ex = int(round(cx + fvx * 5.0))
+                        ey = int(round(cy + fvy * 5.0))
+                        pygame.draw.line(overlay, (*PALE_SUNBEAM, 190), (cx, cy), (ex, ey), 1)
 
-        # Draw AI line-of-sight / pursuit vectors to player
         pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
         for enemy in enemies:
             if not enemy.alive:

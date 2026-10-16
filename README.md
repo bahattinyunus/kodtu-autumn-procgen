@@ -1,4 +1,4 @@
-
+��
 <div align="center">
 
 # 🍂 KODTÜ: Autumn ProcGen Engine
@@ -9,9 +9,14 @@
 [![Art Style](https://img.shields.io/badge/Render-16--Bit_Pixel_Art-6B2D26?style=for-the-badge)](#)
 [![License](https://img.shields.io/badge/License-MIT-2C1820?style=for-the-badge)](#)
 
-*Deterministik tohumlama (seed-driven) ile sonsuz varyasyonda sonbahar biyomları inşa eden, kurallı prosedürel üretim (Procedural Content Generation - PCG) ve gerçek zamanlı piksel-sanat işleme mimarisi.*
+*Deterministik tohumlama (seed-drivenile sonsuz varyasyonda sonbahar biyomları inşa eden, kurallı prosedürel üretim (Procedural Content Generation - PCGve gerçek zamanlı piksel-sanat işleme mimarisi.*
 
-[Mimari Yapı](#-sistem-mimarisi-ve-pcg-boru-hattı-pipeline) • [Algoritmik Detaylar](#-prosedürel-üretim-algoritmaları) • [Kromatik Palet](#-sonbahar-kromatik-spektrumu-color-theory--luts) • [Kurulum](#-kurulum-ve-derleme)
+[Mimari Yapı](#-sistem-mimarisi-ve-pcg-boru-hattı-pipeline) • [Algoritmik Detaylar](#-prosedürel-üretim-algoritmaları) • [Kromatik Palet](#-sonbahar-kromatik-spektrumu-color-theory--luts• [Kurulum](#-kurulum-ve-derleme)
+
+<br/>
+
+![KODTÜ Autumn ProcGen 2x2 Showcase](docs/preview_debug_f1_f4.png)
+*Üst-Sol: Standart Y-Sorted Render & Minimap • Üst-Sağ: `[F1]` Simplex fBm Biyom & Rüzgâr Alanı • Alt-Sol: `[F2]` 47-Tile Blob Bitmask & Spatial Chunks • Alt-Sağ: `[F4]` Dijkstra Jeodezik Uzaklık & Flow-Field*
 
 </div>
 
@@ -19,11 +24,11 @@
 
 ## 📋 1. Yönetici Özeti ve Jam Kısıtlamaları (Constraint Compliance Matrix)
 
-Bu proje, **KODTÜ** yarışma spesifikasyonlarında tanımlanan üç temel tasarım ve mühendislik kısıtlamasını deterministik algoritmalar ve düşük seviyeli (low-level) piksel estetiği ile birleştirmek üzere tasarlanmıştır. Statik seviye tasarımı (level design) tamamen terk edilerek; topografya, bitki örtüsü dağılımı, engeller ve atmosferik partiküllerin tamamı çalışma zamanında (runtime) matematiksel modellerle sentezlenir.
+Bu proje, **KODTÜ** yarışma spesifikasyonlarında tanımlanan üç temel tasarım ve mühendislik kısıtlamasını deterministik algoritmalar ve düşük seviyeli (low-levelpiksel estetiği ile birleştirmek üzere tasarlanmıştır. Statik seviye tasarımı (level design) tamamen terk edilerek; topografya, bitki örtüsü dağılımı, engeller ve atmosferik partiküllerin tamamı çalışma zamanında (runtimematematiksel modellerle sentezlenir.
 
 | Yarışma Kriteri | Teknik Uygulama ve Mimari Karşılığı | Doğrulama Metriği |
 | :--- | :--- | :--- |
-| **Sanat Stili:** `Pixelated` | Integer-scaling tabanlı yerel çözünürlük (`320x180` viewport), alt-piksel (sub-pixel) titremesini önleyen tam sayı kamera matrisi, 16x16 karolama (tiling) ve 4-bit/8-bit renk derinliği simülasyonu. | %100 Pixel-Perfect Hizalama & Sıfır Bilinear Filtering |
+| **Sanat Stili:** `Pixelated` | Integer-scaling tabanlı yerel çözünürlük (`320x180` viewport), alt-piksel (sub-pixel) titremesini önleyen tam sayı kamera matrisi, 16x16 karolama (tilingve 4-bit/8-bit renk derinliği simülasyonu. | %100 Pixel-Perfect Hizalama & Sıfır Bilinear Filtering |
 | **Renk Paleti:** `Sonbahar` | Klorofil yıkımını (yaprak sararması/kızarması) simüle eden özel **16-Renk Sonbahar LUT (Look-Up Table)** paleti. Gölgelerde soğuk mürdüm, orta tonlarda yanık kehribar ve ışıklarda hardal/altın sarısı renk uzayı kısıtlaması. | Sıkı Hex-Kısıtlamalı Shader / Palet Kuantizasyonu |
 | **Mekanik:** `Procedural Generation` | Çok katmanlı **Simplex/Perlin Gürültüsü (Multi-Octave FBM)**, **Hücresel Özdevinim (Cellular Automata)**, **4-Bit/8-Bit Otomatik Karolama (Bitmask Autotiling)** ve **Poisson Disk Örneklemesi** ile organik obje serpiştirme. | $2^{64}$ Benzersiz Deterministik Tohum (Seed) Uzayı |
 
@@ -31,7 +36,7 @@ Bu proje, **KODTÜ** yarışma spesifikasyonlarında tanımlanan üç temel tasa
 
 ## 🏗️ 2. Sistem Mimarisi ve PCG Boru Hattı (Pipeline)
 
-Oyun dünyası, her yeni oturumda (veya biyom geçişinde) 6 aşamalı deterministik bir boru hattından (pipeline) geçerek milisaniyeler içinde bellekte inşa edilir:
+Oyun dünyası, her yeni oturumda (veya biyom geçişinde6 aşamalı deterministik bir boru hattından (pipeline) geçerek milisaniyeler içinde bellekte inşa edilir:
 
 ```text
 [64-Bit PRNG Seed] 
@@ -39,19 +44,19 @@ Oyun dünyası, her yeni oturumda (veya biyom geçişinde) 6 aşamalı determini
        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. TOPOGRAFİK GÜRÜLTÜ SENTEZİ (Fractional Brownian Motion)  │
-│    • Yükseklik (Elevation) & Nem (Moisture) Matrisleri      │
+│    • Yükseklik (Elevation) & Nem (MoistureMatrisleri      │
 └────────────────────────────┬────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 2. TOPOLOJİK ŞEKİLLENDİRME (Cellular Automata & Walkers)    │
+│ 2. TOPOLOJİK ŞEKİLLENDİRME (Cellular Automata & Walkers   │
 │    • Açıklıkların oyulması, çıkmaz sokakların temizlenmesi  │
-│    • Flood-Fill ile bağlantısallık (Connectivity) garantisi │
+│    • Flood-Fill ile bağlantısallık (Connectivitygarantisi │
 └────────────────────────────┬────────────────────────────────┘
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│ 3. BİT-MASKELİ OTOMATİK KAROLAMA (Bitmask Autotiling)       │
+│ 3. BİT-MASKELİ OTOMATİK KAROLAMA (Bitmask Autotiling      │
 │    • 4-Yönlü (16 durum) ve 8-Yönlü (47-Tile Blob) geçişler  │
 │    • Toprak, yaprak yığını ve uçurum kenarı birleşimleri    │
 └────────────────────────────┬────────────────────────────────┘
@@ -73,7 +78,7 @@ Oyun dünyası, her yeni oturumda (veya biyom geçişinde) 6 aşamalı determini
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
 │ 6. ATMOSFERİK SENTEZ (Verlet Integration Leaf Particles)    │
-│    • Rüzgâr vektör alanı (Wind Vector Field) ve dökülen     │
+│    • Rüzgâr vektör alanı (Wind Vector Fieldve dökülen     │
 │      yaprakların piksel tabanlı fiziksel simülasyonu        │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -90,8 +95,8 @@ $$H(x, y) = \sum_{i=0}^{n-1} \text{persistence}^i \cdot \text{Noise}\left(\text{
 *   **Elevation Map (Yükseklik):** Kayalık sınırları, çukurları ve patika seviyelerini belirler.
 *   **Moisture & Decay Map (Nem ve Çürüme):** Sonbahar temasını mekanikleştiren ana katmandır. Nem oranı yüksek bölgelerde **koyu çamurlu toprak, mantar kolonileri ve çürümüş kızıl yapraklar** oluşurken; kuru bölgelerde **altın sarısı çıtır yaprak yığınları (hışırtı mekaniği/ses tetikleyicisi)** ve rüzgâr koridorları üretilir.
 
-### 3.2. Hücresel Özdevinim (Cellular Automata) ve Bağlantısallık Garantisi
-Gürültü haritası ikili (binary) bir matrise dönüştürüldükten sonra, doğadaki orman açıklıklarını taklit etmek için $B678/S345678$ kurallı **Cellular Automata** iterasyonlarından geçirilir.
+### 3.2. Hücresel Özdevinim (Cellular Automatave Bağlantısallık Garantisi
+Gürültü haritası ikili (binarybir matrise dönüştürüldükten sonra, doğadaki orman açıklıklarını taklit etmek için $B678/S345678$ kurallı **Cellular Automata** iterasyonlarından geçirilir.
 *   **Orphan Culling & Flood Fill:** Oyuncunun haritada sıkışmasını (soft-lock) önlemek amacıyla, üretilen harita üzerinde **Breadth-First Search (BFS) Flood Fill** algoritması koşturulur. Ana oyun alanına bağlı olmayan izole boşluklar tespit edilir; ya doldurulur ya da **Bresenham Çizgi Algoritması** + **Drunkard’s Walk** hibriti bir koridor açıcı ile ana patikaya bağlanır.
 
 ### 3.3. Bitmasking ile Kesintisiz Görsel Geçişler (47-Tile Blob Autotiling)
@@ -106,7 +111,7 @@ Prosedürel üretilen matristeki `0` (zemin) ve `1` (duvar/ağaç sınırı) de�
 Hesaplanan 8-bitlik maske değeri (`0-255`), köşe çakışmaları sadeleştirilerek **47 benzersiz karo (tile)** indeksine eşlenir. Bu sayede sonbahar yapraklarının çimenlerle, toprağın ise su birikintileriyle birleştiği her kenar el ile çizilmişçesine kusursuz bir piksel geçişine sahip olur.
 
 ### 3.4. Poisson Disk Örneklemesi (Bridson's Algorithm)
-Tamamen rastgele (`uniform random`) nesne yerleştirme, amatör projelerde nesnelerin bir noktada üst üste binmesine (clustering) veya devasa boş alanlar kalmasına yol açar. Bu projede ağaçlar, çalılar ve toplanabilir sonbahar objeleri **Fast Poisson Disk Sampling** ($\mathcal{O}(N)$ zaman karmaşıklığı) ile yerleştirilir. Her nesnenin etrafında minimum $r$ yarıçaplı bir dışlama zonu (exclusion zone) garanti edilerek hem doğal hem de oynanabilir (navigable) bir orman dokusu elde edilir.
+Tamamen rastgele (`uniform random`nesne yerleştirme, amatör projelerde nesnelerin bir noktada üst üste binmesine (clusteringveya devasa boş alanlar kalmasına yol açar. Bu projede ağaçlar, çalılar ve toplanabilir sonbahar objeleri **Fast Poisson Disk Sampling** ($\mathcal{O}(N)$ zaman karmaşıklığı) ile yerleştirilir. Her nesnenin etrafında minimum $r$ yarıçaplı bir dışlama zonu (exclusion zonegaranti edilerek hem doğal hem de oynanabilir (navigable) bir orman dokusu elde edilir.
 
 ---
 
@@ -126,21 +131,21 @@ Görsel motor, sonbaharın melankolik, sıcak ama aynı zamanda çürümeyi ve s
 | **Autumn Mist** | `#D4C8BE` | `(212, 200, 190)` | Sabah sisi, nefes buharı ve atmosferik derinlik efekti |
 
 ### Piksel Sanatı ve Görsel İşleme Kuralları
-1. **Strict Pixel Grid:** Tüm sprite'lar ve partiküller küresel piksel ızgarasına (global pixel grid) yuvarlanır (`round(pos.x), round(pos.y)`). Döndürme (rotation) işlemleri çalışma zamanında matris döndürmesiyle değil, önceden çizilmiş kareler veya **Rotsprite** algoritması mantığıyla gerçekleştirilir.
-2. **Dinamik Yaprak Fiziği:** Ekranda süzülen yapraklar basit doğrusal hareket yapmaz; sinüzoidal salınım ($\sin(\omega t + \phi)$) ve harita genelindeki 2D gürültü tabanlı rüzgâr vektör alanından (Wind Field) etkilenerek süzülür.
+1. **Strict Pixel Grid:** Tüm sprite'lar ve partiküller küresel piksel ızgarasına (global pixel gridyuvarlanır (`round(pos.x), round(pos.y)`). Döndürme (rotationişlemleri çalışma zamanında matris döndürmesiyle değil, önceden çizilmiş kareler veya **Rotsprite** algoritması mantığıyla gerçekleştirilir.
+2. **Dinamik Yaprak Fiziği:** Ekranda süzülen yapraklar basit doğrusal hareket yapmaz; sinüzoidal salınım ($\sin(\omega t + \phi)$ve harita genelindeki 2D gürültü tabanlı rüzgâr vektör alanından (Wind Fieldetkilenerek süzülür.
 
 ---
 
 ## 📂 5. Proje Dizin Yapısı (Directory Architecture)
 
-Kod tabanı, yüksek kohezyon (high cohesion) ve düşük bağımlılık (low coupling) prensiplerine göre modülerleştirilmiştir:
+Kod tabanı, yüksek kohezyon (high cohesionve düşük bağımlılık (low couplingprensiplerine göre modülerleştirilmiştir:
 
 ```text
 kodtu-autumn-procgen/
 ├── assets/
 │   ├── palettes/           # .hex ve .png formatında Sonbahar LUT dosyaları
 │   ├── sprites/            # 16x16 & 32x32 karakter, obje ve bitmask tileset'leri
-│   ├── shaders/            # Palet kuantizasyonu, sis ve rüzgâr sallanma (wind-sway) shader'ları
+│   ├── shaders/            # Palet kuantizasyonu, sis ve rüzgâr sallanma (wind-swayshader'ları
 │   └── audio/              # Prosedürel pitch-shifting destekli yaprak hışırtısı SFX ve ambiyans
 ├── src/
 │   ├── core/               # Oyun döngüsü (Game Loop), Kamera & Viewport, Spatial Hash, Ses Sentezi
@@ -165,12 +170,12 @@ kodtu-autumn-procgen/
 
 ## ⚡ 6. Performans ve Optimizasyon Metrikleri
 
-Prosedürel üretim sistemlerinin en büyük darboğazı olan üretim gecikmesi (generation hitching) ve çizim çağrıları (draw calls) aşağıdaki mühendislik çözümleriyle optimize edilmiştir:
+Prosedürel üretim sistemlerinin en büyük darboğazı olan üretim gecikmesi (generation hitchingve çizim çağrıları (draw calls) aşağıdaki mühendislik çözümleriyle optimize edilmiştir:
 
 *   **Chunk-Based Spatial Hashing:** Harita tek bir devasa dizide tutulmak yerine `16x16` veya `32x32` boyutlu yığınlara (chunks) bölünür. Çarpışma testi (collision detection) sadece oyuncunun bulunduğu ve komşu olduğu hücrelerde $\mathcal{O}(1)$ karmaşıklıkla çalışır.
-*   **Frustum Culling & Sprite Batching:** Kamera görüş alanı (viewport) dışında kalan hiçbir karo veya yaprak partikülü GPU boru hattına gönderilmez.
-*   **Y-Sorting (Painter's Algorithm):** 2.5D derinlik hissi (top-down oblique perspektif) için oyuncu, ağaçlar ve çalılar her karede `Y` ekseni taban koordinatlarına göre sıralanarak çizilir; böylece oyuncu ağaç gövdelerinin arkasından geçerken yaprakların altında kalabilir.
-*   **Seed Serialization:** Üretilen tüm dünya sadece **64-bitlik tek bir tam sayı (Seed String)** ile temsil edilir. Oyuncular beğendikleri bir sonbahar haritasının kodunu (Örn: `KODTU-8492-FALL`) kopyalayıp başka bir bilgisayarda girdiğinde **piksel pikseline aynı harita, aynı ağaç konumları ve aynı rüzgâr örüntüsü** yeniden üretilir.
+*   **Frustum Culling & Sprite Batching:** Kamera görüş alanı (viewportdışında kalan hiçbir karo veya yaprak partikülü GPU boru hattına gönderilmez.
+*   **Y-Sorting (Painter's Algorithm):** 2.5D derinlik hissi (top-down oblique perspektifiçin oyuncu, ağaçlar ve çalılar her karede `Y` ekseni taban koordinatlarına göre sıralanarak çizilir; böylece oyuncu ağaç gövdelerinin arkasından geçerken yaprakların altında kalabilir.
+*   **Seed Serialization:** Üretilen tüm dünya sadece **64-bitlik tek bir tam sayı (Seed String)** ile temsil edilir. Oyuncular beğendikleri bir sonbahar haritasının kodunu (Örn: `KODTU-8492-FALL`kopyalayıp başka bir bilgisayarda girdiğinde **piksel pikseline aynı harita, aynı ağaç konumları ve aynı rüzgâr örüntüsü** yeniden üretilir.
 
 ---
 
@@ -200,7 +205,7 @@ pytest tests/ -v
 *   `[E]` : **Tapınak Etkileşimi / Sonraki Biyom** (Hasat yadigârları toplandığında Kadim Sonbahar Tapınağını uyandırır).
 *   `[TAB]` : **Canlı Seed Giriş / Paylaşım Paneli** (Oyun içinde özel bir Seed metni yazıp dünyayı anında o tohumla üretir).
 
-### Geliştirici (Debug) Kısayolları
+### Geliştirici (DebugKısayolları
 Oyun çalışırken prosedürel üretim katmanlarını canlı olarak incelemek için:
 *   `[F1]` : **Noise & Biome Overlay** (Sıcaklık, nem ve yükseklik haritalarını renklendirerek gösterir).
 *   `[F2]` : **Bitmask & Grid Debug** (Hücre sınırlarını, bitmask indekslerini ve çarpışma kutularını açar).

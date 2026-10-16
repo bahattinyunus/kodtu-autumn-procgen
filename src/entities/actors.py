@@ -1,5 +1,6 @@
 """
-Player, AI Agents (Wisp, Bramble Stalker, Hollow Golem), and Interactive Autumn Entities.
+Player, AI Agents (Wisp, Bramble Stalker, Hollow Golem, Elder Stag Warden),
+Floating Combat Popups, and Interactive Autumn Entities.
 """
 
 from __future__ import annotations
@@ -24,9 +25,21 @@ class CollectibleItem:
     bob_phase: float = 0.0
 
 
+@dataclass
+class FloatingText:
+    """Pixel-snapped floating combat/status text in world coordinates."""
+
+    x: float
+    y: float
+    text: str
+    color: Tuple[int, int, int]
+    timer: float = 0.85
+    max_timer: float = 0.85
+
+
 class EnemyAgent:
     """
-    Autonomous Autumn Enemy AI (`wisp`, `stalker`, `golem`).
+    Autonomous Autumn Enemy AI (`wisp`, `stalker`, `golem`, `warden`).
     Responds to line-of-sight distance AND acoustic leaf-crunch ripples!
     """
 
@@ -56,6 +69,12 @@ class EnemyAgent:
             self.aggro_range = 7.5
             self.radius = 0.35
             self.damage = 18.0
+        elif kind == "warden":
+            self.max_hp = 12
+            self.speed = 2.65
+            self.aggro_range = 8.5
+            self.radius = 0.44
+            self.damage = 28.0
         else:  # golem
             self.max_hp = 7
             self.speed = 1.85
@@ -103,7 +122,6 @@ class EnemyAgent:
 
         effective_aggro = self.aggro_range + player_noise_radius
         if 0.05 < dist <= effective_aggro:
-            # Pursue player with slight sinusoidal weave for wisps
             dir_x = dx / dist
             dir_y = dy / dist
             if self.kind == "wisp":
@@ -111,10 +129,14 @@ class EnemyAgent:
                 weave = math.sin(self.phase * 1.4) * 0.45
                 dir_x += perp_x * weave
                 dir_y += perp_y * weave
+            elif self.kind == "warden":
+                # Elder Stag Warden surges forward in rhythmic antler charges
+                surge = 1.35 if math.sin(self.phase * 0.8) > 0.55 else 0.90
+                dir_x *= surge
+                dir_y *= surge
             self.vx = dir_x * self.speed
             self.vy = dir_y * self.speed
         else:
-            # Gentle idle orbit around home clearing
             orbit_x = self.home_x + math.cos(self.phase * 0.45) * 1.1
             orbit_y = self.home_y + math.sin(self.phase * 0.45) * 1.1
             odx = orbit_x - self.x
@@ -133,7 +155,6 @@ class EnemyAgent:
         self.kb_vy *= math.exp(-10.0 * dt)
 
         if self.kind == "wisp":
-            # Wisps float over low props, only blocked by outer map boundaries
             nx = max(2.2, min(float(spatial_hash.width - 2.2), nx))
             ny = max(2.2, min(float(spatial_hash.height - 2.2), ny))
             if spatial_hash.walkable_grid[int(ny), int(nx)] == 0:
@@ -149,8 +170,9 @@ class Player:
     Features:
     - O(1) Spatial-Hashed movement & biome interaction
     - Crunchy Leaf Pile acoustic ripple & Wind-Step speed boost
-    - Solar Ember Sweep attack (`SPACE` / Left Click)
+    - 3-Hit Solar Ember Sweep combo (`SPACE` / Left Click)
     - Autumn Gust Dash (`SHIFT` / Right Click)
+    - Harvest Nova 360-degree whirlwind (`Q` / Middle Click)
     """
 
     def __init__(self, x: float, y: float) -> None:
@@ -181,10 +203,16 @@ class Player:
         self.dash_dir_x = 1.0
         self.dash_dir_y = 0.0
 
-        # Solar Ember Sweep attack state
+        # Solar Ember Sweep 3-stage combo state
         self.attack_timer = 0.0
         self.attack_cooldown = 0.0
         self.attack_angle = 0.0
+        self.combo_step = 0
+        self.combo_reset_timer = 0.0
+
+        # Harvest Nova 360-degree shockwave state
+        self.nova_timer = 0.0
+        self.nova_cooldown = 0.0
 
     @property
     def anim_frame(self) -> int:
@@ -212,9 +240,24 @@ class Player:
     def trigger_attack(self) -> bool:
         if self.attack_cooldown > 0.0:
             return False
-        self.attack_timer = 0.18
-        self.attack_cooldown = 0.32
+        if self.combo_reset_timer > 0.0:
+            self.combo_step = (self.combo_step + 1) % 3
+        else:
+            self.combo_step = 0
+        self.combo_reset_timer = 0.85
+        self.attack_timer = 0.20 if self.combo_step == 2 else 0.17
+        self.attack_cooldown = 0.28
         self.attack_angle = math.atan2(self.facing_y, self.facing_x)
+        return True
+
+    def trigger_nova(self) -> bool:
+        """Triggers the 360-degree Harvest Nova whirlwind if cooldown & warmth permit."""
+        if self.nova_cooldown > 0.0 or self.warmth < 15.0:
+            return False
+        self.warmth = max(1.0, self.warmth - 12.0)
+        self.nova_timer = 0.30
+        self.nova_cooldown = 1.60
+        self.invuln_timer = max(self.invuln_timer, 0.30)
         return True
 
     def update(
@@ -235,6 +278,9 @@ class Player:
         self.dash_cooldown = max(0.0, self.dash_cooldown - dt)
         self.attack_cooldown = max(0.0, self.attack_cooldown - dt)
         self.attack_timer = max(0.0, self.attack_timer - dt)
+        self.combo_reset_timer = max(0.0, self.combo_reset_timer - dt)
+        self.nova_timer = max(0.0, self.nova_timer - dt)
+        self.nova_cooldown = max(0.0, self.nova_cooldown - dt)
         self.noise_ripple_radius = max(0.0, self.noise_ripple_radius - dt * 4.5)
 
         stepped_dry_leaves = False
@@ -275,7 +321,6 @@ class Player:
             on_mushroom = len(spatial_hash.mushroom_cells.get((tx, ty), ())) > 0
 
             if on_mushroom:
-                # Glowing autumn mushrooms gently warm the lantern
                 self.warmth = min(self.max_warmth, self.warmth + dt * 4.5)
 
             if self.walk_timer > 0.0 and self.step_sfx_cooldown <= 0.0:

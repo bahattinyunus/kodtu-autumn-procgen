@@ -18,6 +18,12 @@ from src.procgen.autotile import (
     compute_4dir_mask_grid,
 )
 from src.procgen.poisson import fast_poisson_disk_sampling, distribute_ecological_props, PropPlacement
+from src.procgen.structures import (
+    StructurePlacement,
+    astar_shortest_path,
+    compute_flow_field_vectors,
+    synthesize_autumn_structures,
+)
 from src.procgen.pipeline import generate_autumn_world, WorldData, EntitySpawn
 
 __all__ = [
@@ -40,6 +46,10 @@ __all__ = [
     "fast_poisson_disk_sampling",
     "distribute_ecological_props",
     "PropPlacement",
+    "StructurePlacement",
+    "astar_shortest_path",
+    "compute_flow_field_vectors",
+    "synthesize_autumn_structures",
     "generate_autumn_world",
     "WorldData",
     "EntitySpawn",

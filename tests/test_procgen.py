@@ -167,8 +167,9 @@ def test_headless_engine_and_debug_overlays() -> None:
         game.update(1.0 / 60.0)
         game.render()
 
-    # Test Solar Ember attack, Gust Dash, and Instant Re-Seed ([F3])
+    # Test Solar Ember attack, Harvest Nova, Gust Dash, and Instant Re-Seed ([F3])
     game._perform_ember_attack()
+    game._perform_harvest_nova()
     game._perform_gust_dash()
     game.instant_reseed()
     assert game.world.seed_uint64 != initial_seed_u64
@@ -186,4 +187,18 @@ def test_headless_engine_and_debug_overlays() -> None:
     assert (REPO_ROOT / "assets" / "shaders" / "palette_quantize.glsl").exists()
     assert (REPO_ROOT / "assets" / "shaders" / "wind_sway.glsl").exists()
     assert (REPO_ROOT / "assets" / "audio" / "leaf_crunch_1.wav").exists()
+
+
+def test_astar_and_procedural_structures() -> None:
+    """Verifies A* optimal pathfinding matches Dijkstra distance and structures are placed."""
+    from src.procgen.structures import astar_shortest_path
+
+    world = generate_autumn_world(seed="KODTU2026", width=48, height=36)
+    astar_path = astar_shortest_path(world.walkable_grid, world.spawn_tile, world.shrine_tile)
+    assert astar_path[0] == world.spawn_tile
+    assert astar_path[-1] == world.shrine_tile
+    assert len(astar_path) - 1 == int(world.dijkstra_dist[world.shrine_tile[1], world.shrine_tile[0]])
+    assert len(world.structures) >= 2
+    assert any(st.structure_type == "campfire" for st in world.structures)
+
 
