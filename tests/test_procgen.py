@@ -284,7 +284,7 @@ def test_destructible_props_and_codex_modal() -> None:
     py = game.player.y
     ch_key = (int(px) // 16, int(py) // 16)
     game.spatial_hash.chunk_props[ch_key].append(
-        PropPlacement(x=px, y=py, prop_type="pumpkin", variant=0, solid=True)
+        PropPlacement(x=px, y=py, prop_type="pumpkin", variant=0, biome=2, solid=True)
     )
     game._smash_nearby_props(px, py, 1.2)
     assert len(game.items) == initial_items + 1
