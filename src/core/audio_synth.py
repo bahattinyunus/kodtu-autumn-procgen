@@ -1,0 +1,223 @@
+"""
+Procedural Audio Synthesizer & Pitch-Shifted SFX Engine.
+
+Generates authentic 16-bit retro `.wav` sound effects for:
+- Crisp autumn leaf footsteps (granular noise bursts + band-pass envelope + pitch-shifting)
+- Damp mud footsteps
+- Solar Ember lantern sweep
+- Harvest Relic chime (warm pentatonic autumn chord)
+- Shrine portal awakening
+- Melancholic autumn wind ambience
+"""
+
+from __future__ import annotations
+from pathlib import Path
+from typing import Dict, List, Optional
+import wave
+import numpy as np
+import pygame
+
+SAMPLE_RATE = 22050
+
+
+def _save_wav_int16(filepath: Path, samples: np.ndarray, sample_rate: int = SAMPLE_RATE) -> None:
+    """Saves a normalized float [-1.0, 1.0] array as a 16-bit mono PCM WAV file."""
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+    clipped = np.clip(samples, -1.0, 1.0)
+    pcm16 = (clipped * 32767.0).astype(np.int16)
+    with wave.open(str(filepath), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(sample_rate)
+        wf.writeframes(pcm16.tobytes())
+
+
+def synth_leaf_crunch(seed_offset: int = 0, pitch_factor: float = 1.0) -> np.ndarray:
+    """
+    Synthesizes a crunchy dry autumn leaf rustle/footstep using micro-granular crackle
+    impulses modulated by a crisp high-frequency envelope.
+    """
+    rng = np.random.default_rng(1042 + seed_offset)
+    duration = int(SAMPLE_RATE * (0.14 / pitch_factor))
+    t = np.linspace(0.0, 1.0, duration, endpoint=False)
+
+    # White noise with sharp crackle spikes
+    noise = rng.normal(0.0, 1.0, duration)
+    crackle_mask = (rng.random(duration) > 0.72).astype(np.float64)
+    burstEnv = np.sin(t * np.pi) * np.exp(-t * 5.5)
+    sub_bursts = 0.5 + 0.5 * np.sin(2.0 * np.pi * (18.0 + seed_offset * 3.0) * t)
+
+    # Differentiate to emphasize high-frequency dry leaf snap
+    diff_noise = np.diff(noise, prepend=noise[0])
+    signal = (diff_noise * 0.65 + noise * crackle_mask * 0.85) * burstEnv * sub_bursts
+    return signal * 0.42
+
+
+def synth_mud_step() -> np.ndarray:
+    """Synthesizes a soft, damp soil footstep for high-moisture biomes."""
+    rng = np.random.default_rng(2026)
+    duration = int(SAMPLE_RATE * 0.11)
+    t = np.linspace(0.0, 0.11, duration, endpoint=False)
+    env = np.exp(-t * 32.0)
+    thump = np.sin(2.0 * np.pi * (140.0 * np.exp(-t * 14.0)) * t)
+    squelch = np.convolve(rng.normal(0.0, 0.3, duration), np.ones(8) / 8.0, mode="same")
+    return (thump * 0.6 + squelch * 0.4) * env * 0.38
+
+
+def synth_ember_sweep() -> np.ndarray:
+    """Synthesizes a warm golden lantern flame sweep + wind whoosh."""
+    rng = np.random.default_rng(3099)
+    duration = int(SAMPLE_RATE * 0.22)
+    t = np.linspace(0.0, 0.22, duration, endpoint=False)
+    env = np.sin(np.pi * (t / 0.22)) * np.exp(-t * 6.0)
+    freq_sweep = np.linspace(380.0, 190.0, duration)
+    tone = np.sin(2.0 * np.pi * np.cumsum(freq_sweep) / SAMPLE_RATE)
+    whoosh = np.convolve(rng.normal(0.0, 0.6, duration), np.ones(5) / 5.0, mode="same")
+    return (tone * 0.45 + whoosh * 0.55) * env * 0.45
+
+
+def synth_harvest_chime() -> np.ndarray:
+    """Synthesizes a crystalline autumn arpeggio (D minor / Dorian fifth + ninth)."""
+    duration = int(SAMPLE_RATE * 0.48)
+    t = np.linspace(0.0, 0.48, duration, endpoint=False)
+    freqs = [587.33, 880.0, 1174.66, 1318.51]  # D5, A5, D6, E6
+    signal = np.zeros(duration, dtype=np.float64)
+    for i, f in enumerate(freqs):
+        start_t = i * 0.055
+        mask = t >= start_t
+        local_t = np.maximum(0.0, t - start_t)
+        env = mask * np.exp(-local_t * 7.5)
+        signal += (np.sin(2.0 * np.pi * f * local_t) + 0.3 * np.sin(4.0 * np.pi * f * local_t)) * env
+    return signal * 0.22
+
+
+def synth_portal_activate() -> np.ndarray:
+    """Synthesizes a deep resonant shrine awakening chord."""
+    duration = int(SAMPLE_RATE * 0.85)
+    t = np.linspace(0.0, 0.85, duration, endpoint=False)
+    env = np.sin(np.pi * np.minimum(1.0, t / 0.85)) * np.exp(-t * 1.8)
+    chord = (
+        np.sin(2.0 * np.pi * 220.0 * t)
+        + 0.7 * np.sin(2.0 * np.pi * 329.63 * t)
+        + 0.5 * np.sin(2.0 * np.pi * 440.0 * t)
+        + 0.4 * np.sin(2.0 * np.pi * 659.25 * (t + 0.02 * np.sin(12.0 * t)))
+    )
+    return chord * env * 0.20
+
+
+def synth_hit_hurt() -> np.ndarray:
+    """Synthesizes a crisp 16-bit impact sound."""
+    rng = np.random.default_rng(77)
+    duration = int(SAMPLE_RATE * 0.16)
+    t = np.linspace(0.0, 0.16, duration, endpoint=False)
+    env = np.exp(-t * 22.0)
+    drop = np.sin(2.0 * np.pi * (240.0 * np.exp(-t * 18.0)) * t)
+    noise = rng.uniform(-0.6, 0.6, duration)
+    return (drop * 0.7 + noise * 0.3) * env * 0.45
+
+
+def synth_wind_ambience() -> np.ndarray:
+    """Synthesizes a seamless 4-second melancholic autumn breeze + distant chime loop."""
+    rng = np.random.default_rng(8492)
+    duration = int(SAMPLE_RATE * 4.0)
+    t = np.linspace(0.0, 4.0, duration, endpoint=False)
+    raw = rng.normal(0.0, 0.25, duration)
+    # Moving-average low-pass filter to create soft wind murmur
+    kernel = np.hanning(64)
+    kernel /= kernel.sum()
+    wind = np.convolve(raw, kernel, mode="same")
+    mod = 0.55 + 0.45 * np.sin(2.0 * np.pi * 0.25 * t)
+    drone = 0.06 * np.sin(2.0 * np.pi * 146.83 * t) + 0.04 * np.sin(2.0 * np.pi * 220.0 * t)
+    fade = np.ones(duration, dtype=np.float64)
+    fade_len = int(SAMPLE_RATE * 0.25)
+    fade[:fade_len] = np.linspace(0.0, 1.0, fade_len)
+    fade[-fade_len:] = np.linspace(1.0, 0.0, fade_len)
+    return (wind * mod + drone) * fade * 0.35
+
+
+def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
+    """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    files: Dict[str, Path] = {
+        "leaf_crunch_1": audio_dir / "leaf_crunch_1.wav",
+        "leaf_crunch_2": audio_dir / "leaf_crunch_2.wav",
+        "leaf_crunch_3": audio_dir / "leaf_crunch_3.wav",
+        "mud_step": audio_dir / "mud_step.wav",
+        "slash_ember": audio_dir / "slash_ember.wav",
+        "harvest_chime": audio_dir / "harvest_chime.wav",
+        "portal_activate": audio_dir / "portal_activate.wav",
+        "hit_hurt": audio_dir / "hit_hurt.wav",
+        "wind_ambience": audio_dir / "wind_ambience.wav",
+    }
+
+    if not files["leaf_crunch_1"].exists():
+        _save_wav_int16(files["leaf_crunch_1"], synth_leaf_crunch(0, 0.92))
+    if not files["leaf_crunch_2"].exists():
+        _save_wav_int16(files["leaf_crunch_2"], synth_leaf_crunch(1, 1.02))
+    if not files["leaf_crunch_3"].exists():
+        _save_wav_int16(files["leaf_crunch_3"], synth_leaf_crunch(2, 1.14))
+    if not files["mud_step"].exists():
+        _save_wav_int16(files["mud_step"], synth_mud_step())
+    if not files["slash_ember"].exists():
+        _save_wav_int16(files["slash_ember"], synth_ember_sweep())
+    if not files["harvest_chime"].exists():
+        _save_wav_int16(files["harvest_chime"], synth_harvest_chime())
+    if not files["portal_activate"].exists():
+        _save_wav_int16(files["portal_activate"], synth_portal_activate())
+    if not files["hit_hurt"].exists():
+        _save_wav_int16(files["hit_hurt"], synth_hit_hurt())
+    if not files["wind_ambience"].exists():
+        _save_wav_int16(files["wind_ambience"], synth_wind_ambience())
+
+    return files
+
+
+class SoundEngine:
+    """
+    Runtime audio manager supporting procedural pitch-shifted leaf rustling
+    and graceful fallback in headless test environments.
+    """
+
+    def __init__(self, audio_dir: Path, enabled: bool = True) -> None:
+        self.enabled = enabled
+        self.sounds: Dict[str, pygame.mixer.Sound] = {}
+        self.leaf_variants: List[pygame.mixer.Sound] = []
+        self._step_counter = 0
+
+        files = ensure_audio_assets(audio_dir)
+        if not self.enabled:
+            return
+
+        try:
+            if not pygame.mixer.get_init():
+                pygame.mixer.init(frequency=SAMPLE_RATE, size=-16, channels=1, buffer=512)
+            for name, path in files.items():
+                self.sounds[name] = pygame.mixer.Sound(str(path))
+            self.leaf_variants = [
+                self.sounds["leaf_crunch_1"],
+                self.sounds["leaf_crunch_2"],
+                self.sounds["leaf_crunch_3"],
+            ]
+        except Exception:
+            self.enabled = False
+
+    def play_leaf_crunch(self) -> None:
+        if not self.enabled or not self.leaf_variants:
+            return
+        snd = self.leaf_variants[self._step_counter % len(self.leaf_variants)]
+        self._step_counter += 1
+        snd.play()
+
+    def play(self, name: str) -> None:
+        if not self.enabled:
+            return
+        snd: Optional[pygame.mixer.Sound] = self.sounds.get(name)
+        if snd is not None:
+            snd.play()
+
+    def start_ambience(self) -> None:
+        if not self.enabled:
+            return
+        amb = self.sounds.get("wind_ambience")
+        if amb is not None:
+            amb.play(loops=-1)
