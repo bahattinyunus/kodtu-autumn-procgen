@@ -436,6 +436,118 @@ def generate_section_divider(out_path: Path) -> None:
     pygame.image.save(divider, str(out_path))
 
 
+def generate_competitor_infographic(out_path: Path) -> None:
+    """
+    Renders a 1280x290 infographic comparing the 6 genre benchmarks (Hyper Light Drifter,
+    Core Keeper, Nuclear Throne, Enter the Gungeon, Wizard of Legend, Don't Starve)
+    and how KODTÜ: Autumn ProcGen Engine synthesizes their best pillars.
+    """
+    surf = pygame.Surface((1280, 290))
+    surf.fill(DEEP_VOID)
+    pygame.draw.rect(surf, HARVEST_GOLD, (0, 0, 1280, 290), 2)
+
+    f_hdr = pygame.font.SysFont("consolas,couriernew,monospace", 19, bold=True)
+    f_title = pygame.font.SysFont("consolas,couriernew,monospace", 13, bold=True)
+    f_sub = pygame.font.SysFont("consolas,couriernew,monospace", 11, bold=False)
+
+    _draw_text_clean(
+        surf,
+        f_hdr,
+        "GENRE BENCHMARK & COMPETITOR ANALYSIS MATRIX  —  TOP-DOWN PIXEL-ART PROCGEN ROGUELITES",
+        640,
+        12,
+        SUNLIT_BIRCH,
+        PLUM_SHADOW,
+        center=True,
+    )
+
+    competitors = [
+        (
+            "HYPER LIGHT DRIFTER",
+            "Heart Machine (2016)",
+            "Slash-Recharged Ammo [F]",
+            "Dash Afterimage Ghosts",
+            "Melee Orb Deflection",
+            "Hue-Shifted Neon/Fall LUT",
+        ),
+        (
+            "CORE KEEPER",
+            "Pugstorm (2024)",
+            "B678/S345678 Automata",
+            "Multi-Biome Ecosystem",
+            "47-Tile Blob Autotiling",
+            "16x16 Spatial Chunk Hash",
+        ),
+        (
+            "NUCLEAR THRONE",
+            "Vlambeer (2015)",
+            "Tactile Hit-Stop Freeze",
+            "Trauma^2 Camera Shake",
+            "Zero Dead-End Carvers",
+            "Roguelite Boon Synergies",
+        ),
+        (
+            "ENTER THE GUNGEON",
+            "Dodge Roll (2016)",
+            "Dijkstra Threat Budget",
+            "3-Way Boss Orb Volleys",
+            "Bullet-Deflect Slash",
+            "320x180 Integer Scaling",
+        ),
+        (
+            "WIZARD OF LEGEND",
+            "Contingent99 (2018)",
+            "3-Hit Solar Ember Combo",
+            "360 Harvest Nova [Q]",
+            "Autumn Gust Dash [SHF]",
+            "5 ODTÜ Relic Boons [B]",
+        ),
+        (
+            "DON'T STARVE / NOITA",
+            "Klei / Nolla Games",
+            "Lantern Warmth Survival",
+            "ODTÜ Bilim Ağacı Buff",
+            "Verlet 2D Wind Leaves",
+            "64-Bit Xoshiro256** Seed",
+        ),
+    ]
+
+    for idx, (name, studio, p1, p2, p3, p4) in enumerate(competitors):
+        cx = 14 + idx * 209
+        cy = 46
+        cw = 198
+        ch = 186
+        pygame.draw.rect(surf, PLUM_SHADOW, (cx, cy, cw, ch))
+        pygame.draw.rect(surf, BURNT_AMBER, (cx, cy, cw, ch), 2)
+        pygame.draw.rect(surf, CRIMSON_DECAY, (cx + 2, cy + 2, cw - 4, 42))
+
+        _draw_text_clean(surf, f_title, name, cx + cw // 2, cy + 7, PALE_SUNBEAM, DEEP_VOID, center=True)
+        _draw_text_clean(surf, f_sub, studio, cx + cw // 2, cy + 25, AUTUMN_MIST, DEEP_VOID, center=True)
+
+        for p_idx, pillar in enumerate((p1, p2, p3, p4)):
+            py = cy + 56 + p_idx * 30
+            pygame.draw.rect(surf, DEEP_VOID, (cx + 8, py - 2, cw - 16, 22))
+            pygame.draw.rect(surf, WITHERED_BARK, (cx + 8, py - 2, cw - 16, 22), 1)
+            _draw_text_clean(surf, f_sub, f"+ {pillar}", cx + 14, py + 2, SUNLIT_BIRCH, DEEP_VOID)
+
+    # Bottom summary banner inside infographic
+    pygame.draw.rect(surf, PLUM_SHADOW, (14, 242, 1252, 34))
+    pygame.draw.rect(surf, SUNLIT_BIRCH, (14, 242, 1252, 34), 1)
+    _draw_text_clean(
+        surf,
+        f_title,
+        "KODTÜ: AUTUMN PROCGEN ENGINE SYNTHESIZES ALL 6 BENCHMARK PILLARS IN <35ms DETERMINISTIC PYTHON",
+        640,
+        251,
+        PALE_SUNBEAM,
+        DEEP_VOID,
+        center=True,
+    )
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    pygame.image.save(surf, str(out_path))
+
+
 def build_all_banners() -> None:
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
@@ -446,6 +558,7 @@ def build_all_banners() -> None:
     generate_hero_banner(assets, banners_dir / "hero_odtu_kodtu_banner.png")
     generate_pipeline_infographic(banners_dir / "pipeline_6stage_infographic.png")
     generate_palette_infographic(assets, banners_dir / "palette_lut_infographic.png")
+    generate_competitor_infographic(banners_dir / "competitor_matrix_infographic.png")
     generate_section_divider(banners_dir / "section_divider_autumn.png")
     pygame.quit()
 

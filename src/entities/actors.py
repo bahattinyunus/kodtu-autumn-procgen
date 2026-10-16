@@ -37,10 +37,51 @@ class FloatingText:
     max_timer: float = 0.85
 
 
+@dataclass
+class Projectile:
+    """
+    Active projectile in world space (Solar Ember Bolt or Enemy Twilight Orb).
+    Supports melee deflection ('Hyper Light Drifter' / 'Enter the Gungeon' style).
+    """
+
+    x: float
+    y: float
+    vx: float
+    vy: float
+    owner: str          # 'player' or 'enemy'
+    damage: int = 3
+    radius: float = 0.22
+    lifetime: float = 1.85
+    alive: bool = True
+    deflected: bool = False
+
+
+@dataclass
+class DashGhost:
+    """Pixel-snapped afterimage silhouette spawned during Autumn Gust Dash."""
+
+    x: float
+    y: float
+    facing_right: bool
+    anim_frame: int
+    timer: float = 0.16
+    max_timer: float = 0.16
+
+
+AUTUMN_BOONS: List[Tuple[str, str, str]] = [
+    ("DEVRIM_TORCH", "DEVRIM MESALESI", "+2.5/s Warmth Regen & +1 Max Solar Bolt"),
+    ("BILIM_SPARK", "BILIM AGACI KIVILCIMI", "+1 Slash/Bolt Damage & Crit Shockwave"),
+    ("YALINCAK_GALE", "YALINCAK RUZGARI", "+18% Move Speed & Faster Gust Dash"),
+    ("EYMIR_REFLECT", "EYMIR AYNA KALKANI", "Deflects Enemy Orbs for 2x DMG & +Warmth"),
+    ("HARVEST_CROWN", "KODTU HASAT TACI", "Solar Bolt [F] Fires a 3-Way Ember Volley"),
+]
+
+
 class EnemyAgent:
     """
     Autonomous Autumn Enemy AI (`wisp`, `stalker`, `golem`, `warden`).
     Responds to line-of-sight distance AND acoustic leaf-crunch ripples!
+    `wisp` and `warden` also fire dodgeable/deflectable Twilight Orbs.
     """
 
     def __init__(self, x: float, y: float, kind: str, seed_phase: float = 0.0) -> None:
@@ -55,6 +96,7 @@ class EnemyAgent:
         self.kb_vx = 0.0
         self.kb_vy = 0.0
         self.hit_flash = 0.0
+        self.shoot_cooldown = 1.6 + (seed_phase % 1.2)
         self.alive = True
 
         if kind == "wisp":
@@ -108,6 +150,7 @@ class EnemyAgent:
         player_y: float,
         player_noise_radius: float,
         spatial_hash: ChunkSpatialHash,
+        projectiles: Optional[List[Projectile]] = None,
     ) -> None:
         if not self.alive:
             return
@@ -115,6 +158,7 @@ class EnemyAgent:
         self.phase += dt * 4.5
         if self.hit_flash > 0.0:
             self.hit_flash = max(0.0, self.hit_flash - dt)
+        self.shoot_cooldown = max(0.0, self.shoot_cooldown - dt)
 
         dx = player_x - self.x
         dy = player_y - self.y
@@ -129,11 +173,42 @@ class EnemyAgent:
                 weave = math.sin(self.phase * 1.4) * 0.45
                 dir_x += perp_x * weave
                 dir_y += perp_y * weave
+                if projectiles is not None and self.shoot_cooldown <= 0.0 and dist <= 5.8:
+                    self.shoot_cooldown = 2.6
+                    projectiles.append(
+                        Projectile(
+                            x=self.x,
+                            y=self.y,
+                            vx=(dx / dist) * 4.8,
+                            vy=(dy / dist) * 4.8,
+                            owner="enemy",
+                            damage=10,
+                            radius=0.20,
+                            lifetime=1.9,
+                        )
+                    )
             elif self.kind == "warden":
-                # Elder Stag Warden surges forward in rhythmic antler charges
+                # Elder Stag Warden surges forward in rhythmic antler charges & fires 3-way Twilight Orbs
                 surge = 1.35 if math.sin(self.phase * 0.8) > 0.55 else 0.90
                 dir_x *= surge
                 dir_y *= surge
+                if projectiles is not None and self.shoot_cooldown <= 0.0 and dist <= 7.2:
+                    self.shoot_cooldown = 2.2
+                    base_ang = math.atan2(dy, dx)
+                    for spread in (-0.28, 0.0, 0.28):
+                        ang = base_ang + spread
+                        projectiles.append(
+                            Projectile(
+                                x=self.x,
+                                y=self.y,
+                                vx=math.cos(ang) * 5.4,
+                                vy=math.sin(ang) * 5.4,
+                                owner="enemy",
+                                damage=14,
+                                radius=0.22,
+                                lifetime=2.1,
+                            )
+                        )
             self.vx = dir_x * self.speed
             self.vy = dir_y * self.speed
         else:
@@ -164,15 +239,18 @@ class EnemyAgent:
             self.x, self.y = rx, ry
 
 
+
 class Player:
     """
     The Autumn Keeper controlled by the user.
     Features:
     - O(1) Spatial-Hashed movement & biome interaction
     - Crunchy Leaf Pile acoustic ripple & Wind-Step speed boost
-    - 3-Hit Solar Ember Sweep combo (`SPACE` / Left Click)
-    - Autumn Gust Dash (`SHIFT` / Right Click)
-    - Harvest Nova 360-degree whirlwind (`Q` / Middle Click)
+    - 3-Hit Solar Ember Sweep combo (`SPACE` / Left Click) that recharges Solar Bolts
+    - Ranged Solar Ember Bolt (`F` key) with 3-way volley upgrade
+    - Autumn Gust Dash (`SHIFT` / Right Click) with afterimage ghost trails
+    - Harvest Nova 360-degree whirlwind (`Q` / Middle Click) & Orb Deflection
+    - Roguelite ODTÜ Autumn Boons (`active_boons`)
     """
 
     def __init__(self, x: float, y: float) -> None:
@@ -189,6 +267,16 @@ class Player:
         self.relics_collected = 0
         self.acorns_collected = 0
         self.enemies_defeated = 0
+        self.orbs_deflected = 0
+
+        # Hyper Light Drifter style Ranged Solar Bolt ammo (recharged by melee hits & time)
+        self.max_solar_bolts = 4
+        self.solar_bolts = 4
+        self.bolt_recharge_timer = 0.0
+        self.bolt_cooldown = 0.0
+
+        # Active Roguelite ODTÜ Autumn Boons
+        self.active_boons: List[str] = []
 
         # Animation & timers
         self.walk_timer = 0.0
@@ -202,6 +290,7 @@ class Player:
         self.dash_cooldown = 0.0
         self.dash_dir_x = 1.0
         self.dash_dir_y = 0.0
+        self.ghost_spawn_timer = 0.0
 
         # Solar Ember Sweep 3-stage combo state
         self.attack_timer = 0.0
@@ -222,6 +311,52 @@ class Player:
             return 0
         return 1 + (int(self.walk_timer * 8.0) % 2)
 
+    def has_boon(self, boon_id: str) -> bool:
+        return boon_id in self.active_boons
+
+    def grant_next_boon(self) -> Optional[Tuple[str, str, str]]:
+        """Unlocks the next ODTÜ Autumn Boon not yet held by the player."""
+        for boon_id, title, desc in AUTUMN_BOONS:
+            if boon_id not in self.active_boons:
+                self.active_boons.append(boon_id)
+                if boon_id == "DEVRIM_TORCH":
+                    self.max_solar_bolts += 1
+                    self.solar_bolts = self.max_solar_bolts
+                elif boon_id == "YALINCAK_GALE":
+                    self.base_speed *= 1.18
+                return (boon_id, title, desc)
+        return None
+
+    def recharge_bolt_on_melee(self) -> None:
+        """Recharges +1 Solar Bolt when landing a melee hit (Hyper Light Drifter style)."""
+        if self.solar_bolts < self.max_solar_bolts:
+            self.solar_bolts += 1
+
+    def trigger_solar_bolt(self, projectiles: List[Projectile]) -> bool:
+        """[F] Fires a high-velocity Solar Ember Bolt (or 3-way volley with HARVEST_CROWN)."""
+        if self.bolt_cooldown > 0.0 or self.solar_bolts <= 0:
+            return False
+        self.solar_bolts -= 1
+        self.bolt_cooldown = 0.22
+        base_ang = math.atan2(self.facing_y, self.facing_x)
+        base_dmg = 4 if self.has_boon("BILIM_SPARK") else 3
+        spreads = (-0.22, 0.0, 0.22) if self.has_boon("HARVEST_CROWN") else (0.0,)
+        for sp in spreads:
+            ang = base_ang + sp
+            projectiles.append(
+                Projectile(
+                    x=self.x + math.cos(ang) * 0.45,
+                    y=self.y + math.sin(ang) * 0.45,
+                    vx=math.cos(ang) * 11.5,
+                    vy=math.sin(ang) * 11.5,
+                    owner="player",
+                    damage=base_dmg,
+                    radius=0.22,
+                    lifetime=1.45,
+                )
+            )
+        return True
+
     def trigger_dash(self, move_x: float, move_y: float) -> bool:
         if self.dash_cooldown > 0.0 or self.dash_timer > 0.0:
             return False
@@ -233,7 +368,7 @@ class Player:
             self.dash_dir_x = self.facing_x
             self.dash_dir_y = self.facing_y
         self.dash_timer = 0.16
-        self.dash_cooldown = 0.65
+        self.dash_cooldown = 0.45 if self.has_boon("YALINCAK_GALE") else 0.65
         self.invuln_timer = max(self.invuln_timer, 0.22)
         return True
 
@@ -267,9 +402,10 @@ class Player:
         move_y: float,
         spatial_hash: ChunkSpatialHash,
         biome_grid: np.ndarray,
+        dash_ghosts: Optional[List[DashGhost]] = None,
     ) -> Tuple[bool, bool]:
         """
-        Updates player movement, collision, and biome triggers.
+        Updates player movement, collision, passive boons, and biome triggers.
         Returns (stepped_on_dry_leaves, stepped_on_damp_mud).
         """
         self.step_sfx_cooldown = max(0.0, self.step_sfx_cooldown - dt)
@@ -281,7 +417,17 @@ class Player:
         self.combo_reset_timer = max(0.0, self.combo_reset_timer - dt)
         self.nova_timer = max(0.0, self.nova_timer - dt)
         self.nova_cooldown = max(0.0, self.nova_cooldown - dt)
+        self.bolt_cooldown = max(0.0, self.bolt_cooldown - dt)
         self.noise_ripple_radius = max(0.0, self.noise_ripple_radius - dt * 4.5)
+
+        # Passive Solar Bolt recharge & Devrim Torch warmth aura
+        if self.solar_bolts < self.max_solar_bolts:
+            self.bolt_recharge_timer += dt
+            if self.bolt_recharge_timer >= 2.4:
+                self.bolt_recharge_timer = 0.0
+                self.solar_bolts += 1
+        if self.has_boon("DEVRIM_TORCH"):
+            self.warmth = min(self.max_warmth, self.warmth + dt * 2.5)
 
         stepped_dry_leaves = False
         stepped_mud = False
@@ -291,6 +437,17 @@ class Player:
             speed = self.base_speed * 2.65
             vx = self.dash_dir_x * speed
             vy = self.dash_dir_y * speed
+            self.ghost_spawn_timer -= dt
+            if dash_ghosts is not None and self.ghost_spawn_timer <= 0.0:
+                self.ghost_spawn_timer = 0.035
+                dash_ghosts.append(
+                    DashGhost(
+                        x=self.x,
+                        y=self.y,
+                        facing_right=self.facing_right,
+                        anim_frame=self.anim_frame,
+                    )
+                )
         else:
             mag = math.hypot(move_x, move_y)
             if mag > 1e-4:

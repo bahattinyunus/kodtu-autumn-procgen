@@ -87,17 +87,17 @@ class GameHUD:
         draw_calls: int,
         culled_props: int,
     ) -> None:
-        # 1. Top-Left: Lantern Warmth Bar & Relic Status
-        pygame.draw.rect(canvas, DEEP_VOID, (4, 4, 102, 24))
-        pygame.draw.rect(canvas, WITHERED_BARK, (4, 4, 102, 24), 1)
+        # 1. Top-Left: Lantern Warmth Bar, Solar Bolt Ammo Pips & Relic/Boon Status
+        pygame.draw.rect(canvas, DEEP_VOID, (4, 4, 114, 33))
+        pygame.draw.rect(canvas, WITHERED_BARK, (4, 4, 114, 33), 1)
 
         # Warmth bar
-        bar_w = int(round(68 * (player.warmth / max(1.0, player.max_warmth))))
+        bar_w = int(round(76 * (player.warmth / max(1.0, player.max_warmth))))
         bar_col = HARVEST_GOLD if player.warmth > 35.0 else CRIMSON_DECAY
-        pygame.draw.rect(canvas, PLUM_SHADOW, (32, 7, 68, 6))
+        pygame.draw.rect(canvas, PLUM_SHADOW, (34, 7, 76, 6))
         if bar_w > 0:
-            pygame.draw.rect(canvas, bar_col, (32, 7, bar_w, 6))
-            pygame.draw.line(canvas, SUNLIT_BIRCH, (32, 7), (32 + max(0, bar_w - 1), 7))
+            pygame.draw.rect(canvas, bar_col, (34, 7, bar_w, 6))
+            pygame.draw.line(canvas, SUNLIT_BIRCH, (34, 7), (34 + max(0, bar_w - 1), 7))
         self.font.draw_text(canvas, "WARM", 7, 5, SUNLIT_BIRCH)
 
         # Relic count & Shrine state
@@ -105,10 +105,21 @@ class GameHUD:
         relic_str = (
             "SHRINE AWAKE [E]"
             if awakened
-            else f"RELIC {player.relics_collected}/{world.total_relics} ACORN {player.acorns_collected}"
+            else f"RELIC {player.relics_collected}/{world.total_relics} BOON:{len(player.active_boons)}"
         )
         relic_col = PALE_SUNBEAM if awakened else HARVEST_GOLD
-        self.font.draw_text(canvas, relic_str, 7, 16, relic_col)
+        self.font.draw_text(canvas, relic_str, 7, 15, relic_col)
+
+        # Hyper Light Drifter style Solar Bolt Ammo Pips ([F])
+        self.font.draw_text(canvas, "BOLT[F]", 7, 25, AUTUMN_MIST)
+        for b_idx in range(player.max_solar_bolts):
+            bx = 52 + b_idx * 10
+            by = 27
+            pygame.draw.rect(canvas, PLUM_SHADOW, (bx, by, 7, 5))
+            if b_idx < player.solar_bolts:
+                pygame.draw.rect(canvas, PALE_SUNBEAM, (bx + 1, by + 1, 5, 3))
+            else:
+                pygame.draw.rect(canvas, WITHERED_BARK, (bx, by, 7, 5), 1)
 
         # 2. Top-Right: Seed String & Share Code + Live Minimap Radar
         seed_box_w = 126

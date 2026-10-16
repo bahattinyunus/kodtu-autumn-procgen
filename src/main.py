@@ -36,6 +36,8 @@ from src.entities.actors import (
     EnemyAgent,
     CollectibleItem,
     FloatingText,
+    Projectile,
+    DashGhost,
     spawn_world_entities,
 )
 from src.procgen.noise import compute_wind_vector_field
@@ -103,6 +105,7 @@ class AutumnProcGenGame:
         self.time_sec = 0.0
         self.wind_refresh_timer = 0.0
         self.bilim_aura_timer = 0.0
+        self.hit_stop_timer = 0.0
 
         # Active world state
         self.world: WorldData
@@ -111,6 +114,8 @@ class AutumnProcGenGame:
         self.items: List[CollectibleItem] = []
         self.enemies: List[EnemyAgent] = []
         self.floating_texts: List[FloatingText] = []
+        self.projectiles: List[Projectile] = []
+        self.dash_ghosts: List[DashGhost] = []
         self.leaf_system: VerletLeafSystem
 
         self.load_seed(initial_seed, depth_level=1)
@@ -126,6 +131,7 @@ class AutumnProcGenGame:
         Executes the 6-stage deterministic PCG pipeline for `seed_str` and initializes
         spatial hashing, entities, camera, and Verlet leaf particles.
         """
+        prev_boons = getattr(self, "player", None).active_boons if hasattr(self, "player") else []
         self.world = generate_autumn_world(
             seed=seed_str, width=56, height=42, depth_level=depth_level
         )
@@ -134,8 +140,13 @@ class AutumnProcGenGame:
 
         sx, sy = self.world.spawn_tile
         self.player = Player(float(sx) + 0.5, float(sy) + 0.5)
+        if depth_level > 1 and prev_boons:
+            for _ in range(len(prev_boons)):
+                self.player.grant_next_boon()
         self.items, self.enemies = spawn_world_entities(self.world.spawns)
         self.floating_texts.clear()
+        self.projectiles.clear()
+        self.dash_ghosts.clear()
 
         self.leaf_system = VerletLeafSystem(self.world.seed_uint64, max_leaves=160)
         world_px_w = self.world.width * TILE_SIZE
@@ -254,6 +265,10 @@ class AutumnProcGenGame:
                     self.cycle_odtu_preset()
                 elif event.key == pygame.K_SPACE:
                     self._perform_ember_attack()
+                elif event.key == pygame.K_f:
+                    self._perform_solar_bolt()
+                elif event.key == pygame.K_b:
+                    self._unlock_next_boon()
                 elif event.key == pygame.K_q:
                     self._perform_harvest_nova()
                 elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
@@ -267,7 +282,7 @@ class AutumnProcGenGame:
                 elif event.button == 2:
                     self._perform_harvest_nova()
                 elif event.button == 3:
-                    self._perform_gust_dash()
+                    self._perform_solar_bolt()
 
         return True
 
@@ -287,6 +302,27 @@ class AutumnProcGenGame:
             my += 1.0
         return mx, my
 
+    def _unlock_next_boon(self) -> None:
+        boon = self.player.grant_next_boon()
+        if boon is not None:
+            _, title, desc = boon
+            self.sound.play("harvest_chime")
+            self.hud.show_banner(f"BOON: {title} ({desc})", duration=3.2)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.5, f"+{title}!", PALE_SUNBEAM)
+        else:
+            self.hud.show_banner("ALL 5 ODTU AUTUMN BOONS ACTIVE!", duration=2.4)
+
+    def _perform_solar_bolt(self) -> None:
+        """[F] / Right Click: Fires a blazing Solar Ember Bolt (Hyper Light Drifter style)."""
+        if not self.player.trigger_solar_bolt(self.projectiles):
+            self.spawn_floating_text(self.player.x, self.player.y - 0.4, "RECHARGE BOLT BY SLASH!", CRIMSON_DECAY)
+            return
+        self.sound.play("slash_ember")
+        self.camera.add_trauma(0.15)
+        px_x = self.player.x * TILE_SIZE
+        px_y = self.player.y * TILE_SIZE
+        self.leaf_system.spawn_burst(px_x, px_y, count=6, golden_bias=True)
+
     def _perform_gust_dash(self) -> None:
         mx, my = self._get_move_vector()
         if self.player.trigger_dash(mx, my):
@@ -296,12 +332,33 @@ class AutumnProcGenGame:
             self.leaf_system.spawn_burst(px_x, px_y, count=12, golden_bias=True)
             self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=36.0, strength=2.4)
 
+    def _deflect_nearby_orbs(self, radius: float) -> None:
+        """Deflects incoming enemy Twilight Orbs back at 1.6x speed and 2x damage."""
+        for proj in self.projectiles:
+            if not proj.alive or proj.owner != "enemy":
+                continue
+            if math.hypot(proj.x - self.player.x, proj.y - self.player.y) <= radius:
+                proj.owner = "player"
+                proj.deflected = True
+                proj.vx = -proj.vx * 1.65
+                proj.vy = -proj.vy * 1.65
+                proj.damage = 6 if self.player.has_boon("EYMIR_REFLECT") else 5
+                proj.lifetime = 1.8
+                self.player.orbs_deflected += 1
+                self.player.recharge_bolt_on_melee()
+                if self.player.has_boon("EYMIR_REFLECT"):
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 6.0)
+                self.hit_stop_timer = max(self.hit_stop_timer, 0.04)
+                self.camera.add_trauma(0.28)
+                self.spawn_floating_text(proj.x, proj.y - 0.3, "DEFLECT!", PALE_SUNBEAM)
+
     def _perform_ember_attack(self) -> None:
         if not self.player.trigger_attack():
             return
         self.sound.play("slash_ember")
         is_crit = self.player.combo_step == 2
-        dmg = 4 if is_crit else 2
+        bonus_dmg = 1 if self.player.has_boon("BILIM_SPARK") else 0
+        dmg = (4 if is_crit else 2) + bonus_dmg
         reach = 2.15 if is_crit else 1.85
 
         px_x = self.player.x * TILE_SIZE
@@ -313,6 +370,9 @@ class AutumnProcGenGame:
         )
         self.leaf_system.spawn_burst(sweep_cx, sweep_cy, count=12 if is_crit else 7, golden_bias=True)
 
+        # Deflect enemy Twilight Orbs within melee arc
+        self._deflect_nearby_orbs(reach)
+
         for enemy in self.enemies:
             if not enemy.alive:
                 continue
@@ -323,7 +383,10 @@ class AutumnProcGenGame:
                 dot = (dx * self.player.facing_x + dy * self.player.facing_y) / max(1e-5, dist)
                 if dot >= (-0.45 if is_crit else -0.25) or dist < 0.85:
                     defeated = enemy.apply_hit(dmg, self.player.x, self.player.y, knockback=8.5)
+                    self.player.recharge_bolt_on_melee()
                     self.camera.add_trauma(0.32 if is_crit else 0.20)
+                    if is_crit or defeated:
+                        self.hit_stop_timer = max(self.hit_stop_timer, 0.038)
                     label = f"CRIT -{dmg}!" if is_crit else f"-{dmg}"
                     self.spawn_floating_text(
                         enemy.x, enemy.y - 0.3, label, PALE_SUNBEAM if is_crit else HARVEST_GOLD
@@ -347,12 +410,16 @@ class AutumnProcGenGame:
         self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=72.0, strength=4.8)
         self.spawn_floating_text(self.player.x, self.player.y - 0.5, "HARVEST NOVA!", PALE_SUNBEAM)
 
+        # Deflect all enemy orbs in a wide 360-degree ring
+        self._deflect_nearby_orbs(2.95)
+
         for enemy in self.enemies:
             if not enemy.alive:
                 continue
             dist = math.hypot(enemy.x - self.player.x, enemy.y - self.player.y)
             if dist <= 2.85:
                 defeated = enemy.apply_hit(3, self.player.x, self.player.y, knockback=11.0)
+                self.player.recharge_bolt_on_melee()
                 self.spawn_floating_text(enemy.x, enemy.y - 0.3, "-3 NOVA", SUNLIT_BIRCH)
                 if defeated:
                     self.player.enemies_defeated += 1
@@ -375,7 +442,12 @@ class AutumnProcGenGame:
         self.time_sec += dt
         self.hud.update(dt)
 
-        # Update floating combat texts
+        # Vlambeer / Nuclear Throne style tactile Hit-Stop micro-freeze
+        if self.hit_stop_timer > 0.0:
+            self.hit_stop_timer = max(0.0, self.hit_stop_timer - dt)
+            return
+
+        # Update floating combat texts & dash afterimage ghosts
         alive_texts: List[FloatingText] = []
         for ft in self.floating_texts:
             ft.timer -= dt
@@ -383,6 +455,13 @@ class AutumnProcGenGame:
             if ft.timer > 0.0:
                 alive_texts.append(ft)
         self.floating_texts = alive_texts
+
+        alive_ghosts: List[DashGhost] = []
+        for dg in self.dash_ghosts:
+            dg.timer -= dt
+            if dg.timer > 0.0:
+                alive_ghosts.append(dg)
+        self.dash_ghosts = alive_ghosts
 
         # Periodically evolve the 2D Wind Vector Field with time
         self.wind_refresh_timer += dt
@@ -394,7 +473,7 @@ class AutumnProcGenGame:
 
         mx, my = self._get_move_vector()
         stepped_leaves, stepped_mud = self.player.update(
-            dt, mx, my, self.spatial_hash, self.world.biome_grid
+            dt, mx, my, self.spatial_hash, self.world.biome_grid, self.dash_ghosts
         )
 
         # Warmth regeneration near Alchemist Campfires & ODTÜ Bilim Ağacı Monument
@@ -432,7 +511,7 @@ class AutumnProcGenGame:
         elif stepped_mud:
             self.sound.play("mud_step")
 
-        # Update Collectibles
+        # Update Collectibles (Relics also unlock ODTÜ Autumn Boons!)
         for item in self.items:
             if item.collected:
                 continue
@@ -442,7 +521,9 @@ class AutumnProcGenGame:
                     self.player.relics_collected += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 20.0)
                     self.sound.play("harvest_chime")
-                    self.spawn_floating_text(item.x, item.y, "+RELIC!", PALE_SUNBEAM)
+                    boon = self.player.grant_next_boon()
+                    boon_label = f"+RELIC & {boon[1]}!" if boon else "+RELIC!"
+                    self.spawn_floating_text(item.x, item.y, boon_label, PALE_SUNBEAM)
                     self.leaf_system.spawn_burst(
                         item.x * TILE_SIZE, item.y * TILE_SIZE, count=18, golden_bias=True
                     )
@@ -451,7 +532,7 @@ class AutumnProcGenGame:
                         self.hud.show_banner("ALL RELICS GATHERED! RETURN TO SHRINE [E]")
                     else:
                         self.hud.show_banner(
-                            f"HARVEST RELIC {self.player.relics_collected}/{self.world.total_relics} RECLAIMED"
+                            f"RELIC {self.player.relics_collected}/{self.world.total_relics} + {boon[1] if boon else 'WARMTH'}"
                         )
                 else:
                     self.player.acorns_collected += 1
@@ -469,25 +550,70 @@ class AutumnProcGenGame:
                 self.player.y,
                 self.player.noise_ripple_radius,
                 self.spatial_hash,
+                self.projectiles,
             )
             if (
                 self.player.invuln_timer <= 0.0
                 and math.hypot(self.player.x - enemy.x, self.player.y - enemy.y)
                 <= (self.player.radius + enemy.radius)
             ):
-                self.player.warmth = max(0.0, self.player.warmth - enemy.damage)
-                self.player.invuln_timer = 0.75
-                self.camera.add_trauma(0.40)
-                self.sound.play("hit_hurt")
-                self.spawn_floating_text(
-                    self.player.x, self.player.y - 0.3, f"-{int(enemy.damage)} WARMTH", CRIMSON_DECAY
-                )
-                if self.player.warmth <= 0.0:
-                    sx, sy = self.world.spawn_tile
-                    self.player.x = float(sx) + 0.5
-                    self.player.y = float(sy) + 0.5
-                    self.player.warmth = self.player.max_warmth
-                    self.hud.show_banner("LANTERN REKINDLED AT GROVE HEART")
+                self._apply_player_damage(enemy.damage)
+
+        # Update Projectiles (Solar Bolts & Enemy Twilight Orbs)
+        alive_projectiles: List[Projectile] = []
+        for proj in self.projectiles:
+            if not proj.alive:
+                continue
+            proj.lifetime -= dt
+            if proj.lifetime <= 0.0:
+                continue
+            proj.x += proj.vx * dt
+            proj.y += proj.vy * dt
+            tx, ty = int(proj.x), int(proj.y)
+            if (
+                tx < 1
+                or ty < 1
+                or tx >= self.world.width - 1
+                or ty >= self.world.height - 1
+                or self.world.walkable_grid[ty, tx] == 1
+            ):
+                self.leaf_system.spawn_burst(proj.x * TILE_SIZE, proj.y * TILE_SIZE, count=5, golden_bias=proj.owner == "player")
+                continue
+
+            if proj.owner == "player":
+                for enemy in self.enemies:
+                    if not enemy.alive:
+                        continue
+                    if math.hypot(proj.x - enemy.x, proj.y - enemy.y) <= (proj.radius + enemy.radius):
+                        proj.alive = False
+                        defeated = enemy.apply_hit(proj.damage, proj.x, proj.y, knockback=9.0)
+                        self.camera.add_trauma(0.24)
+                        self.spawn_floating_text(
+                            enemy.x,
+                            enemy.y - 0.3,
+                            f"-{proj.damage} BOLT!",
+                            PALE_SUNBEAM if proj.deflected else SUNLIT_BIRCH,
+                        )
+                        self.leaf_system.spawn_burst(
+                            enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=12, golden_bias=True
+                        )
+                        if defeated:
+                            self.player.enemies_defeated += 1
+                            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+                            self.hit_stop_timer = max(self.hit_stop_timer, 0.035)
+                        break
+            else:
+                if (
+                    self.player.invuln_timer <= 0.0
+                    and math.hypot(proj.x - self.player.x, proj.y - self.player.y)
+                    <= (proj.radius + self.player.radius)
+                ):
+                    proj.alive = False
+                    self._apply_player_damage(float(proj.damage))
+
+            if proj.alive:
+                alive_projectiles.append(proj)
+        self.projectiles = alive_projectiles
 
         # Update Camera & Verlet Leaf Particles
         world_px_w = self.world.width * TILE_SIZE
@@ -503,6 +629,21 @@ class AutumnProcGenGame:
             dt, self.world.wind_vx, self.world.wind_vy, world_px_w, world_px_h
         )
 
+    def _apply_player_damage(self, damage: float) -> None:
+        self.player.warmth = max(0.0, self.player.warmth - damage)
+        self.player.invuln_timer = 0.75
+        self.camera.add_trauma(0.40)
+        self.sound.play("hit_hurt")
+        self.spawn_floating_text(
+            self.player.x, self.player.y - 0.3, f"-{int(damage)} WARMTH", CRIMSON_DECAY
+        )
+        if self.player.warmth <= 0.0:
+            sx, sy = self.world.spawn_tile
+            self.player.x = float(sx) + 0.5
+            self.player.y = float(sy) + 0.5
+            self.player.warmth = self.player.max_warmth
+            self.hud.show_banner("LANTERN REKINDLED AT GROVE HEART")
+
     def render(self) -> None:
         self.renderer.render_frame(
             canvas=self.canvas,
@@ -516,6 +657,8 @@ class AutumnProcGenGame:
             time_sec=self.time_sec,
             debug_mode=self.debug_mode,
             floating_texts=self.floating_texts,
+            projectiles=self.projectiles,
+            dash_ghosts=self.dash_ghosts,
         )
         self.hud.render(
             canvas=self.canvas,

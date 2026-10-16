@@ -213,3 +213,60 @@ def test_odtu_bilim_agaci_monument_and_curated_seeds() -> None:
         game.cycle_odtu_preset()
         game.update(1.0 / 60.0)
         game.render()
+
+
+def test_solar_bolts_boons_and_orb_deflection() -> None:
+    """
+    Verifies competitor-inspired combat mechanics:
+    - Hyper Light Drifter style Solar Bolt firing & melee ammo recharge
+    - Enter the Gungeon / HLD style Enemy Twilight Orb melee deflection
+    - Wizard of Legend / Hades style 5 ODTÜ Autumn Boons & 3-way volley
+    - Dash Afterimage Ghost spawning
+    """
+    from src.main import AutumnProcGenGame
+    from src.entities.actors import Projectile
+
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+
+    # 1. Fire Solar Bolt ([F]) -> consumes 1 bolt, spawns 1 player projectile
+    initial_bolts = game.player.solar_bolts
+    game._perform_solar_bolt()
+    assert game.player.solar_bolts == initial_bolts - 1
+    assert len(game.projectiles) == 1
+    assert game.projectiles[0].owner == "player"
+
+    # 2. Spawn an incoming enemy Twilight Orb near the player and deflect it with melee slash
+    enemy_orb = Projectile(
+        x=game.player.x + 0.8,
+        y=game.player.y,
+        vx=-4.5,
+        vy=0.0,
+        owner="enemy",
+        damage=10,
+    )
+    game.projectiles.append(enemy_orb)
+    game.player.attack_cooldown = 0.0
+    game._perform_ember_attack()
+    assert enemy_orb.owner == "player"
+    assert enemy_orb.deflected is True
+    assert game.player.orbs_deflected == 1
+    assert game.player.solar_bolts == initial_bolts  # Recharged by deflection!
+
+    # 3. Unlock all 5 ODTÜ Autumn Boons & verify HARVEST_CROWN fires a 3-way volley
+    for _ in range(5):
+        game._unlock_next_boon()
+    assert len(game.player.active_boons) == 5
+    assert game.player.has_boon("HARVEST_CROWN")
+
+    game.projectiles.clear()
+    game.player.bolt_cooldown = 0.0
+    game._perform_solar_bolt()
+    assert len(game.projectiles) == 3  # 3-way Solar Volley!
+
+    # 4. Trigger Autumn Gust Dash & verify DashGhost afterimages spawn
+    game.player.dash_cooldown = 0.0
+    game._perform_gust_dash()
+    game.hit_stop_timer = 0.0
+    game.update(1.0 / 60.0)
+    assert len(game.dash_ghosts) >= 1
+

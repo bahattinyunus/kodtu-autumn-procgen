@@ -25,7 +25,14 @@ from src.core.palette import (
     hue_shift_toward_shadow,
 )
 from src.core.spatial_hash import ChunkSpatialHash, CHUNK_SIZE_TILES
-from src.entities.actors import Player, EnemyAgent, CollectibleItem, FloatingText
+from src.entities.actors import (
+    Player,
+    EnemyAgent,
+    CollectibleItem,
+    FloatingText,
+    Projectile,
+    DashGhost,
+)
 from src.procgen.pipeline import WorldData
 from src.procgen.prng import hash_coords_2d
 
@@ -97,6 +104,8 @@ class WorldRenderer:
         time_sec: float,
         debug_mode: int = DEBUG_NONE,
         floating_texts: Optional[List[FloatingText]] = None,
+        projectiles: Optional[List[Projectile]] = None,
+        dash_ghosts: Optional[List[DashGhost]] = None,
     ) -> None:
         if self.baked_terrain is None or self.baked_seed_uint64 != world.seed_uint64:
             self.bake_world_terrain(world)
@@ -266,11 +275,48 @@ class WorldRenderer:
 
         y_sort_queue.append((pl_px_y, _draw_player))
 
+        # 3g. Dash Afterimage Ghosts (Hyper Light Drifter style silhouette trails)
+        if dash_ghosts:
+            for dg in dash_ghosts:
+                gsx, gsy = camera.world_to_screen(dg.x * TILE_SIZE, dg.y * TILE_SIZE)
+                if 0 <= gsx < NATIVE_WIDTH and 0 <= gsy < NATIVE_HEIGHT:
+                    col = HARVEST_GOLD if dg.timer > 0.08 else BURNT_AMBER
+                    y_sort_queue.append(
+                        (
+                            dg.y * TILE_SIZE - 1.0,
+                            lambda dx=gsx, dy=gsy, c=col: pygame.draw.rect(
+                                canvas, c, (dx - 3, dy - 10, 6, 9), 1
+                            ),
+                        )
+                    )
+
         # Execute Painter's Algorithm (strict Y-order sort)
         y_sort_queue.sort(key=lambda entry: entry[0])
         for _, draw_fn in y_sort_queue:
             draw_fn()
             draw_calls += 1
+
+        # 3h. Active Projectiles (Solar Ember Bolts & Deflectable Enemy Twilight Orbs)
+        if projectiles:
+            for proj in projectiles:
+                if not proj.alive:
+                    continue
+                psx, psy = camera.world_to_screen(proj.x * TILE_SIZE, proj.y * TILE_SIZE)
+                if -8 <= psx <= NATIVE_WIDTH + 8 and -8 <= psy <= NATIVE_HEIGHT + 8:
+                    if proj.owner == "player":
+                        outer = PALE_SUNBEAM if proj.deflected else HARVEST_GOLD
+                        inner = SUNLIT_BIRCH
+                        pygame.draw.circle(canvas, outer, (psx, psy - 4), 4)
+                        pygame.draw.circle(canvas, inner, (psx, psy - 4), 2)
+                        canvas.set_at(
+                            (max(0, min(NATIVE_WIDTH - 1, psx)), max(0, min(NATIVE_HEIGHT - 1, psy - 4))),
+                            PALE_SUNBEAM,
+                        )
+                    else:
+                        pygame.draw.circle(canvas, DEEP_VOID, (psx, psy - 4), 4)
+                        pygame.draw.circle(canvas, CRIMSON_DECAY, (psx, psy - 4), 3)
+                        pygame.draw.circle(canvas, RUST_TERRACOTTA, (psx, psy - 4), 1)
+                    draw_calls += 1
 
         # 4. Verlet Integration Falling Leaf Particles
         drawn_leaves = leaf_system.render(canvas, camera.x, camera.y, NATIVE_WIDTH, NATIVE_HEIGHT)

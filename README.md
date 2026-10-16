@@ -13,7 +13,7 @@
 [![Art Style: Pixelated](https://img.shields.io/badge/Art_Style-Pixelated_16--Bit_(320x180)-E09F3E?style=for-the-badge&labelColor=1A1118)](#-piksel-kusursuz-pixel-perfect-g%C3%B6rsel-m%C3%BChendislik)
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Color_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#-sonbahar-renk-kuram%C4%B1-hue-shifted-autumn-lut)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Stage_Deterministic_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#-deterministik-prosed%C3%BCrel-%C3%BCretim-mimarisi-pcg-pipeline)
-[![Tests: 14 Passed](https://img.shields.io/badge/Pytest_Suite-14%2F14_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
+[![Tests: 15 Passed](https://img.shields.io/badge/Pytest_Suite-15%2F15_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
 
 </div>
 
@@ -220,24 +220,45 @@ Motorumuz, klasik RGB değerlerini yalnızca karartıp açmak yerine **Hue-Shift
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## ⚔️ 5. Oynanış Döngüsü, Savaş Mekanikleri ve Kontroller
+## ⚔️ 5. Oynanış Döngüsü, Savaş Mekanikleri ve ODTÜ Sonbahar Kutsamaları (Boons)
 
 Oyuncu, sonbahar korusuna çöken alacakaranlıkta **Güneş Közü Fenerini (Solar Ember Lantern)** taşıyan **Sonbahar Muhafızı (Autumn Keeper)** rolündedir:
 
-- **🔥 Fener Isısı (Lantern Warmth) & Hayatta Kalma:** Zamanla azalan fener ısınızı **ODTÜ Bilim Ağacı Anıtı**, simyacı kamp ateşleri (`campfire`) ve meşe palamutları (`Golden Acorn`) ile yenileyin.
+- **🔥 Fener Isısı (Lantern Warmth) & Hayatta Kalma:** Zamanla azalan fener ısınızı **ODTÜ Bilim Ağacı Anıtı** (`+15/sn`), simyacı kamp ateşleri (`campfire`) ve meşe palamutları (`Golden Acorn`) ile yenileyin.
 - **✨ 5 Hasat Reliği & Kadim Tapınak:** Haritanın derinliklerindeki **5 Hasat Reliğini (`Harvest Relic`)** toplayıp **Kadim Sonbahar Tapınağı'na (`[E]`)** dönerek bir sonraki prosedürel koru derinliğine (`Grove Depth 2, 3, ...`) geçin!
-- **🗡️ 3-Vuruşluk Solar Ember Kombo (`[SPACE]` / Sol Tık):** Ardışık vuruşlarda `Combo x1` $\rightarrow$ `Combo x2` $\rightarrow$ **`CRIT -4!` (`Combo x3`)** geniş açılı altın köz darbesi vurur ve çevredeki yaprakları savurur.
-- **💥 Harvest Nova Şok Dalgası (`[Q]` / Orta Tık):** $360^\circ$ çevredeki tüm düşmanları geri püskürten ve `28` altın yaprak parçacığı saçan alan etkili patlama.
-- **💨 Autumn Gust Dash (`[SHIFT]` / Sağ Tık):** Kısa süreli dokunulmazlık (i-frame) ve yaprak girdabı sağlayan rüzgar atılması.
+- **🗡️ 3-Vuruşluk Solar Ember Kombo (`[SPACE]` / Sol Tık):** Ardışık vuruşlarda `Combo x1` $\rightarrow$ `Combo x2` $\rightarrow$ **`CRIT -4!` (`Combo x3`)** geniş açılı altın köz darbesi vurur, çevredeki yaprakları savurur ve **isabet eden her darbede `+1 Solar Bolt` mermisi şarj eder** (*Hyper Light Drifter* tarzı hibrit dövüş döngüsü).
+- **☄️ Solar Ember Bolt (`[F]` / Sağ Tık):** Fenerden yüksek hızlı bir güneş közü mermisi (`11.5 karo/sn`) ateşler. `KODTÜ Hasat Tacı` kutsaması açıldığında **3'lü Yelpaze Yaylım Ateşine (3-Way Volley)** dönüşür!
+- **🛡️ Yakın Dövüşle Mermi Yansıtma (`DEFLECT!`):** *Wisp* ve *Elder Stag Warden* tarafından ateşlenen karanlık küreleri (**Twilight Orbs**) kılıç darbesi (`[SPACE]`) veya `Harvest Nova ([Q])` ile vurduğunuzda küre **`1.65x` hızla ve `2x` hasarla düşmana geri yansıtılır (`DEFLECT!`)**!
+- **💥 Harvest Nova Şok Dalgası (`[Q]` / Orta Tık):** $360^\circ$ çevredeki tüm düşmanları geri püskürten, düşman kürelerini yansıtan ve `28` altın yaprak parçacığı saçan alan etkili patlama.
+- **💨 Autumn Gust Dash & Hayalet İzleri (`[SHIFT]`):** Kısa süreli dokunulmazlık (i-frame), yaprak girdabı ve piksel-kusursuz **Afterimage Hayalet İzleri (`DashGhost`)** bırakan rüzgar atılması.
+- **⚡ Dokunsal Vuruş Duraksaması (`Hit-Stop Frame Freeze`):** Kritik vuruşlarda, mermi yansıtmalarında ve düşman infazlarında uygulanan `38 ms` mikro-dondurma ve $\text{Trauma}^2$ kamera sarsıntısı.
+
+---
+
+### 🌟 Roguelite ODTÜ Sonbahar Kutsamaları (`Autumn Boons` — `[B]` veya Relik Toplama)
+
+Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/sinerji için **`[B]`** tuşuna basıldığında) oyuncu ODTÜ kampüs efsanelerinden ilham alan **5 kalıcı kutsamadan (Boon)** birini kazanır:
+
+| Kutsama Kodu | ODTÜ Kutsama Adı | Mekanik Sinerji ve Yükseltme Etkisi | İlham Alınan Muadil Mekanik |
+| :--- | :--- | :--- | :--- |
+| **`DEVRIM_TORCH`** | 🔥 **Devrim Meşalesi** | Saniyede `+2.5 Warmth` pasif ısı yenilemesi sağlar ve maksimum **Solar Bolt** kapasitesini `4` $\rightarrow$ `5` yapar. | *Don't Starve* / *Core Keeper* Fener Aurası |
+| **`BILIM_SPARK`** | ⚡ **Bilim Ağacı Kıvılcımı** | Tüm kılıç darbelerine ve Solar Bolt mermilerine **`+1` Bonus Hasar** ekler, yaprak şok dalgasını büyütür. | *Hades* / *Children of Morta* Hasar Sinerjisi |
+| **`YALINCAK_GALE`** | 🍃 **Yalıncak Rüzgarı** | Yürüme hızını **`+%18`** artırır ve `Autumn Gust Dash` bekleme süresini **`%30` kısaltır** (`0.65s` $\rightarrow$ `0.45s`). | *Wizard of Legend* Rüzgar Koşusu |
+| **`EYMIR_REFLECT`** | 🛡️ **Eymir Ayna Kalkanı** | Yansıtılan düşman kürelerinin (`DEFLECT!`) hasarını `6`'ya çıkarır ve her yansıtmada **`+6 Warmth`** iyileştirir. | *Enter the Gungeon* / *HLD* Mermi Yansıtma |
+| **`HARVEST_CROWN`** | 👑 **KODTÜ Hasat Tacı** | `Solar Bolt ([F])` atışlarını **3'lü Yelpaze Yaylım Ateşine (`-0.22`, `0`, `+0.22` rad)** dönüştürür! | *Nuclear Throne* / *Archvale* Çoklu Atış |
+
+---
 
 ### 🎮 Klavye & Fare Kontrol Tablosu
 
 | Tuş / Girdi | Aksiyon / Komut | Teknik / Oynanış Açıklaması |
 | :---: | :--- | :--- |
 | **`W, A, S, D`** / **Ok Tuşları** | Hareket Et | 8 yönlü alt-piksel hareketi, `16×16` uzamsal özetleme çarpışma çözümü |
-| **`SPACE`** veya **Sol Tık** | **Solar Ember Slash** | 3-vuruşluk yakın dövüş kombosu (3. vuruş Kritik + Radyal Yaprak İtkisi) |
-| **`Q`** veya **Orta Tık** | **Harvest Nova** | $360^\circ$ alan etkili köz patlaması ve yüksek geri itme (Knockback) |
-| **`SHIFT`** veya **Sağ Tık** | **Autumn Gust Dash** | Hızlı rüzgar atılması (`0.20 sn` dokunulmazlık) |
+| **`SPACE`** veya **Sol Tık** | **Solar Ember Slash** | 3-vuruşluk kombo + **Mermi Yansıtma (`DEFLECT!`)** + **Solar Bolt Şarjı** |
+| **`F`** veya **Sağ Tık** | **Solar Ember Bolt** | Menzilli güneş közü atışı (Hasat Tacı ile 3'lü yaylım ateşi) |
+| **`Q`** veya **Orta Tık** | **Harvest Nova** | $360^\circ$ alan etkili köz patlaması, yüksek geri itme ve $360^\circ$ mermi yansıtma |
+| **`SHIFT`** | **Autumn Gust Dash** | Afterimage hayalet izli hızlı rüzgar atılması (`0.22 sn` dokunulmazlık) |
+| **`B`** | **ODTÜ Kutsaması (Boon)** | Sıradaki ODTÜ Sonbahar Kutsamasını (`Devrim`, `Bilim`, `Yalıncak`, `Eymir`, `Hasat`) açar |
 | **`E`** | **Tapınak Etkileşimi** | 5 Relik toplandığında Kadim Tapınağı uyandırır ve sonraki koruyu sentezler |
 | **`M`** | **Minimap Radar Aç/Kapa** | Sağ üstteki canlı biyom, relik, Bilim Ağacı ve tapınak radarını açar/kapatır |
 | **`TAB`** | **Tohum (Seed) Penceresi** | Canlı metin tohumu girme ve paylaşım kodu (`KODTU-XXXX-LEAF`) görüntüleme |
@@ -251,46 +272,71 @@ Oyuncu, sonbahar korusuna çöken alacakaranlıkta **Güneş Közü Fenerini (So
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## 🗂️ 6. Proje Dizin Mimarisi
+## 🏆 6. Muadil Oyunlar & Rakip Analizi (Genre Benchmarks & Competitor Matrix)
+
+<div align="center">
+  <img src="docs/banners/competitor_matrix_infographic.png" alt="Genre Benchmark & Competitor Analysis Matrix" width="100%" />
+</div>
+
+Üstten görünüşlü (Top-Down) **Pixel Art + Prosedürel Üretim (PCG) + Aksiyon Roguelite / Hayatta Kalma** kulvarı, bağımsız oyun dünyasının en rekabetçi ve en çok satan türlerinden biridir. **KODTÜ: Autumn ProcGen Engine** geliştirilirken bu kulvarda dünya çapında başarı yakalamış **8 başyapıt** derinlemesine incelenmiş, her birinin en güçlü mühendislik ve oynanış sütunu motorumuza sentezlenmiştir:
+
+| Muadil Oyun (Stüdyo / Yıl) | Küresel Başarı Nedeni & Temel Mekanik | Rakibin Sınırlılığı / Eksikliği | **KODTÜ: Autumn ProcGen Engine**'deki Üstün Karşılığı |
+| :--- | :--- | :--- | :--- |
+| **1. Hyper Light Drifter**<br/>*(Heart Machine, 2016)* | Kılıç darbeleriyle mermi şarj etme (*Slash-to-Reload*), mermi yansıtma, Dash hayalet izleri ve Hue-Shifted atmosferik piksel sanatı. | Dünyası tamamen sabit/el yapımıdır; prosedürel üretim (PCG) içermez. | `Solar Ember Slash ([SPACE])` ile `Solar Bolt ([F])` şarj etme, `DEFLECT!` mermi yansıtma ve `DashGhost` izlerini **`%100` deterministik prosedürel dünya** ile birleştirir. |
+| **2. Core Keeper**<br/>*(Pugstorm, 2024)* | Hücresel otomata mağara sistemleri, çoklu biyom ekosistemi, otomatik karo döşeme (autotiling) ve ışık/meşale odaklı keşif. | Savaş sistemi daha yavaş ve kütleseldir; rüzgar/yaprak vektör fiziği bulunmaz. | $B678/S345678$ Otomata + **47-Karo Blob Bitmasking** ve `16×16` Chunk Spatial Hash mimarisini hızlı aksiyon ve **2B Verlet yaprak fiziğiyle** birleştirir. |
+| **3. Nuclear Throne**<br/>*(Vlambeer, 2015)* | Çıkmaz sokaksız dinamik seviye kazıyıcıları, **Hit-Stop** (mikro kare dondurma), kamera sarsıntısı ve mutasyon seçimleri. | Görsel paleti düşük kontrastlı çorak topraklardır; topolojik mesafe bütçelemesi basittir. | Vlambeer tarzı `38 ms` **Hit-Stop** ve $\text{Trauma}^2$ sarsıntısını, **Dijkstra Jeodezik Tehdit Bütçesi** ve **5 ODTÜ Kutsaması (`Autumn Boons`)** ile sunar. |
+| **4. Enter the Gungeon**<br/>*(Dodge Roll, 2016)* | Kusursuz tam sayı piksel ölçekleme, mermi cehennemi (bullet-hell) desenleri ve yakın dövüşle mermi kesme/yansıtma. | Önceden çizilmiş oda şablonlarını birleştirir; organik doğa/orman topoğrafyası üretmez. | *Elder Stag Warden*'ın 3'lü **Twilight Orb** yaylım ateşini kılıç veya `Harvest Nova ([Q])` ile düşmana geri yansıtma (`DEFLECT!`) mekaniğini organik ormanda sunar. |
+| **5. Wizard of Legend**<br/>*(Contingent99, 2018)* | Çok hızlı element büyü komboları, $360^\circ$ alan etkili novalar, rüzgar atılmaları ve sinerjik relik/kutsama dizilimleri. | Koridorlar dikdörtgen zindan karolarından ibarettir; mavi-gürültülü (Poisson) ekolojik dağılım yoktur. | `3-Hit Solar Combo` + `Harvest Nova [Q]` + `Solar Bolt [F]` + `Gust Dash [SHIFT]` dörtlüsünü **Bridson $\mathcal{O}(N)$ Poisson Disk** ormanında çalıştırır. |
+| **6. Don't Starve**<br/>*(Klei Entertainment)* | Sonbahar (*Reign of Giants*) biyom estetiği, karanlık/ısı yönetimi (fener/kamp ateşi) ve çevresel tehdit algısı. | Dövüş mekanikleri tek tuşlu ("kite & hit") ve basittir; piksel-sanatı yerine 2B vektör kukla kullanır. | Fener ısısı (*Lantern Warmth*) hayatta kalma gerilimini **ODTÜ Bilim Ağacı Meşalesi (`+15/sn`)**, simyacı kamp ateşleri ve derin kombo sistemiyle harmanlar. |
+| **7. Noita**<br/>*(Nolla Games, 2020)* | Deterministik tohum (seed) mimarisi ve her pikselin/parçacığın çevresel kuvvetlerle fiziksel etkileşime girmesi. | Yüksek CPU yükü nedeniyle düşük donanımlarda kare hızı düşüşleri yaşanabilir. | Zamanla evrilen **2B Simplex Rüzgar Vektör Alanı ($\vec{W}(x,y,t)$)** ve oyuncu saldırılarının radyal şok dalgalarıyla savrulan `160+` Verlet yaprağını `60 FPS`'te işler. |
+| **8. Children of Morta & Moonlighter** | Zengin 16-bit piksel animasyonları, Y-Sıralamalı (Y-Sorted) derinlik ve zindan/orman keşif döngüsü. | Prosedürel üretim aşamaları oyuncuya kapalı bir "kara kutu" (black-box) olarak çalışır. | **`[F1]`–`[F4]` Canlı Mühendislik Telemetrisi** ile gürültü matrislerini, 47-Blob indekslerini ve Dijkstra/A\* grafını oyun içinde anlık olarak görselleştirir! |
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## 🗂️ 7. Proje Dizin Mimarisi
 
 ```text
 kodtu-autumn-procgen/
-├── README.md                          # Kapsamlı teknik dokümantasyon, ODTÜ mirası ve mimari rehber
+├── README.md                          # Kapsamlı teknik dokümantasyon, ODTÜ mirası ve rakip analizi
 ├── requirements.txt                   # Bağımlılıklar (pygame-ce, numpy, pillow, pytest)
 ├── assets/                            # Deterministik olarak sentezlenen 16-bit varlıklar ve sesler
 │   ├── palettes/
 │   │   ├── autumn_16.hex              # 16-Renk Sonbahar HEX palet tanımı
 │   │   └── autumn_lut.png             # 1D Renk Arama Tablosu (LUT) dokusu
 │   ├── shaders/
-│   │   ├── autumn_lut.frag.glsl       # GLSL 330 Sonbahar LUT & Alacakaranlık Vinyet gölgelendiricisi
-│   │   └── pixel_upscale.vert.glsl    # GLSL 330 Tam Sayı Ölçekleme (Integer Scaling) köşe gölgelendiricisi
+│   │   ├── palette_quantize.glsl      # GLSL 330 Sonbahar LUT & Alacakaranlık Vinyet gölgelendiricisi
+│   │   └── wind_sway.glsl             # GLSL 330 Tam Sayı Ölçekleme & Kanopi Rüzgar gölgelendiricisi
 │   ├── sprites/
-│   │   ├── autumn_tileset_47.png      # 47-Karo Blob otomatik döşeme (autotile) atlası
+│   │   ├── autotile_47.png            # 47-Karo Blob otomatik döşeme (autotile) atlası
 │   │   ├── foliage_sheet.png          # Akçaağaç, Huş, Meşe, Mantar, Balkabağı ve Yaprak atlası
-│   │   └── entities_sheet.png         # Autumn Keeper, Wisp, Stalker, Golem, Elder Stag Warden atlası
+│   │   ├── player_sheet.png           # Autumn Keeper 16-bit karakter animasyon kareleri
+│   │   └── entities_sheet.png         # Wisp, Stalker, Golem, Elder Stag Warden ve Relik atlası
 │   └── audio/                         # Prosedürel ADSR zarflı PCM WAV ses efektleri
-│       ├── wind_drone.wav             # Pembe gürültü + LFO alçak geçiren sonbahar rüzgarı
-│       ├── leaf_crunch_0..3.wav       # 4 farklı perdede kuru yaprak hışırtısı
-│       ├── slash_ember.wav            # Köz kılıcı savurma ve nova sesi
-│       ├── harvest_chime.wav          # Pentatonik (`C5-D5-F5-G5-A5`) relik toplama tınısı
-│       └── portal_activate.wav        # Tapınak uyanışı ve tohum geçiş akoru
+│       ├── ambient_wind.wav           # Pembe gürültü + LFO alçak geçiren sonbahar rüzgarı
+│       ├── leaf_crunch_1..3.wav       # 3 farklı perdede kuru yaprak hışırtısı
+│       ├── slash_ember.wav            # Köz kılıcı savurma, Solar Bolt ve Nova sesi
+│       ├── harvest_chime.wav          # Pentatonik (`C5-D5-F5-G5-A5`) relik & kutsama tınısı
+│       └── portal_activate.wav        # Tapınak uyanışı ve ODTÜ tohum geçiş akoru
 ├── docs/
 │   ├── banners/                       # Prosedürel olarak üretilen yüksek çözünürlüklü infografik ve bannerlar
 │   │   ├── hero_odtu_kodtu_banner.png
 │   │   ├── pipeline_6stage_infographic.png
 │   │   ├── palette_lut_infographic.png
+│   │   ├── competitor_matrix_infographic.png
 │   │   └── section_divider_autumn.png
 │   ├── preview_gameplay.png           # Canlı 16-bit oynanış ekran görüntüsü
 │   └── preview_debug_f1_f4.png        # 4'lü [F1]-[F4] prosedürel telemetri vitrini
 ├── src/
-│   ├── main.py                        # Ana oyun döngüsü, CLI argümanları ve [F1]-[F5] kontrolcüsü
+│   ├── main.py                        # Ana oyun döngüsü, Hit-Stop, Solar Bolt, Deflect ve [F1]-[F5] kontrolcüsü
 │   ├── core/
 │   │   ├── palette.py                 # 16-Renk Sonbahar LUT sabitleri ve Hue-Shifting matematiği
 │   │   ├── camera.py                  # 320x180 tam sayı ölçekleme, Frustum Culling ve kamera sarsıntısı
 │   │   ├── spatial_hash.py            # 16x16 Chunk uzamsal özetleme ve O(1) çarpışma çözümü
 │   │   ├── asset_builder.py           # 100% deterministik piksel-sanatı ve ODTÜ Bilim Ağacı sentezleyicisi
 │   │   ├── audio_synth.py             # Prosedürel PCM ses sentezleyicisi ve çalışma zamanı mikseri
-│   │   └── banner_generator.py        # README için piksel-sanatı banner ve infografik üreticisi
+│   │   └── banner_generator.py        # README için piksel-sanatı banner ve rakip matrisi üreticisi
 │   ├── procgen/
 │   │   ├── prng.py                    # FNV-1a, SplitMix64, Xoshiro256** ve Mulberry32 PRNG motoru
 │   │   ├── noise.py                   # Vektörize 2B Simplex fBm gürültü ve 2B rüzgar vektör alanı
@@ -300,22 +346,22 @@ kodtu-autumn-procgen/
 │   │   ├── structures.py              # ODTÜ Bilim Ağacı, Tapınak, A* köprüler ve tehdit bütçesi
 │   │   └── pipeline.py                # 6 aşamalı deterministik PCG orkestratörü ve milisaniye telemetrisi
 │   ├── entities/
-│   │   └── actors.py                  # Player, 4 düşman arketipi (Warden dahil), Relikler ve FloatingText
+│   │   └── actors.py                  # Player, Projectile, DashGhost, ODTÜ Boons ve 4 düşman arketipi
 │   ├── rendering/
 │   │   ├── particles.py               # Verlet entegrasyonlu yaprak fiziği ve Rotsprite dönüşleri
-│   │   └── renderer.py                # Y-Sorted sahne işleyicisi ve [F1]-[F4] hata ayıklama katmanları
+│   │   └── renderer.py                # Y-Sorted sahne işleyicisi, mermi/hayalet çizimi ve [F1]-[F4] katmanları
 │   └── ui/
 │       ├── pixel_font.py              # Özel 5x7 piksel-sanatı bitmap yazı tipi motoru
-│       └── hud.py                     # Fener barı, Minimap radar, pusula, telemetri ve Tohum penceresi
+│       └── hud.py                     # Fener barı, Solar Bolt mermi göstergesi, Minimap ve Tohum penceresi
 └── tests/
-    └── test_procgen.py                # 14 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, LUT ve ölçekleme testi
+    └── test_procgen.py                # 15 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, Deflect ve Boon testi
 ```
 
 <p align="center">
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## 🚀 7. Hızlı Başlangıç & Doğrulama Testleri
+## 🚀 8. Hızlı Başlangıç & Doğrulama Testleri
 
 ### 1. Kurulum
 
@@ -343,7 +389,7 @@ python src/main.py --seed "METU-BILIM-AGACI" --debug-procgen
 
 ### 3. Otomatik Test Paketi (`pytest`)
 
-Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **14 birim testini** çalıştırın:
+Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **15 birim testini** çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -364,7 +410,8 @@ tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED
 tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED
 tests/test_procgen.py::test_astar_and_procedural_structures PASSED
 tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED
-... 14 passed in 1.15s
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED
+... 15 passed in 1.25s
 ```
 
 <div align="center">
