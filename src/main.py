@@ -51,13 +51,16 @@ from src.rendering.renderer import (
     DEBUG_BITMASK_GRID,
     DEBUG_PATHFINDING,
 )
+from src.core.story import StoryManager
 from src.ui.hud import GameHUD
+from src.ui.modern_overlay import ModernStoryOverlay
 
 
 class AutumnProcGenGame:
     """
     Main Engine & Gameplay Controller uniting the 6-Stage PCG Pipeline,
-    Integer-Scaled 320x180 Pixel Renderer, Verlet Leaf Physics, and Audio Synthesizer.
+    Integer-Scaled 320x180 Pixel Renderer, High-Res 1280x720 Modern Story UI,
+    Verlet Leaf Physics, and Audio Synthesizer.
     """
 
     def __init__(
@@ -78,7 +81,7 @@ class AutumnProcGenGame:
         flags = 0 if headless else pygame.RESIZABLE
         self.screen = pygame.display.set_mode((self.window_w, self.window_h), flags)
         pygame.display.set_caption(
-            f"KODTU: Autumn ProcGen Engine | Seed: {initial_seed} | 320x180 Pixel-Perfect"
+            f"ODTÜ: Sonbaharın Son Işığı | KODTÜ Jam | Seed: {initial_seed}"
         )
         if not headless and sys.platform == "win32":
             try:
@@ -101,15 +104,17 @@ class AutumnProcGenGame:
         self.renderer = WorldRenderer(self.assets)
         self.camera = PixelCamera(NATIVE_WIDTH, NATIVE_HEIGHT)
         self.hud = GameHUD()
+        self.story = StoryManager(show_intro_card=not headless and not debug_procgen)
+        self.modern_ui = ModernStoryOverlay(self.assets)
 
         self.debug_procgen = debug_procgen
         self.debug_mode = DEBUG_NONE
         self.reseed_rng = Xoshiro256StarStar(f"{initial_seed}:reseed_stream")
         self.odtu_presets = [
-            ("ODTU-1956-DEVRIM", "ODTU DEVRIM STADYUMU KORUSU"),
-            ("KODTU-2026-EYMIR", "EYMIR GOLU SONBAHAR KIYISI"),
-            ("METU-BILIM-AGACI", "ODTU BILIM AGACI ANITI"),
-            ("ODTU-YALINCAK-FALL", "YALINCAK SONBAHAR PATIKASI"),
+            ("ODTU-1956-DEVRIM", "ODTÜ DEVRİM STADYUMU KORUSU"),
+            ("KODTU-2026-EYMIR", "EYMİR GÖLÜ SONBAHAR KIYISI"),
+            ("METU-BILIM-AGACI", "ODTÜ BİLİM AĞACI ANITI"),
+            ("ODTU-YALINCAK-FALL", "YALINCAK SONBAHAR PATİKASI"),
         ]
         self.odtu_preset_idx = 0
         self.time_sec = 0.0
@@ -139,7 +144,7 @@ class AutumnProcGenGame:
     def load_seed(self, seed_str: str, depth_level: int = 1) -> None:
         """
         Executes the 6-stage deterministic PCG pipeline for `seed_str` and initializes
-        spatial hashing, entities, camera, and Verlet leaf particles.
+        spatial hashing, entities, camera, story chapter, and Verlet leaf particles.
         """
         prev_boons = getattr(self, "player", None).active_boons if hasattr(self, "player") else []
         self.world = generate_autumn_world(
@@ -170,11 +175,13 @@ class AutumnProcGenGame:
             world_px_h,
         )
 
+        self.story.start_chapter(depth_level, self.world.seed_code)
+        chapter_title, _ = self.story.get_chapter_meta()
         pygame.display.set_caption(
-            f"KODTU: Autumn ProcGen | Seed: {self.world.seed_input} ({self.world.seed_code}) | {self.world.total_gen_ms:.1f}ms"
+            f"ODTÜ: Sonbaharın Son Işığı | {chapter_title} | Seed: {self.world.seed_code}"
         )
         self.hud.show_banner(
-            f"GROVE {depth_level}: {self.world.seed_code} ({self.world.total_gen_ms:.1f}ms)"
+            f"{chapter_title} — TOHUM: {self.world.seed_code} ({self.world.total_gen_ms:.1f}ms)"
         )
 
         if self.debug_procgen:
@@ -206,13 +213,31 @@ class AutumnProcGenGame:
         )
 
     def handle_events(self) -> bool:
-        """Processes keyboard/mouse input, Debug Shortcuts ([F1]-[F5]), and Seed Modal."""
+        """Processes keyboard/mouse input, Story Intro Card, Debug Shortcuts ([F1]-[F5]), and Seed Modal."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
             elif event.type == pygame.VIDEORESIZE:
                 self.window_w, self.window_h = event.w, event.h
             elif event.type == pygame.KEYDOWN:
+                if self.story.show_intro_card:
+                    if event.key == pygame.K_ESCAPE:
+                        self.story.show_intro_card = False
+                        continue
+                    elif event.key in (
+                        pygame.K_RETURN,
+                        pygame.K_SPACE,
+                        pygame.K_e,
+                        pygame.K_h,
+                        pygame.K_w,
+                        pygame.K_a,
+                        pygame.K_s,
+                        pygame.K_d,
+                    ):
+                        self.story.show_intro_card = False
+                        self.sound.play("portal_activate")
+                        continue
+
                 if self.hud.seed_modal_open:
                     if event.key in (pygame.K_ESCAPE, pygame.K_TAB):
                         self.hud.seed_modal_open = False
@@ -240,6 +265,8 @@ class AutumnProcGenGame:
                         self.hud.codex_modal_open = False
                         continue
                     return False
+                elif event.key == pygame.K_h:
+                    self.story.show_intro_card = not self.story.show_intro_card
                 elif event.key == pygame.K_c:
                     self.hud.codex_modal_open = not self.hud.codex_modal_open
                 elif event.key == pygame.K_TAB:
@@ -293,6 +320,10 @@ class AutumnProcGenGame:
                     self._try_interact_shrine()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and not self.hud.seed_modal_open:
+                if self.story.show_intro_card:
+                    self.story.show_intro_card = False
+                    self.sound.play("portal_activate")
+                    continue
                 if event.button == 1:
                     self._perform_ember_attack()
                 elif event.button == 2:
@@ -303,7 +334,7 @@ class AutumnProcGenGame:
         return True
 
     def _get_move_vector(self) -> tuple[float, float]:
-        if self.hud.seed_modal_open or self.hud.codex_modal_open:
+        if self.hud.seed_modal_open or self.hud.codex_modal_open or self.story.show_intro_card:
             return 0.0, 0.0
         keys = pygame.key.get_pressed()
         mx = 0.0
@@ -480,6 +511,11 @@ class AutumnProcGenGame:
     def update(self, dt: float) -> None:
         self.time_sec += dt
         self.hud.update(dt)
+        self.story.update(dt)
+
+        # Pause gameplay movement/enemies while reading the Story Intro Card
+        if self.story.show_intro_card:
+            return
 
         # Vlambeer / Nuclear Throne style tactile Hit-Stop micro-freeze
         if self.hit_stop_timer > 0.0:
@@ -521,13 +557,15 @@ class AutumnProcGenGame:
             if st.structure_type == "campfire":
                 if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 1.8:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 9.0)
+                    self.story.on_near_campfire()
             elif st.structure_type == "bilim_agaci":
                 if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 2.4:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 15.0)
+                    self.story.on_near_bilim_agaci()
                     if self.bilim_aura_timer <= 0.0:
                         self.bilim_aura_timer = 2.8
                         self.spawn_floating_text(
-                            st.tile_x + 0.5, st.tile_y - 0.4, "ODTU BILIM MESALESI +WARMTH", PALE_SUNBEAM
+                            st.tile_x + 0.5, st.tile_y - 0.4, "ODTÜ BİLİM MEŞALESİ +ISI", PALE_SUNBEAM
                         )
                         self.leaf_system.spawn_burst(
                             (st.tile_x + 0.5) * TILE_SIZE,
@@ -550,7 +588,7 @@ class AutumnProcGenGame:
         elif stepped_mud:
             self.sound.play("mud_step")
 
-        # Update Collectibles (Relics also unlock ODTÜ Autumn Boons!)
+        # Update Collectibles (Relics also unlock ODTÜ Autumn Boons & Story Memories!)
         for item in self.items:
             if item.collected:
                 continue
@@ -561,22 +599,25 @@ class AutumnProcGenGame:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 20.0)
                     self.sound.play("harvest_chime")
                     boon = self.player.grant_next_boon()
-                    boon_label = f"+RELIC & {boon[1]}!" if boon else "+RELIC!"
+                    boon_label = f"+ANI & {boon[1]}!" if boon else "+SONBAHAR ANISI!"
                     self.spawn_floating_text(item.x, item.y, boon_label, PALE_SUNBEAM)
                     self.leaf_system.spawn_burst(
                         item.x * TILE_SIZE, item.y * TILE_SIZE, count=18, golden_bias=True
                     )
+                    self.story.on_relic_collected(
+                        self.player.relics_collected, self.world.total_relics
+                    )
                     if self.player.relics_collected >= self.world.total_relics:
                         self.sound.play("portal_activate")
-                        self.hud.show_banner("ALL RELICS GATHERED! RETURN TO SHRINE [E]")
+                        self.hud.show_banner("TÜM ANILAR TOPLANDI! KADİM TAPINAĞA DÖN [E]")
                     else:
                         self.hud.show_banner(
-                            f"RELIC {self.player.relics_collected}/{self.world.total_relics} + {boon[1] if boon else 'WARMTH'}"
+                            f"SONBAHAR ANISI {self.player.relics_collected}/{self.world.total_relics} + {boon[1] if boon else 'ISI'}"
                         )
                 else:
                     self.player.acorns_collected += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 10.0)
-                    self.spawn_floating_text(item.x, item.y, "+10 WARMTH", HARVEST_GOLD)
+                    self.spawn_floating_text(item.x, item.y, "+10 ISI", HARVEST_GOLD)
                     self.sound.play("harvest_chime")
 
         # Update Enemies & check player contact
@@ -630,7 +671,7 @@ class AutumnProcGenGame:
                         self.spawn_floating_text(
                             enemy.x,
                             enemy.y - 0.3,
-                            f"-{proj.damage} BOLT!",
+                            f"-{proj.damage} KÖZ!",
                             PALE_SUNBEAM if proj.deflected else SUNLIT_BIRCH,
                         )
                         self.leaf_system.spawn_burst(
@@ -674,14 +715,14 @@ class AutumnProcGenGame:
         self.camera.add_trauma(0.40)
         self.sound.play("hit_hurt")
         self.spawn_floating_text(
-            self.player.x, self.player.y - 0.3, f"-{int(damage)} WARMTH", CRIMSON_DECAY
+            self.player.x, self.player.y - 0.3, f"-{int(damage)} ISI", CRIMSON_DECAY
         )
         if self.player.warmth <= 0.0:
             sx, sy = self.world.spawn_tile
             self.player.x = float(sx) + 0.5
             self.player.y = float(sy) + 0.5
             self.player.warmth = self.player.max_warmth
-            self.hud.show_banner("LANTERN REKINDLED AT GROVE HEART")
+            self.hud.show_banner("DEVRİM FENERİ KORUNUN KALBİNDE YENİDEN YANDI")
 
     def render(self) -> None:
         self.renderer.render_frame(
@@ -699,18 +740,25 @@ class AutumnProcGenGame:
             projectiles=self.projectiles,
             dash_ghosts=self.dash_ghosts,
         )
-        self.hud.render(
-            canvas=self.canvas,
-            world=self.world,
-            player=self.player,
-            items=self.items,
-            fps=self.clock.get_fps(),
-            debug_mode=self.debug_mode,
-            show_procgen_telemetry=self.debug_procgen,
-            draw_calls=self.renderer.last_draw_calls,
-            culled_props=self.renderer.last_culled_props,
-            enemies=self.enemies,
-        )
+        # Render low-res canvas HUD only when debug modes, modals, or procgen telemetry are active
+        if (
+            self.debug_mode != DEBUG_NONE
+            or self.debug_procgen
+            or self.hud.seed_modal_open
+            or self.hud.codex_modal_open
+        ):
+            self.hud.render(
+                canvas=self.canvas,
+                world=self.world,
+                player=self.player,
+                items=self.items,
+                fps=self.clock.get_fps(),
+                debug_mode=self.debug_mode,
+                show_procgen_telemetry=self.debug_procgen,
+                draw_calls=self.renderer.last_draw_calls,
+                culled_props=self.renderer.last_culled_props,
+                enemies=self.enemies,
+            )
 
         # Strict Integer Scaling onto the display window (Zero Bilinear Blur)
         scale, ox, oy, sw, sh = PixelCamera.compute_integer_viewport_rect(
@@ -719,6 +767,22 @@ class AutumnProcGenGame:
         self.screen.fill(DEEP_VOID)
         scaled_surf = pygame.transform.scale(self.canvas, (sw, sh))
         self.screen.blit(scaled_surf, (ox, oy))
+
+        # High-Resolution 1280x720 Modern Story & Objective Overlay on top of Pixelated World
+        self.modern_ui.render_hd_overlay(
+            screen=self.screen,
+            world=self.world,
+            player=self.player,
+            items=self.items,
+            enemies=self.enemies,
+            story=self.story,
+            show_minimap=self.hud.show_minimap,
+            codex_open=self.hud.codex_modal_open,
+            seed_modal_open=self.hud.seed_modal_open,
+            seed_input_buffer=self.hud.seed_input_buffer,
+            banner_text=self.hud.banner_text,
+            banner_timer=self.hud.banner_timer,
+        )
         pygame.display.flip()
 
     def export_debug_quad_showcase(self, output_path: Path) -> None:

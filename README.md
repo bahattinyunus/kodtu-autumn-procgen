@@ -13,7 +13,8 @@
 [![Art Style: Pixelated](https://img.shields.io/badge/Art_Style-Pixelated_16--Bit_(320x180)-E09F3E?style=for-the-badge&labelColor=1A1118)](#-piksel-kusursuz-pixel-perfect-g%C3%B6rsel-m%C3%BChendislik)
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Color_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#-sonbahar-renk-kuram%C4%B1-hue-shifted-autumn-lut)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Stage_Deterministic_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#-deterministik-prosed%C3%BCrel-%C3%BCretim-mimarisi-pcg-pipeline)
-[![Tests: 16 Passed](https://img.shields.io/badge/Pytest_Suite-16%2F16_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
+[![Modern UI: 1280x720 HD Story](https://img.shields.io/badge/UI-Modern_1280x720_Story_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#-modern-y%C3%BCksek-%C3%A7%C3%B6z%C3%BCn%C3%BCrl%C3%BCkl%C3%BC-hd-aray%C3%BCz-ve-hikaye-anlat%C4%B1m%C4%B1)
+[![Tests: 17 Passed](https://img.shields.io/badge/Pytest_Suite-17%2F17_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
 
 </div>
 
@@ -244,8 +245,31 @@ Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/s
 | **`DEVRIM_TORCH`** | 🔥 **Devrim Meşalesi** | Saniyede `+2.5 Warmth` pasif ısı yenilemesi sağlar ve maksimum **Solar Bolt** kapasitesini `4` $\rightarrow$ `5` yapar. | *Don't Starve* / *Core Keeper* Fener Aurası |
 | **`BILIM_SPARK`** | ⚡ **Bilim Ağacı Kıvılcımı** | Tüm kılıç darbelerine ve Solar Bolt mermilerine **`+1` Bonus Hasar** ekler, yaprak şok dalgasını büyütür. | *Hades* / *Children of Morta* Hasar Sinerjisi |
 | **`YALINCAK_GALE`** | 🍃 **Yalıncak Rüzgarı** | Yürüme hızını **`+%18`** artırır ve `Autumn Gust Dash` bekleme süresini **`%30` kısaltır** (`0.65s` $\rightarrow$ `0.45s`). | *Wizard of Legend* Rüzgar Koşusu |
-| **`EYMIR_REFLECT`** | 🛡️ **Eymir Ayna Kalkanı** | Yansıtılan düşman kürelerinin (`DEFLECT!`) hasarını `6`'ya çıkarır ve her yansıtmada **`+6 Warmth`** iyileştirir. | *Enter the Gungeon* / *HLD* Mermi Yansıtma |
-| **`HARVEST_CROWN`** | 👑 **KODTÜ Hasat Tacı** | `Solar Bolt ([F])` atışlarını **3'lü Yelpaze Yaylım Ateşine (`-0.22`, `0`, `+0.22` rad)** dönüştürür! | *Nuclear Throne* / *Archvale* Çoklu Atış |
+---
+
+## 📖 6. Modern Yüksek Çözünürlüklü (HD) Arayüz ve Hikaye Anlatımı (Story Mode)
+
+> *"Celeste, Eastward ve Sea of Stars tarzı: Dünyanın kendisi 100% piksel-kusursuz (Pixelated) ve Sonbahar paletine sadık kalırken, oyuncunun hikayeyi takip ettiği arayüz ultra-net, sade ve modern 1280×720 HD çözünürlükte sunulur."*
+
+KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation** kısıtlamalarına tam bağlı kalınırken, oyun deneyimini hantal retro HUD kutularından kurtarıp **çağdaş, modern ve sade bir anlatı oyununa** dönüştüren hibrit bir mimari geliştirdik:
+
+1. **🏛️ 3 Aşamalı ODTÜ Hikaye Bölümleri (`src/core/story.py`):**
+   - **Bölüm I: Yalıncak Yaprak Yolu (Koru 1):** Bozkırın kalbinde Devrim Feneri'nin ilk kıvılcımı parlar. Kızıl yaprakların altında ODTÜ Bilim Ağacı Anıtı'na ulaşın ve ormanın uyuyan anı kristallerini uyandırın.
+   - **Bölüm II: Eymir'in Sisli Kıyıları (Koru 2):** Sislerin arasından yükselen ahşap iskeleler ve su birikintileri. Kadim meşelerin fısıltılarını dinleyerek karanlık alacakaranlık yaratıklarını savuşturun.
+   - **Bölüm III: Devrim Korusu ve Sonbahar Kalbi (Koru 3+):** Devrim Stadyumu'nun ulu korusunda Elder Stag Warden ile yüzleşin ve Sonbaharın Son Işığı'nı sonsuzluğa taşıyın.
+2. **💬 Piksel-Portreli Türkçe Diyalog Kutusu:**
+   - Ekranın alt-ortasında konuşmacıya özel `64×64` piksel-sanatı portre ikonları (**ODTÜ Bilim Ağacı**, **Sonbahar Anısı Kristali**, **Ormancı Kamp Ateşi**, **Muhafız Ekin**).
+   - Akıcı Türkçe metinler, harf kaydırma ve açık yönlendirmeler.
+3. **🧭 Üst-Orta Dinamik Pusula Kapsülü (Compass Pill):**
+   - Oyuncuyu haritada kaybolmaktan kurtaran minimalist navigasyon kapsülü: En yakın **Sonbahar Anısı Kristali** veya **Kadim Tapınak** yönünü ok ile ve gerçek adım mesafesiyle (`Mesafe: 14 adım`) anlık gösterir.
+4. **📊 Sol-Üst Sadeleştirilmiş Durum & Görev Kartı:**
+   - **Devrim Feneri Isısı:** Yüzde çubuğuyla temiz görsel geribildirim.
+   - **Köz Mermisi [F]:** 4 şarj hücresi ile anlık mermi durumu.
+   - **Sonbahar Anısı:** `0 / 5` ilerleme göstergesi ve anlık Türkçe tek cümlelik net görev özeti: `GÖREV: Ormandaki Sonbahar Anılarını Bul (0/5) — Kalan: 5`.
+5. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
+   - Oyuna başlarken hikaye arka planını, fener mekaniğini ve 3 adımlı basit oyun amacını özetleyen estetik kart. İstendiğinde **`[H]`** tuşuyla yeniden açılabilir.
+
+---
 
 ---
 
@@ -334,6 +358,7 @@ kodtu-autumn-procgen/
 │   ├── core/
 │   │   ├── palette.py                 # 16-Renk Sonbahar LUT sabitleri ve Hue-Shifting matematiği
 │   │   ├── camera.py                  # 320x180 tam sayı ölçekleme, Frustum Culling ve kamera sarsıntısı
+│   │   ├── story.py                   # Türkçe hikaye bölümleri, diyalog kuyruğu ve anı parçacıkları
 │   │   ├── spatial_hash.py            # 16x16 Chunk uzamsal özetleme, O(1) çarpışma ve parçalanabilir flora
 │   │   ├── asset_builder.py           # 100% deterministik piksel-sanatı ve ODTÜ Bilim Ağacı sentezleyicisi
 │   │   ├── audio_synth.py             # Prosedürel PCM ses sentezleyicisi ve çalışma zamanı mikseri
@@ -353,9 +378,10 @@ kodtu-autumn-procgen/
 │   │   └── renderer.py                # Y-Sorted sahne işleyicisi, mermi/hayalet çizimi ve [F1]-[F4] katmanları
 │   └── ui/
 │       ├── pixel_font.py              # Özel 5x7 piksel-sanatı bitmap yazı tipi motoru
-│       └── hud.py                     # Fener barı, Boss barı, [C] Kutsama Kodeksi, Minimap ve Tohum penceresi
+│       ├── hud.py                     # [F1]-[F4] telemetri paneli ve düşük çözünürlüklü debug arayüzü
+│       └── modern_overlay.py          # 1280x720 Modern HD Türkçe arayüz, diyalog kutusu ve pusula
 └── tests/
-    └── test_procgen.py                # 16 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, Deflect ve Kodeks testi
+    └── test_procgen.py                # 17 kapsamlı determinizm, ODTÜ Bilim Ağacı, Hikaye ve Modern HD arayüz testi
 ```
 
 <p align="center">
@@ -378,19 +404,19 @@ pip install -r requirements.txt
 ### 2. Oyunu Çalıştırma (Standart & ODTÜ Özel Tohumlarıyla)
 
 ```bash
-# Varsayılan KODTÜ 2026 tohumu ve canlı PCG telemetri paneli ile başlatın
-python src/main.py --seed "KODTU2026" --debug-procgen
+# Varsayılan KODTÜ 2026 tohumu ve Modern Hikaye Modu ile başlatın
+python src/main.py --seed "KODTU2026"
 
 # ODTÜ Devrim Stadyumu Korusu tohumu ile başlatın
-python src/main.py --seed "ODTU-1956-DEVRIM" --debug-procgen
+python src/main.py --seed "ODTU-1956-DEVRIM"
 
 # ODTÜ Bilim Ağacı Anıtı tohumu ile başlatın
-python src/main.py --seed "METU-BILIM-AGACI" --debug-procgen
+python src/main.py --seed "METU-BILIM-AGACI"
 ```
 
 ### 3. Otomatik Test Paketi (`pytest`)
 
-Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, parçalanabilir flora/palamut ganimetlerini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **16 birim testini** çalıştırın:
+Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, parçalanabilir flora/palamut ganimetlerini, Türkçe Hikaye Bölümlerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **17 birim testini** çalıştırın:
 
 ```bash
 pytest tests/ -v

@@ -296,3 +296,34 @@ def test_destructible_props_and_codex_modal() -> None:
     game.hud.codex_modal_open = False
 
 
+def test_story_manager_and_modern_hd_overlay() -> None:
+    """Verifies Turkish story chapter progression, dialogue triggers, and modern HD 1280x720 overlay."""
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="ODTU-1956-DEVRIM", debug_procgen=False, headless=True)
+
+    # Initial Chapter meta & objective
+    title, _ = game.story.get_chapter_meta()
+    assert "YALINCAK" in title.upper() or "BÖLÜM" in title.upper()
+    obj_text = game.story.get_current_objective_text(0, 5)
+    assert "GÖREV:" in obj_text
+    assert "0/5" in obj_text
+
+    # Trigger near Bilim Ağacı dialogue
+    game.story.on_near_bilim_agaci()
+    assert game.story.active_dialogue is not None
+    assert "ODTÜ BİLİM AĞACI" in game.story.active_dialogue.speaker
+
+    # Trigger relic collection story fragment
+    game.story.on_relic_collected(1, 5, boon_title="BİLİM KIVILCIMI")
+    assert game.story.active_dialogue is not None
+    assert "1/5" in game.story.active_dialogue.speaker
+
+    # Test Story Intro Card toggle and render
+    game.story.show_intro_card = True
+    game.render()
+    game.story.show_intro_card = False
+    game.render()
+
+
+
