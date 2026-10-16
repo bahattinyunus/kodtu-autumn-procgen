@@ -30,57 +30,57 @@ class DialogueEntry:
 
 CHAPTER_INFO: Dict[int, Tuple[str, str, str]] = {
     1: (
-        "BÖLÜM I : YALINCAK YAPRAK YOLU",
-        "1956'dan beri bozkırdan ellerle yeşertilen ulu ODTÜ ormanına ansızın dondurucu bir alacakaranlık sisi çöktü. "
-        "Yalıncak patikasında yapraklar hızla dökülürken, Bilim Ağacı'nın kadim meşalesinden aldığın köz feneriyle "
-        "ormanın dağılmış 5 Sonbahar Hatırasını topla ve tapınağı uyandır.",
-        "Görev: 5 Sonbahar Hatırası Kristalini topla, fenerini sıcak tut ve Kadim Tapınağa [E] ulaş.",
+        "BÖLÜM I : YALINCAK VE BOZKIRIN ENTROPİSİ",
+        "Her dökülen yaprak, doğanın kaçınılmaz entropisine karşı bir veda değil; toprağa bırakılmış bir vaattir. "
+        "1956'da ellerle dikilen bu orman, insanın tabiatla kurduğu en derin diyalogdur. "
+        "Fenerindeki köz, sadece karanlığı delmekle kalmaz; unuttuğun köklerini ve yarım kalmış hatıraları aydınlatır.",
+        "Görev: Yalıncak patikasında dağılmış 5 Varlık Hatırasını topla ve Kadim Tapınakta [E] döngüyü başlat.",
     ),
     2: (
-        "BÖLÜM II : EYMİR'İN SİSLİ KIYILARI",
-        "İlk korunun yaprakları ısındı! Şimdi Eymir Gölü'nün bataklık sazlıklarına ve prosedürel ahşap iskelelerine "
-        "inme vakti. Suyun üzerinde asılı kalan alacakaranlık fısıltılarına kulak ver; gölgeler soğuk üflerken "
-        "sadece köz fenerinin ışığı göl kıyısındaki kadim bilgiyi koruyabilir.",
-        "Görev: Eymir'in sisli kıyılarındaki 5 Sonbahar Hatırasını bul ve karanlık orbları yansıtarak tapınağı aç.",
+        "BÖLÜM II : EYMİR'İN DİNGİNLİĞİ VE ZAMANIN AKIŞI",
+        "Su akar, sis çöker, yaprak çürür; fakat bilgi ve hafıza asla yok olmaz. Eymir'in dingin kıyılarında "
+        "yankılanan fısıltılar sana şunu hatırlatır: 'Karanlık, ışığın yokluğu değil; henüz yakılmamış bir meşaledir.' "
+        "Korkularını gölgelere fırlat, fenerinin sıcaklığıyla gölün sakladığı felsefi hakikati çöz.",
+        "Görev: Eymir'in sisli sularındaki 5 Hatırayı birleştir ve gölge kürelerini erdemle geri yansıt.",
     ),
     3: (
-        "BÖLÜM III : DEVRİM KORUSU VE SONBAHAR KALBİ",
-        "Devrim Stadyumu'nun çam ve meşe korusuna ulaştın! Ormanın en kadim bekçisi Elder Stag Warden ve gölge ordusu, "
-        "Sonbaharın Son Işığı'nı bozkır ayazına hapsetmek üzere. Fenerinin tüm kutsamalarını birleştir, "
-        "son anıları mühürle ve ebedi sonbahar ahengini tüm kampüse geri kazandır!",
-        "Görev: Devrim Korusu'ndaki son 5 hatırayı birleştir, Orman Bekçisiyle yüzleş ve Sonbahar Kalbini yak.",
+        "BÖLÜM III : DEVRİM KORUSU VE EBEDİ DÖNGÜ (OUROBOROS)",
+        "Sonbahar bir son değil, dirilişin sessiz eşiğidir. Devrim basamaklarında yükselen 'Devrim', doğanın "
+        "kendini durmaksızın yenileyen devrimci iradesidir. Ormanın Kadim Bekçisiyle yüzleşirken anla ki: "
+        "Sen ormanda yürüyen bir yabancı değilsin; sen ormanın ta kendisisin, düşen yaprağın ve yanan közün kardeşisin.",
+        "Görev: Son 5 Bilgelik Hatırasını mühürle, Orman Bekçisinin sınavını geç ve Sonbahar Kalbini ebediyete ada.",
     ),
 }
 
 RELIC_STORY_FRAGMENTS: List[Tuple[str, str, str]] = [
     (
-        "İLK TOHUMUN HATIRASI (Anı 1/5)",
-        "1956 güzünde bozkır rüzgarına emanet edilen ilk meşe palamudunun anısı... "
-        "'Bir fidan bin inançtır.' Fenerinin alevi pas rengi kıvılcımlarla parıldadı!",
+        "VAROLUŞUN İLK KIVILCIMI (Anı 1/5)",
+        "Bozkırın ortasında bir avuç gencin diktiği ilk fidan fısıldıyor: "
+        "'Umut, en çorak toprakta bile bir tohumun çatlamaya cüret etmesidir.' Fenerin felsefi bir dinginlikle ışıdı.",
         "bilim_agaci",
     ),
     (
-        "YALINCAK RÜZGARININ TÜRKÜSÜ (Anı 2/5)",
-        "Altın huş yapraklarının savrulurken söylediği eski bir öğrenci marşı kulaklarında yankılandı: "
-        "'Bu orman teslim olmaz, her sonbahar yeni bir bahara gebe kalır!' [Hız +%18]",
+        "KABULLENİŞ VE DÖKÜLEN YAPRAKLAR (Anı 2/5)",
+        "Sarı huş yaprağı dalından koparken korkmuyor; çünkü toprağa karışmanın, yeniden doğmanın ilk adımı olduğunu biliyor. "
+        "'Geçicilik, varlığa anlam katan tek hakikattir.' [Ruhsal Dinginlik & Hız +%18]",
         "relic",
     ),
     (
-        "EYMİR SİSİ VE BİLİM MEŞALESİ (Anı 3/5)",
-        "Göl yüzeyindeki kehribar rengi sabah buğusu, fenerinin çatlaklarını güneş ısıyla doldurdu. "
-        "Gölün derinliklerindeki su nilüferleri altın köz saçarak seni selamladı.",
+        "SİSLER ARASINDAKİ AYNA (Anı 3/5)",
+        "Eymir'in yüzeyinde kendi aksini değil, bu ormanı var eden binlerce insanın ortak vicdanını görüyorsun. "
+        "'Birey bir damladır; dayanışma ise gölün ta kendisidir.' Fenerin gölün duruluğuyla parladı.",
         "bilim_agaci",
     ),
     (
-        "DEVRİM STADYUMU KIVILCIMI (Anı 4/5)",
-        "Tarihin taşa ve çime kazındığı basamaklardan yükselen sönmeyen inanç dalgası! "
-        "Fenerinden fırlayan Solar Ember mermileri artık 3'lü yaylım halinde gölgeleri yarıyor!",
+        "DİRENİŞ VE DEVRİM MEŞALESİ (Anı 4/5)",
+        "Devrim basamaklarına kazınan miras konuşuyor: 'Dünyayı değiştirmek, önce kendi içindeki karanlığa köz taşımakla başlar.' "
+        "Solar Ember mermilerin artık tek bir kıvılcım değil, kolektif bir hakikat meşalesidir!",
         "player",
     ),
     (
-        "SONBAHARIN SON IŞIĞI (Anı 5/5)",
-        "Tüm parçalar birleşti! ODTÜ ormanının bozkıra karşı verdiği yarım asırlık direniş fenerinde vücut buldu. "
-        "Artık Kadim Tapınağa [E] dön ve yeni korunun gizemli geçidini sonsuzluğa aç!",
+        "EBEDİ DÖNGÜ: SONBAHARIN SON IŞIĞI (Anı 5/5)",
+        "Tüm parçalar tamamlandı. Ölüm ve yaşam, düşüş ve yükseliş, bozkır ve orman tek bir ahenkte birleşti. "
+        "Artık Kadim Tapınağa [E] git; fenerindeki ışık artık sadece sana değil, tüm geleceğe aittir.",
         "relic",
     ),
 ]
@@ -158,10 +158,10 @@ class StoryManager:
     def on_near_bilim_agaci(self) -> None:
         self.trigger_dialogue(
             speaker="ODTÜ BİLİM AĞACI ANITI",
-            title="SÖNMEYEN BİLİM MEŞALESİ",
-            text="'1956'dan beri bozkırdan yükselen bu orman, her sonbaharda küllerinden yeniden doğar. "
-            "Fenerin üşüdüğünde yanıma gel; bilgi ve dayanışmanın meşalesi fenerini koruyacaktır.' (+15 Isı/sn)",
-            duration=6.5,
+            title="AKIL VE BOZKIRIN DİYALEKTİĞİ",
+            text="'1956'dan beri bozkırdan göğe uzanan bu anıt der ki: Ağaç dikmek, zamana karşı verilmiş en saf meydan okumadır. "
+            "Bilgiyle tutuşan meşale üşüyen fenerini ısıtır; akıl doğayı tüketmek için değil, onunla nefes almak içindir.' (+15 Isı/sn)",
+            duration=6.8,
             accent_type="birch",
             avatar_key="bilim_agaci",
             once_key="bilim_agaci_intro",
@@ -170,10 +170,10 @@ class StoryManager:
     def on_near_campfire(self) -> None:
         self.trigger_dialogue(
             speaker="ORMANCI KAMP ATEŞİ",
-            title="SICAK KÖZ DURAĞI",
-            text="Çıtırdayan kestane dalları ve meşe kökleri fenerinin ısısını tazeliyor. "
-            "Yalıncak ve Eymir yollarında ilerlemeden önce soluklanmak için güvenli bir sığınak.",
-            duration=5.5,
+            title="SOLUKLANMA VE GEÇİCİLİK",
+            text="'Ateş yanar, kül olur, sonra toprağa döner. Yolcu dinlenir, fenerini ısıtır, sonra tekrar yürür. "
+            "Bu durağın kıymetini bil; çünkü her mola, fırtınaya karşı toplanan yeni bir cesarettir.' (+9 Isı/sn)",
+            duration=5.8,
             accent_type="gold",
             avatar_key="campfire",
             once_key="campfire_intro",
@@ -182,10 +182,10 @@ class StoryManager:
     def on_boss_encounter(self) -> None:
         self.trigger_dialogue(
             speaker="KADİM GEYİK (ELDER STAG WARDEN)",
-            title="ORMANIN KORUYUCU RUHU",
-            text="'Bozkırın kış uykusu yaklaşırken közünü söndürmeyeceğim, onu sınayacağım! "
-            "Kılıcınla gölge kürelerimi yansıt ve sonbaharın ışığına layık olduğunu kanıtla!'",
-            duration=6.8,
+            title="TABİATIN İÇSEL SINAVI",
+            text="'Bozkırın kış uykusu yaklaşırken seni durdurmak için değil, ışığını tartmak için buradayım! "
+            "Karanlığı düşman belleme; kılıcınla gölge kürelerimi yansıt ve zıttınla ahenk içinde dans etmeyi öğren!'",
+            duration=7.0,
             accent_type="crimson",
             avatar_key="warden",
             once_key="boss_encounter",

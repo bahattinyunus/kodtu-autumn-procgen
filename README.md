@@ -275,22 +275,36 @@ Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/s
 
 KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation** kısıtlamalarına tam bağlı kalınırken, oyun deneyimini hantal retro HUD kutularından kurtarıp **çağdaş, modern ve sade bir anlatı oyununa** dönüştüren hibrit bir mimari geliştirdik:
 
-1. **🏛️ 3 Aşamalı Zengin ODTÜ Hikaye Bölümleri (`src/core/story.py`):**
-   - **Bölüm I: Yalıncak Yaprak Yolu (Koru 1):** 1956'dan beri bozkırdan ellerle yeşertilen ulu ODTÜ ormanına çöken alacakaranlık ayazı. Bilim Ağacı'nın meşalesinden Devrim Feneri'ni yakarak ormanın dağılmış 5 Sonbahar Hatırasını kurtarın.
-   - **Bölüm II: Eymir'in Sisli Kıyıları (Koru 2):** Eymir Gölü'nün sazlıklarına ve prosedürel ahşap iskelelerine inen patikalar. Gölgelerin fısıltılarını kılıç darbeleriyle geri püskürtün ve gölün kadim bilgisini tapınağa taşıyın.
-   - **Bölüm III: Devrim Korusu ve Sonbahar Kalbi (Koru 3+):** Devrim Stadyumu'nun ulu korusunda Ormanın Koruyucu Ruhu **Kadim Geyik (Elder Stag Warden)** ile yüzleşin, gölge kürelerini yansıtarak Sonbahar Kalbini sonsuzluğa mühürleyin!
-2. **💬 Daktilo Efektli (Typewriter) Piksel-Portreli Türkçe Diyalog Sistemi:**
+1. **🏛️ 3 Aşamalı Felsefi ODTÜ Anlatı Katmanı (`src/core/story.py`):**
+   - **Bölüm I: Yalıncak ve Bozkırın Entropisi (Koru 1):** 
+     - *Felsefi Arka Plan:* Bozkır unutmaya meyillidir; entropi insan emeğini toza, taşları kuma çağıran evrensel ve acımasız bir kuvvettir. ODTÜ Yalıncak koruluğunda, 1956'da ellerle dikilen ilk fidanlar bozkırın sessizliğine karşı aklın, emeğin ve kolektif iradenin ilk varoluşsal direnişidir. Düşen sarı yaprak bir ölüm veya yenilgi değildir; toprağa karışarak baharın filizini besleyeceğine dair tabiata verilmiş kadim bir sözdür.
+     - *Görev:* Bilim Ağacı'ndan Devrim Közü'nü al, bozkırın fısıltılarına kulak ver ve kayıp 5 Sonbahar Hatırasını topla.
+   - **Bölüm II: Eymir'in Dinginliği ve Zamanın Akışı (Koru 2):**
+     - *Felsefi Arka Plan:* Zaman, Eymir Gölü'nün sazlıkları arasından kıvrılan su gibi durmaksızın akar. İnsan bilinci geçmişin melankolisi ile geleceğin kaygısı arasında sıkışır. Gölün sakin aynası bize hakikati fısıldar: *"Karanlık, ışığın yokluğu değildir; yalnızca henüz yakılmamış bir meşaledir. Birey bir su damlasıdır; ancak bir araya geldiğinde ebedi göle dönüşür."*
+     - *Görev:* Sisli sazlıklarda gölgelerin vesvesesini kılıç darbeleriyle deflet, hafızanın özünü Kadim Tapınağa taşı.
+   - **Bölüm III: Devrim Korusu ve Ebedi Döngü — Ouroboros (Koru 3+):**
+     - *Felsefi Arka Plan:* Devrim Stadyumu'nun ulu korusunda bekleyen **Elder Stag Warden (Kadim Geyik)**, yok edilmesi gereken bir düşman değil; mevsimlerin, yaşamın ve ölümün diyalektik muhafızıdır. Sonbahar bir son değil, sonsuzluğun eşiğidir. Kılıcını savururken doğayla savaşmazsın; onun döngüsüyle hemhal olursun.
+     - *Görev:* Kadim Muhafızın karanlık kürelerini ışığa dönüştür, Sonbahar Çekirdeğini mühürle ve ebedi döngüyü tamamla.
+
+2. **📜 5 Varoluşsal Hatıra Parçacığı (Philosophical Harvest Relics):**
+   - **1. Hatıra: Varoluşun İlk Kıvılcımı:** *"Çorak bir bozkırda tohum olmak, rüzgara rağmen çatlamaya cüret etmektir. Umut, imkansızı bilip yine de yeşermektir."*
+   - **2. Hatıra: Kabulleniş ve Dökülen Yapraklar:** *"Dalından kopan yaprak yerçekimine yenilmez; toprağa kavuşur. Varoluşun tek mutlak yasası geçiciliktir; hayatı değerli kılan da budur."*
+   - **3. Hatıra: Sisler Arasındaki Ayna (Eymir):** *"Sakin suya baktığında gördüğün yüz yalnızca sana ait değildir; senden önce bu yoldan geçen binlerin ortak hafızasıdır."*
+   - **4. Hatıra: Direniş ve Devrim Meşalesi:** *"Karanlığı lanetlemek kolaydır; erdem, o karanlığın ortasında ellerin yanma pahasına bir kor taşımaktır."*
+   - **5. Hatıra: Ebedi Döngü (Sonbaharın Son Işığı):** *"Kış uykuya çağırır, bahar doğurur, yaz büyütür, sonbahar olgunlaştırır. Başlangıç ve son, Ouroboros yılanı gibi aynı noktada birleşir."*
+
+3. **💬 Daktilo Efektli (Typewriter) Piksel-Portreli Türkçe Diyalog Sistemi:**
    - Ekranın alt-ortasında konuşmacıya özel `64×64` piksel-sanatı portre ikonları (**ODTÜ Bilim Ağacı Anıtı**, **Sonbahar Hatırası Kristali**, **Ormancı Kamp Ateşi**, **Genç Muhafız Ekin**, **Kadim Geyik Warden**).
-   - *Celeste* ve *Eastward* tarzı harf harf açılan akıcı Türkçe daktilo (Typewriter) animasyonu.
-3. **🕯️ Dinamik Sonbahar Fener Vinyeti & Işıklandırma Geçişi (`src/rendering/renderer.py`):**
+   - *Celeste* ve *Eastward* tarzı harf harf açılan akıcı Türkçe daktilo (Typewriter) animasyonu ve prosedürel harf sesleri (`dialogue_blip.wav`).
+4. **🕯️ Dinamik Sonbahar Fener Vinyeti & Işıklandırma Geçişi (`src/rendering/renderer.py`):**
    - Oyuncunun taşıdığı fener, ODTÜ Bilim Ağacı Anıtı ve Kamp Ateşleri etrafında dinamik dalgalanan sıcak altın (`#FAEBAC` / `#E09F3E`) auralar yayılırken, ekranın kenarları doğal derinlik katan mor-çivit gölgelere (`#1A1118` / `#2C1820`) kavuşur.
-4. **🧭 Üst-Orta Dinamik Pusula Kapsülü (Compass Pill):**
+5. **🧭 Üst-Orta Dinamik Pusula Kapsülü (Compass Pill):**
    - Minimalist navigasyon kapsülü: En yakın **Sonbahar Hatırası** veya **Kadim Tapınak** yönünü ok ile ve gerçek adım mesafesiyle (`Mesafe: 14 adım`) anlık gösterir.
-5. **📊 Sol-Üst Sadeleştirilmiş Durum & Görev Kartı:**
+6. **📊 Sol-Üst Sadeleştirilmiş Durum & Görev Kartı:**
    - **Devrim Feneri Isısı:** Yüzde çubuğuyla temiz görsel geribildirim.
    - **Köz Mermisi [F]:** 4 şarj hücresi ile anlık mermi durumu.
    - **Sonbahar Hatırası:** `0 / 5` ilerleme göstergesi ve anlık Türkçe tek cümlelik net görev özeti.
-6. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
+7. **📜 İnteraktif Hikaye Başlangıç Kartı (`[H]` / Enter):**
    - Hikaye arka planını, fener mekaniğini ve 3 adımlı basit oyun amacını özetleyen estetik kart. İstendiğinde **`[H]`** tuşuyla yeniden açılabilir.
 
 ---
@@ -321,7 +335,7 @@ KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation**
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## 🏆 6. Muadil Oyunlar & Rakip Analizi (Genre Benchmarks & Competitor Matrix)
+## 🏆 7. Muadil Oyunlar & Rakip Analizi (Genre Benchmarks & Competitor Matrix)
 
 <div align="center">
   <img src="docs/banners/competitor_matrix_infographic.png" alt="Genre Benchmark & Competitor Analysis Matrix" width="100%" />
@@ -344,7 +358,7 @@ KODTÜ yarışmasının **Pixelated**, **Sonbahar** ve **Procedural Generation**
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## 🗂️ 7. Proje Dizin Mimarisi
+## 🗂️ 8. Proje Dizin Mimarisi
 
 ```text
 kodtu-autumn-procgen/
@@ -416,7 +430,7 @@ kodtu-autumn-procgen/
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
 </p>
 
-## 🚀 8. Hızlı Başlangıç & Doğrulama Testleri
+## 🚀 9. Hızlı Başlangıç & Doğrulama Testleri
 
 ### 1. Kurulum
 
