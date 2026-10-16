@@ -146,9 +146,10 @@ class WorldRenderer:
                 sort_y = (px_y - 6.0) if prop.prop_type == "leaf_pile" else px_y
                 y_sort_queue.append((sort_y, lambda s=sprite, dx=draw_x, dy=draw_y: canvas.blit(s, (dx, dy))))
 
-        # 3b. Alchemist Campfires (Procedural Micro-Structures)
+        # 3b. Alchemist Campfires & ODTÜ Bilim Ağacı (Procedural Micro-Structures)
         camp_frame = int(time_sec * 6.0) % 2
         camp_surf = self.assets.campfire_frames[camp_frame]
+        bilim_surf = self.assets.bilim_agaci_surf
         for st in world.structures:
             if st.structure_type == "campfire":
                 cx_px = (st.tile_x + 0.5) * TILE_SIZE
@@ -160,6 +161,16 @@ class WorldRenderer:
                         pygame.draw.circle(canvas, HARVEST_GOLD, (dx, dy), 9, 1)
                         canvas.blit(camp_surf, (dx - 8, dy - 10))
                     y_sort_queue.append((cy_px, _draw_camp))
+            elif st.structure_type == "bilim_agaci":
+                bx_px = (st.tile_x + 0.5) * TILE_SIZE
+                by_px = (st.tile_y + 0.5) * TILE_SIZE
+                bsx, bsy = camera.world_to_screen(bx_px, by_px)
+                if -32 <= bsx <= NATIVE_WIDTH + 32 and -32 <= bsy <= NATIVE_HEIGHT + 32:
+                    def _draw_bilim(dx: int = bsx, dy: int = bsy) -> None:
+                        pygame.draw.circle(canvas, CRIMSON_DECAY, (dx, dy), 15, 1)
+                        pygame.draw.circle(canvas, SUNLIT_BIRCH, (dx, dy), 11, 1)
+                        canvas.blit(bilim_surf, (dx - 16, dy - 26))
+                    y_sort_queue.append((by_px, _draw_bilim))
 
         # 3c. Ancient Autumn Shrine (32x32)
         shx = (world.shrine_tile[0] + 0.5) * TILE_SIZE

@@ -93,8 +93,16 @@ class AutumnProcGenGame:
         self.debug_procgen = debug_procgen
         self.debug_mode = DEBUG_NONE
         self.reseed_rng = Xoshiro256StarStar(f"{initial_seed}:reseed_stream")
+        self.odtu_presets = [
+            ("ODTU-1956-DEVRIM", "ODTU DEVRIM STADYUMU KORUSU"),
+            ("KODTU-2026-EYMIR", "EYMIR GOLU SONBAHAR KIYISI"),
+            ("METU-BILIM-AGACI", "ODTU BILIM AGACI ANITI"),
+            ("ODTU-YALINCAK-FALL", "YALINCAK SONBAHAR PATIKASI"),
+        ]
+        self.odtu_preset_idx = 0
         self.time_sec = 0.0
         self.wind_refresh_timer = 0.0
+        self.bilim_aura_timer = 0.0
 
         # Active world state
         self.world: WorldData
@@ -165,8 +173,19 @@ class AutumnProcGenGame:
             self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=24, golden_bias=True
         )
 
+    def cycle_odtu_preset(self) -> None:
+        """[F5] Cycles through curated ODTÜ / METU campus heritage seeds."""
+        seed_code, title = self.odtu_presets[self.odtu_preset_idx]
+        self.odtu_preset_idx = (self.odtu_preset_idx + 1) % len(self.odtu_presets)
+        self.load_seed(seed_code, depth_level=1)
+        self.hud.show_banner(f"[F5] {title} ({seed_code})", duration=3.2)
+        self.sound.play("portal_activate")
+        self.leaf_system.spawn_burst(
+            self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=28, golden_bias=True
+        )
+
     def handle_events(self) -> bool:
-        """Processes keyboard/mouse input, Debug Shortcuts ([F1]-[F4]), and Seed Modal."""
+        """Processes keyboard/mouse input, Debug Shortcuts ([F1]-[F5]), and Seed Modal."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return False
@@ -184,6 +203,9 @@ class AutumnProcGenGame:
                     elif event.key == pygame.K_F3:
                         self.hud.seed_modal_open = False
                         self.instant_reseed()
+                    elif event.key == pygame.K_F5:
+                        self.hud.seed_modal_open = False
+                        self.cycle_odtu_preset()
                     elif event.key == pygame.K_BACKSPACE:
                         self.hud.seed_input_buffer = self.hud.seed_input_buffer[:-1]
                     else:
@@ -228,6 +250,8 @@ class AutumnProcGenGame:
                         if self.debug_mode == DEBUG_PATHFINDING
                         else "STANDARD RENDER"
                     )
+                elif event.key == pygame.K_F5:
+                    self.cycle_odtu_preset()
                 elif event.key == pygame.K_SPACE:
                     self._perform_ember_attack()
                 elif event.key == pygame.K_q:
@@ -373,11 +397,26 @@ class AutumnProcGenGame:
             dt, mx, my, self.spatial_hash, self.world.biome_grid
         )
 
-        # Warmth regeneration near Alchemist Campfires
+        # Warmth regeneration near Alchemist Campfires & ODTÜ Bilim Ağacı Monument
+        self.bilim_aura_timer = max(0.0, self.bilim_aura_timer - dt)
         for st in self.world.structures:
             if st.structure_type == "campfire":
                 if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 1.8:
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 9.0)
+            elif st.structure_type == "bilim_agaci":
+                if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 2.4:
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + dt * 15.0)
+                    if self.bilim_aura_timer <= 0.0:
+                        self.bilim_aura_timer = 2.8
+                        self.spawn_floating_text(
+                            st.tile_x + 0.5, st.tile_y - 0.4, "ODTU BILIM MESALESI +WARMTH", PALE_SUNBEAM
+                        )
+                        self.leaf_system.spawn_burst(
+                            (st.tile_x + 0.5) * TILE_SIZE,
+                            (st.tile_y + 0.5) * TILE_SIZE,
+                            count=10,
+                            golden_bias=True,
+                        )
 
         if stepped_leaves:
             self.sound.play_leaf_crunch()

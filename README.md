@@ -1,222 +1,373 @@
-��
 <div align="center">
 
-# 🍂 KODTÜ: Autumn ProcGen Engine
-### *Algorithmic Foliage, Stochastic Topology & Chromatic Fall Aesthetics*
+<img src="docs/banners/hero_odtu_kodtu_banner.png" alt="KODTÜ x ODTÜ: Autumn ProcGen Engine Hero Banner" width="100%" />
 
-[![Event](https://img.shields.io/badge/Event-KODTÜ_Game_Jam-D9534F?style=for-the-badge&logo=itch.io&logoColor=white)](#)
-[![Architecture](https://img.shields.io/badge/Engine-Procedural_2D_Pipeline-E09F3E?style=for-the-badge)](#)
-[![Art Style](https://img.shields.io/badge/Render-16--Bit_Pixel_Art-6B2D26?style=for-the-badge)](#)
-[![License](https://img.shields.io/badge/License-MIT-2C1820?style=for-the-badge)](#)
+<br />
 
-*Deterministik tohumlama (seed-drivenile sonsuz varyasyonda sonbahar biyomları inşa eden, kurallı prosedürel üretim (Procedural Content Generation - PCGve gerçek zamanlı piksel-sanat işleme mimarisi.*
+# 🍁 KODTÜ × ODTÜ: Autumn ProcGen Engine
 
-[Mimari Yapı](#-sistem-mimarisi-ve-pcg-boru-hattı-pipeline) • [Algoritmik Detaylar](#-prosedürel-üretim-algoritmaları) • [Kromatik Palet](#-sonbahar-kromatik-spektrumu-color-theory--luts• [Kurulum](#-kurulum-ve-derleme)
+### **Orta Doğu Teknik Üniversitesi (ODTÜ / METU) — KODTÜ Game Jam Teknik Başyapıtı**
+*16-Bit Piksel-Kusursuz Sonbahar Ekosistemi, Deterministik 6 Aşamalı Prosedürel İçerik Üretimi (PCG) ve Gerçek Zamanlı Verlet Yaprak Fiziği Motoru*
 
-<br/>
-
-![KODTÜ Autumn ProcGen 2x2 Showcase](docs/preview_debug_f1_f4.png)
-*Üst-Sol: Standart Y-Sorted Render & Minimap • Üst-Sağ: `[F1]` Simplex fBm Biyom & Rüzgâr Alanı • Alt-Sol: `[F2]` 47-Tile Blob Bitmask & Spatial Chunks • Alt-Sağ: `[F4]` Dijkstra Jeodezik Uzaklık & Flow-Field*
+[![Jam: KODTÜ @ ODTÜ](https://img.shields.io/badge/ODT%C3%9C_%2F_METU-KODT%C3%9C_Game_Jam-9E472A?style=for-the-badge&labelColor=1A1118)](#)
+[![Art Style: Pixelated](https://img.shields.io/badge/Art_Style-Pixelated_16--Bit_(320x180)-E09F3E?style=for-the-badge&labelColor=1A1118)](#-piksel-kusursuz-pixel-perfect-g%C3%B6rsel-m%C3%BChendislik)
+[![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Color_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#-sonbahar-renk-kuram%C4%B1-hue-shifted-autumn-lut)
+[![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Stage_Deterministic_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#-deterministik-prosed%C3%BCrel-%C3%BCretim-mimarisi-pcg-pipeline)
+[![Tests: 14 Passed](https://img.shields.io/badge/Pytest_Suite-14%2F14_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
 
 </div>
 
----
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
 
-## 📋 1. Yönetici Özeti ve Jam Kısıtlamaları (Constraint Compliance Matrix)
+## 🏛️ 1. Vizyon, KODTÜ Manifestosu ve ODTÜ (METU) Ruhuna Saygı Duruşu
 
-Bu proje, **KODTÜ** yarışma spesifikasyonlarında tanımlanan üç temel tasarım ve mühendislik kısıtlamasını deterministik algoritmalar ve düşük seviyeli (low-levelpiksel estetiği ile birleştirmek üzere tasarlanmıştır. Statik seviye tasarımı (level design) tamamen terk edilerek; topografya, bitki örtüsü dağılımı, engeller ve atmosferik partiküllerin tamamı çalışma zamanında (runtimematematiksel modellerle sentezlenir.
+> *"Bilim ve tekniğin ışığında, ODTÜ bozkırından yükselen sonbahar ormanının her bir yaprağını matematiksel determinizm ile yeniden dokuyoruz."*
 
-| Yarışma Kriteri | Teknik Uygulama ve Mimari Karşılığı | Doğrulama Metriği |
+**KODTÜ: Autumn ProcGen Engine**, **Orta Doğu Teknik Üniversitesi (ODTÜ / METU)** bünyesinde düzenlenen **KODTÜ Game Jam** yarışmasının üç temel tasarım kısıtlamasını sıradan bir oyun prototipi olarak değil; akademik düzeyde doğrulanabilir, yüksek performanslı ve sıfır dış bağımlılıklı (**100% Kod-Tabanlı Varlık & Ses Sentezi**) bir **Prosedürel Oyun Motoru Mimarisi** olarak hayata geçirmek üzere tasarlanmıştır:
+
+| KODTÜ Yarışma Kısıtı | Mühendislik Çözümümüz & Mimari Standart | Doğrulama Metriği |
 | :--- | :--- | :--- |
-| **Sanat Stili:** `Pixelated` | Integer-scaling tabanlı yerel çözünürlük (`320x180` viewport), alt-piksel (sub-pixel) titremesini önleyen tam sayı kamera matrisi, 16x16 karolama (tilingve 4-bit/8-bit renk derinliği simülasyonu. | %100 Pixel-Perfect Hizalama & Sıfır Bilinear Filtering |
-| **Renk Paleti:** `Sonbahar` | Klorofil yıkımını (yaprak sararması/kızarması) simüle eden özel **16-Renk Sonbahar LUT (Look-Up Table)** paleti. Gölgelerde soğuk mürdüm, orta tonlarda yanık kehribar ve ışıklarda hardal/altın sarısı renk uzayı kısıtlaması. | Sıkı Hex-Kısıtlamalı Shader / Palet Kuantizasyonu |
-| **Mekanik:** `Procedural Generation` | Çok katmanlı **Simplex/Perlin Gürültüsü (Multi-Octave FBM)**, **Hücresel Özdevinim (Cellular Automata)**, **4-Bit/8-Bit Otomatik Karolama (Bitmask Autotiling)** ve **Poisson Disk Örneklemesi** ile organik obje serpiştirme. | $2^{64}$ Benzersiz Deterministik Tohum (Seed) Uzayı |
+| 🎨 **Art Stili: `Pixelated`** | Doğal `320×180` (16:9) 16-Bit sanal tuval, kesirli ölçeklemeyi reddeden **Tam Sayı Ölçekleme (Integer Scaling)**, `16×16` piksel taban ızgarası, keskin **Nearest-Neighbor** örnekleme ve 1-piksel konturlu **Rotsprite** varlıklar. | `0` Alt-Piksel Titremesi (`int(round(pos))`), `60 FPS` kilitli kare hızı |
+| 🍂 **Renk Paleti: `Sonbahar`** | **Hue-Shifting (Ton Kaydırma)** prensibiyle kurgulanan **16-Renk Sonbahar LUT** (`assets/palettes/autumn_16.hex` & `autumn_lut.png`). Aydınlıkta **Sunlit Birch (`#F5D67B`)**, gölgede **Deep Void (`#1A1118`)** mor-çivit tonlarına kayan atmosferik spektrum. | `%100` Palet uyumu (16 renk dışında tek bir RGB pikseli üretilmez) |
+| 🎲 **Mekanik: `Procedural Generation`** | `Xoshiro256**` 64-bit PRNG üzerine kurulu **6 Aşamalı Deterministik PCG Hattı**: Çok-Oktavlı Simplex fBm $\rightarrow$ $B678/S345678$ Hücresel Otomata + BFS $\rightarrow$ 47-Karo Blob Otomatik Döşeme $\rightarrow$ Bridson $\mathcal{O}(N)$ Poisson Disk $\rightarrow$ Dijkstra Jeodezik Tehdit Bütçesi + A\* $\rightarrow$ 2B Rüzgar Vektör Alanı. | Ortalama **`~34 ms`** dünya üretim süresi, **`%100`** bağlı topoloji garantisi |
 
 ---
 
-## 🏗️ 2. Sistem Mimarisi ve PCG Boru Hattı (Pipeline)
+### 🌲 ODTÜ Kampüsü ve Sonbahar Mirası Oyunun Kalbinde!
 
-Oyun dünyası, her yeni oturumda (veya biyom geçişinde6 aşamalı deterministik bir boru hattından (pipeline) geçerek milisaniyeler içinde bellekte inşa edilir:
+ODTÜ'nün insan eliyle bozkırdan yaratılan efsanevi ormanı, sonbahar aylarında kızıl akçaağaçların, altın huşların ve çam iğnelerinin eşsiz bir renk senfonisine dönüşür. Motorumuz, **ODTÜ kültürünün sembollerini** doğrudan prosedürel üretim algoritmalarına ve oynanış mekaniklerine entegre eder:
 
-```text
-[64-Bit PRNG Seed] 
-       │
-       ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 1. TOPOGRAFİK GÜRÜLTÜ SENTEZİ (Fractional Brownian Motion)  │
-│    • Yükseklik (Elevation) & Nem (MoistureMatrisleri      │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 2. TOPOLOJİK ŞEKİLLENDİRME (Cellular Automata & Walkers   │
-│    • Açıklıkların oyulması, çıkmaz sokakların temizlenmesi  │
-│    • Flood-Fill ile bağlantısallık (Connectivitygarantisi │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 3. BİT-MASKELİ OTOMATİK KAROLAMA (Bitmask Autotiling      │
-│    • 4-Yönlü (16 durum) ve 8-Yönlü (47-Tile Blob) geçişler  │
-│    • Toprak, yaprak yığını ve uçurum kenarı birleşimleri    │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 4. EKOLOJİK DAĞILIM (Blue Noise / Poisson Disk Sampling)    │
-│    • Ağaçlar, kütükler, mantarlar ve taşların çakışmasız,   │
-│      organik sıklıkta haritaya yerleştirilmesi              │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 5. DİNAMİK VARLIK & DÜŞMAN YERLEŞİMİ (Threat Budgeting)     │
-│    • Dijkstra/A* uzaklık haritasına (Distance Field) göre   │
-│      başlangıç noktasından dengeli zorluk ölçeklemesi       │
-└────────────────────────────┬────────────────────────────────┘
-                             │
-                             ▼
-┌─────────────────────────────────────────────────────────────┐
-│ 6. ATMOSFERİK SENTEZ (Verlet Integration Leaf Particles)    │
-│    • Rüzgâr vektör alanı (Wind Vector Fieldve dökülen     │
-│      yaprakların piksel tabanlı fiziksel simülasyonu        │
-└─────────────────────────────────────────────────────────────┘
+1. **🗿 ODTÜ Bilim Ağacı Anıtı (`bilim_agaci` Structure):**
+   - Her prosedürel korunun başlangıç açıklığında (Starting Glade), Tamer Başoğlu'nun ikonik **ODTÜ Bilim Ağacı** heykelinin 16-bit piksel-sanatı yorumu yükselir (`32×32` piksel, dinamik meşale parıltısı ile).
+   - **Oynanış Etkisi (*ODTÜ Bilim Meşalesi Buff*):** Oyuncu Bilim Ağacı'nın $2.4$ karo yakınına geldiğinde fener ısısı saniyede **`+15.0 Warmth/sn`** hızla yenilenir ve anıttan altın sarısı (`#F5D67B`) yaprak fırtınası yayılır.
+2. **🍁 ODTÜ Kampüs Biyomları (Yalıncak, Eymir ve Devrim Korusu):**
+   - İki boyutlu **Yükseklik ($E$) × Nem ($M$)** Simplex fBm matrisi, ODTÜ doğasını yansıtan 3 farklı biyom sentezler:
+     - **Yalıncak Kızıl Korusu (*Crimson Canopy*):** Sık akçaağaç ve meşelerin örttüğü kızıl-kehribar patikalar.
+     - **Devrim Altın Yaprak Dökümü (*Amber Leaf-Fall*):** Üzerinde yüründüğünde **Verlet yaprak fiziğini** ve **ADSR hışırtı ses sentezini** tetikleyen, oyuncuya **+%20 Hareket Hızı** veren altın huş yaprağı yığınları.
+     - **Eymir Gölü Sisli Kıyısı (*Misty Hollow*):** Yüksek nemli çukur bölgelerde oluşan, ahşap köprülerle (`boardwalk`) geçilen sisli bataklık ve su birikintileri.
+3. **⌨️ `[F5]` ODTÜ Özel Tohum (Curated Seed) Seçkisi:**
+   - Oyun içinde **`[F5]`** tuşuna her bastığınızda motor, ODTÜ tarihine adanmış küratörlü tohum kodları arasında anında geçiş yapar:
+
+| `[F5]` Sırası | ODTÜ Tohum Kodu (`--seed`) | 64-Bit Deterministik Hash (`SplitMix64`) | Paylaşım Kodu (`Share Code`) | Kampüs Teması ve Biyom Karakteristiği |
+| :---: | :--- | :--- | :--- | :--- |
+| **1** | `ODTU-1956-DEVRIM` | `0x8A71E352D049FB12` | `KODTU-5890-OAK` | **ODTÜ Devrim Stadyumu Korusu:** Geniş merkezi altın yaprak açıklığı ve yoğun meşe kümeleri. |
+| **2** | `KODTU-2026-EYMIR` | `0x3E8A91C0B7421D69` | `KODTU-7529-MIST` | **Eymir Gölü Sonbahar Kıyısı:** Zengin sulak alanlar, prosedürel ahşap iskeleler ve sisli geçitler. |
+| **3** | `METU-BILIM-AGACI` | `0x7F14C809E2A653D1` | `KODTU-1489-ROOT` | **ODTÜ Bilim Ağacı Anıtı:** Eski taş çemberler, yüksek relik yoğunluğu ve simetrik koridorlar. |
+| **4** | `ODTU-YALINCAK-FALL` | `0x51C9B047A83E26DF` | `KODTU-9951-LEAF` | **Yalıncak Sonbahar Patikası:** Dinamik rüzgar türbülansı yüksek, kıvrımlı orman patikaları. |
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## 📸 2. Canlı Motor Görselleri & `[F1]`–`[F4]` Telemetri Vitrini
+
+Aşağıdaki görseller herhangi bir harici tasarım programıyla **değil**, doğrudan motorun kendi prosedürel varlık sentezleyicisi (`src/core/asset_builder.py`) ve `320×180` piksel-kusursuz işleyicisi (`src/rendering/renderer.py`) tarafından `KODTU2026` tohumu için üretilmiştir:
+
+<div align="center">
+
+### 🎮 Canlı Oynanış Kamerası (`Seed: KODTU2026` — ODTÜ Bilim Ağacı & Başlangıç Açıklığı)
+<img src="docs/preview_gameplay.png" alt="KODTÜ Autumn ProcGen Gameplay Preview" width="95%" />
+
+<br /><br />
+
+### 🔬 `[F1]`–`[F4]` Gerçek Zamanlı Prosedürel Hata Ayıklama (Debug) Dörtlü Vitrini
+<img src="docs/preview_debug_f1_f4.png" alt="KODTÜ Autumn ProcGen 4-Panel Debug Showcase" width="95%" />
+
+</div>
+
+> [!TIP]
+> **Dörtlü Vitrin Açıklaması:**
+> - **Sol-Üst (Standart 16-Bit Render):** Y-Sıralamalı (Y-Sorted) derinlik, ODTÜ Bilim Ağacı Anıtı, Verlet yaprak parçacıkları, canlı Minimap radar ve telemetri.
+> - **Sağ-Üst (`[F1]` Simplex fBm & Wind Field):** Çok oktavlı Yükseklik/Nem biyom sınıflandırması ve 2B rüzgar vektör alanı okları.
+> - **Sol-Alt (`[F2]` 47-Tile Blob Bitmask & Spatial Chunks):** 8-komşulu `0..46` Blob indeksleri ve `16×16` uzamsal özetleme (Spatial Hash) sınırları.
+> - **Sağ-Alt (`[F4]` Dijkstra Geodesic Field & A\* Path):** Başlangıç noktasından hesaplanan jeodezik uzaklık ısı haritası ($d \in [0, 1]$), akış alanı (Flow-Field) ve A\* en kısa yol çizgisi.
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## 🎲 3. Deterministik Prosedürel Üretim Mimarisi (6-Stage PCG Pipeline)
+
+<div align="center">
+  <img src="docs/banners/pipeline_6stage_infographic.png" alt="6-Stage Deterministic PCG Pipeline Infographic" width="100%" />
+</div>
+
+Motorumuzda **rastgelelik (randomness) kaos demek değildir; matematiksel olarak denetlenebilir determinizm demektir.** Standart `random.random()` veya `os.urandom()` çağrıları prosedürel katmanta **kesinlikle yasaklanmıştır**. Tüm dünya, tek bir tohum dizgesinden (`--seed "KODTU2026"`) türetilen 64-bitlik izole alt-akışlarla (sub-streams) sentezlenir:
+
+```mermaid
+flowchart LR
+    SEED["Tohum Dizgesi<br/>'KODTU2026'"] --> HASH["FNV-1a + SplitMix64<br/>0xDF04761EFADEBE5D"]
+    HASH --> PRNG["Xoshiro256** PRNG<br/>İzole Alt-Akışlar"]
+    PRNG --> S1["Aşama 1: 2B Simplex fBm<br/>Yükseklik E(x,y) & Nem M(x,y)"]
+    S1 --> S2["Aşama 2: Hücresel Otomata<br/>B678/S345678 + BFS Bağlantı"]
+    S2 --> S3["Aşama 3: 47-Karo Blob<br/>8-Bit Köşe İndirgemeli Maske"]
+    S3 --> S4["Aşama 4: Bridson Poisson Disk<br/>O(N) Mavi-Gürültü Flora"]
+    S4 --> S5["Aşama 5: Yapı Sentezi & A*<br/>ODTÜ Bilim Ağacı + İskeleler"]
+    S5 --> S6["Aşama 6: Dijkstra Tehdit Bütçesi<br/>Jeodezik Relik & Muhafız Dağılımı"]
 ```
 
 ---
 
-## 🧮 3. Prosedürel Üretim Algoritmaları (Derinlemesine Bakış)
+### 🔹 Aşama 1: `SplitMix64` & `Xoshiro256**` PRNG ve Çok-Oktavlı Simplex fBm (`src/procgen/prng.py`, `src/procgen/noise.py`)
 
-### 3.1. Çok Oktavlı Gürültü ve Biyom Sentezi (Fractional Brownian Motion - fBm)
-Haritanın temel zemini tek bir rastgele sayı dizisiyle değil, farklı frekans ve genliklerdeki (amplitude) **Simplex Noise** katmanlarının üst üste bindirilmesiyle oluşturulur:
+Kullanıcının girdiği herhangi bir metin veya tam sayı tohumu, önce 64-bit **FNV-1a** özetlemesinden, ardından **Stafford Mix13 (`SplitMix64`)** çığ etkisi (avalanche) karıştırıcısından geçirilerek dört adet 64-bitlik `Xoshiro256**` durum yazmacını başlatır.
 
-$$H(x, y) = \sum_{i=0}^{n-1} \text{persistence}^i \cdot \text{Noise}\left(\text{lacunarity}^i \cdot x, \text{lacunarity}^i \cdot y\right)$$
+Coğrafi temel, iki bağımsız **2B Simplex Kesirli Brown Hareketi (Fractional Brownian Motion - fBm)** skaler alanı ile oluşturulur:
+- **Yükseklik Alanı ($E(x, y) \in [0, 1]$):** $O = 4$ oktav, kalıcılık (persistence) $G = 2^{-H} \approx 0.52$, boşlukluluk (lacunarity) $L = 2.0$, ölçek $S = 0.045$. Artı olarak harita sınırlarında doğal bir vadi oluşturan radyal vinyet fonksiyonu uygulanır.
+- **Nem Alanı ($M(x, y) \in [0, 1]$):** $O = 3$ oktav, $G = 0.55$, $L = 2.0$, ölçek $S = 0.060$.
 
-*   **Elevation Map (Yükseklik):** Kayalık sınırları, çukurları ve patika seviyelerini belirler.
-*   **Moisture & Decay Map (Nem ve Çürüme):** Sonbahar temasını mekanikleştiren ana katmandır. Nem oranı yüksek bölgelerde **koyu çamurlu toprak, mantar kolonileri ve çürümüş kızıl yapraklar** oluşurken; kuru bölgelerde **altın sarısı çıtır yaprak yığınları (hışırtı mekaniği/ses tetikleyicisi)** ve rüzgâr koridorları üretilir.
-
-### 3.2. Hücresel Özdevinim (Cellular Automatave Bağlantısallık Garantisi
-Gürültü haritası ikili (binarybir matrise dönüştürüldükten sonra, doğadaki orman açıklıklarını taklit etmek için $B678/S345678$ kurallı **Cellular Automata** iterasyonlarından geçirilir.
-*   **Orphan Culling & Flood Fill:** Oyuncunun haritada sıkışmasını (soft-lock) önlemek amacıyla, üretilen harita üzerinde **Breadth-First Search (BFS) Flood Fill** algoritması koşturulur. Ana oyun alanına bağlı olmayan izole boşluklar tespit edilir; ya doldurulur ya da **Bresenham Çizgi Algoritması** + **Drunkard’s Walk** hibriti bir koridor açıcı ile ana patikaya bağlanır.
-
-### 3.3. Bitmasking ile Kesintisiz Görsel Geçişler (47-Tile Blob Autotiling)
-Prosedürel üretilen matristeki `0` (zemin) ve `1` (duvar/ağaç sınırı) değerlerinin ekranda "yama gibi" durmaması için her hücrenin 8 komşusu bit düzeyinde okunur:
-
-```text
-[NW: 1]  [N: 2]   [NE: 4]
-[W: 8]   [TILE]   [E: 16]
-[SW: 32] [S: 64]  [SE: 128]
-```
-
-Hesaplanan 8-bitlik maske değeri (`0-255`), köşe çakışmaları sadeleştirilerek **47 benzersiz karo (tile)** indeksine eşlenir. Bu sayede sonbahar yapraklarının çimenlerle, toprağın ise su birikintileriyle birleştiği her kenar el ile çizilmişçesine kusursuz bir piksel geçişine sahip olur.
-
-### 3.4. Poisson Disk Örneklemesi (Bridson's Algorithm)
-Tamamen rastgele (`uniform random`nesne yerleştirme, amatör projelerde nesnelerin bir noktada üst üste binmesine (clusteringveya devasa boş alanlar kalmasına yol açar. Bu projede ağaçlar, çalılar ve toplanabilir sonbahar objeleri **Fast Poisson Disk Sampling** ($\mathcal{O}(N)$ zaman karmaşıklığı) ile yerleştirilir. Her nesnenin etrafında minimum $r$ yarıçaplı bir dışlama zonu (exclusion zonegaranti edilerek hem doğal hem de oynanabilir (navigable) bir orman dokusu elde edilir.
+$$f_{\text{fBm}}(x, y) = \frac{1}{\sum_{i=0}^{O-1} G^i} \sum_{i=0}^{O-1} G^i \cdot \text{Simplex2D}\left(x \cdot S \cdot L^i + \delta_x, \; y \cdot S \cdot L^i + \delta_y\right)$$
 
 ---
 
-## 🎨 4. Sonbahar Kromatik Spektrumu (Color Theory & LUTs)
+### 🔹 Aşama 2: Hücresel Otomata ($B678/S345678$) ve `%100` Bağlı Topoloji Garantisi (`src/procgen/automata.py`)
 
-Görsel motor, sonbaharın melankolik, sıcak ama aynı zamanda çürümeyi ve soğuyan havayı hissettiren doğasını yansıtmak için özel bir renk uzayına kilitlenmiştir. **Hue Shifting (Ton Kaydırma)** tekniği kullanılarak, renkler aydınlandıkça sarıya/sıcak beyaza, gölgeye girdikçe kahverengiye değil **derin mürdüm ve koyu lacivert-mora** kaydırılır.
+Ham gürültü eşiklemesinden gelen ikili ızgara ($1 = \text{Duvar/Uçurum}$, $0 = \text{Yürünebilir Zemin}$), organik orman açıklıkları oluşturmak için **Moore Komşuluğu** ($3 \times 3$ pencere) üzerinde **$B678 / S345678$** kurallarıyla 4 iterasyon boyunca evrimleştirilir:
 
-| Rol / Katman | Hex Kodu | RGB Değeri | Görsel ve Atmosferik Kullanım Alanı |
-| :--- | :---: | :---: | :--- |
-| **Deep Void / Shadow** | `#1A1118` | `(26, 17, 24)` | En derin gölgeler, konturlar (outlines), zindan/kovuk içleri |
-| **Withered Bark** | `#3B2123` | `(59, 33, 35)` | Yaşlı ağaç gövdeleri, ıslak toprak zemini, karanlık taşlar |
-| **Crimson Decay** | `#6B2D26` | `(107, 45, 38)` | Kızıl akçaağaç yaprakları, tehlike/hasar göstergeleri |
-| **Rust / Terracotta** | `#9E472A` | `(158, 71, 42)` | Orta ton kurumuş yaprak kümeleri, paslı kalıntılar |
-| **Burnt Amber** | `#C86D2B` | `(200, 109, 43)` | Birincil sonbahar bitki örtüsü, sıcak zemin geçişleri |
-| **Harvest Gold** | `#E09F3E` | `(224, 159, 62)` | Güneş ışığı vuran yaprak uçları, etkileşimli objeler |
-| **Sunlit Birch** | `#F5D67B` | `(245, 214, 123)` | Parıltılar, rüzgâr izleri (wind trails), UI vurgu metinleri |
-| **Autumn Mist** | `#D4C8BE` | `(212, 200, 190)` | Sabah sisi, nefes buharı ve atmosferik derinlik efekti |
+$$\text{State}_{t+1}(x, y) = \begin{cases} 1 & \text{eğer } \text{State}_t(x,y) = 0 \text{ ve } N_{\text{wall}}(x,y) \in \{6, 7, 8\} \quad (\text{Doğum / Birth}) \\ 1 & \text{eğer } \text{State}_t(x,y) = 1 \text{ ve } N_{\text{wall}}(x,y) \in \{3, 4, 5, 6, 7, 8\} \quad (\text{Hayatta Kalma / Survival}) \\ 0 & \text{aksi halde (Yürünebilir Açıklık)} \end{cases}$$
 
-### Piksel Sanatı ve Görsel İşleme Kuralları
-1. **Strict Pixel Grid:** Tüm sprite'lar ve partiküller küresel piksel ızgarasına (global pixel gridyuvarlanır (`round(pos.x), round(pos.y)`). Döndürme (rotationişlemleri çalışma zamanında matris döndürmesiyle değil, önceden çizilmiş kareler veya **Rotsprite** algoritması mantığıyla gerçekleştirilir.
-2. **Dinamik Yaprak Fiziği:** Ekranda süzülen yapraklar basit doğrusal hareket yapmaz; sinüzoidal salınım ($\sin(\omega t + \phi)$ve harita genelindeki 2D gürültü tabanlı rüzgâr vektör alanından (Wind Fieldetkilenerek süzülür.
+**Sıfır Çıkmaz Sokak Garantisi (Topological Guarantee):**
+1. **BFS Taşkın Doldurma (Flood-Fill):** Tüm bağlantılı yürünebilir bileşenler $\mathcal{O}(W \cdot H)$ zamanda etiketlenir.
+2. $14$ karodan küçük mikro-mağaralar duvarla doldurulur; daha büyük ayrık odalar ise ana bileşene **Bresenham + Drunkard's Walk (Sarhoş Yürüyüşü)** algoritmasıyla $r=1$ yarıçaplı doğal patikalarla bağlanır.
+3. Son doğrulama geçişinde ana bileşen dışındaki tüm yetim pikseller temizlenerek **her tohumda tam olarak $1$ adet `%100` erişilebilir oyun dünyası** garanti altına alınır.
 
 ---
 
-## 📂 5. Proje Dizin Yapısı (Directory Architecture)
+### 🔹 Aşama 3: 47-Karo Blob Otomatik Döşeme (8-Bit Bitmasking) (`src/procgen/autotile.py`)
 
-Kod tabanı, yüksek kohezyon (high cohesionve düşük bağımlılık (low couplingprensiplerine göre modülerleştirilmiştir:
+Karo kenarlarının, iç/dış köşelerin ve uçurum duvarlarının kusursuz birleşmesi için 8 yönlü komşuluk bit maskesi hesaplanır. Köşegen bir bitin ($\text{NE}, \text{SE}, \text{SW}, \text{NW}$) aktif olabilmesi için **komşu olduğu her iki ana yönün de (Cardinal Gates)** aynı arazi tipinde olması şarttır:
+
+$$\text{NE}' = \text{NE} \land N \land E, \quad \text{SE}' = \text{SE} \land S \land E, \quad \text{SW}' = \text{SW} \land S \land W, \quad \text{NW}' = \text{NW} \land N \land W$$
+
+$$M(x, y) = 1 \cdot N + 2 \cdot \text{NE}' + 4 \cdot E + 8 \cdot \text{SE}' + 16 \cdot S + 32 \cdot \text{SW}' + 64 \cdot W + 128 \cdot \text{NW}'$$
+
+Bu indirgeme, $2^8 = 256$ olası durumu $\mathcal{O}(1)$ arama tablosu (`RAW_TO_47_LUT`) ile tam olarak **47 kanonik Blob karosuna (`0..46`)** eşler.
+
+---
+
+### 🔹 Aşama 4: Bridson $\mathcal{O}(N)$ Hızlı Poisson Disk Örneklemesi (`src/procgen/poisson.py`)
+
+Beyaz gürültüyle (white-noise) rastgele dağıtılan ağaçlar yapay kümelenmeler ve boşluklar yaratır. Motorumuz bunun yerine **Robert Bridson'ın $\mathcal{O}(N)$ Hızlı Poisson Disk Örneklemesi** algoritmasını kullanarak tüm florayı **Mavi Gürültü (Blue-Noise)** spektrumunda yerleştirir:
+- Hücre boyutu $c = r_{\min} / \sqrt{2}$ olan bir arka plan ızgarası kurulur ($k = 30$ aday denemesi).
+- Herhangi iki obje arasındaki Öklid uzaklığı her zaman $\|p_i - p_j\|_2 \ge r_{\min}$ koşulunu sağlar:
+  - **Asırlık Kızıl Akçaağaç, Altın Huş ve Meşe Ağaçları:** $r_{\min} = 3.2$ karo (`51.2 px`).
+  - **Çalılar, Devrilmiş Kütükler ve Kaya Parçaları:** $r_{\min} = 1.8$ karo (`28.8 px`).
+  - **Kızıl Mantar Halkaları, Balkabakları ve Yaprak Yığınları:** $r_{\min} = 1.1$ karo (`17.6 px`).
+
+---
+
+### 🔹 Aşama 5 & 6: Yapı Sentezi, A\* Ahşap Köprüler ve Dijkstra Jeodezik Tehdit Bütçesi (`src/procgen/structures.py`, `src/procgen/automata.py`)
+
+1. **ODTÜ Bilim Ağacı & Kadim Tapınak Sentezi:**
+   - Başlangıç noktasının hemen kuzeydoğusuna **ODTÜ Bilim Ağacı Anıtı (`bilim_agaci`)**, haritanın en uzak jeodezik noktasına ($d(x,y) \ge 0.82$) ise **Kadim Sonbahar Tapınağı (`Autumn Shrine`)** yerleştirilir.
+2. **A\* (A-Star) Sulak Alan Köprüleri (`boardwalk`):**
+   - Başlangıç noktası ile Tapınak arasındaki en kısa yürünebilir yol **A\*** algoritmasıyla hesaplanır. Bu rota üzerindeki tüm **Misty Hollow** (çamur/su) karolarına otomatik olarak ahşap iskele (`boardwalk`) döşenir.
+3. **Dijkstra Jeodezik Uzaklık Haritası ve Tehdit Bütçesi ($B_{\text{threat}}$):**
+   - Başlangıç noktasından tüm yürünebilir karolara **Dijkstra / BFS** ile gerçek yürüme mesafesi hesaplanıp $d(x, y) \in [0, 1]$ aralığına normalize edilir:
+   - **Güvenli Başlangıç Açıklığı ($d < 0.22$):** Hiçbir düşman doğmaz; **ODTÜ Bilim Ağacı**, kamp ateşi ve ilk meşe palamutları burada yer alır.
+   - **Orta Koruluk ($0.22 \le d < 0.65$):** *Corrupted Autumn Wisp* ve *Bramble Stalker* devriyeleri.
+   - **Derin Sonbahar Çekirdeği ($d \ge 0.65$):** *Hollow Bark Golem*, **5 adet Hasat Reliği (*Harvest Relics*)** ve Tapınak muhafızı **Elder Stag Warden (Mini-Boss)**.
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## 🎨 4. Sonbahar Renk Kuramı (16-Color Hue-Shifted Autumn LUT) & Piksel Mühendisliği
+
+<div align="center">
+  <img src="docs/banners/palette_lut_infographic.png" alt="16-Color Sonbahar Chromatic Spectrum & 16-Bit Sprite Atlas" width="100%" />
+</div>
+
+Motorumuz, klasik RGB değerlerini yalnızca karartıp açmak yerine **Hue-Shifting (Ton Kaydırma)** kuramını uygular:
+- **Aydınlık Tonlar (Highlights):** Işık şiddeti arttıkça renk tonları sarı-altın ve soluk güneş huzmesine (**`#F5D67B` Sunlit Birch** $\rightarrow$ **`#FAEBAC` Pale Sunbeam**) kayar.
+- **Gölge Tonları (Shadows):** Gölge derinleştikçe renkler çamurlu gri/siyaha değil, soğuk kızıl-mürdüm ve derin çivit-mor (**`#4E222A` Mulberry Dusk** $\rightarrow$ **`#1A1118` Deep Void**) tonlarına kayar.
+
+| İndeks | İsim (Token) | Hex Kodu | RGB Değeri | Görsel Rolü ve Atmosferik Görevi |
+| :---: | :--- | :---: | :---: | :--- |
+| `00` | **Deep Void** | `#1A1118` | `(26, 17, 24)` | En derin gölge, dış kontur (outline), uçurum boşluğu |
+| `01` | **Plum Shadow** | `#2C1820` | `(44, 24, 32)` | Karanlık orman tabanı, derin gövde gölgesi |
+| `02` | **Withered Bark** | `#3B2123` | `(59, 33, 35)` | Yaşlı meşe kabuğu, taş anıt gölgesi |
+| `03` | **Mulberry Dusk** | `#4E222A` | `(78, 34, 42)` | Alacakaranlık geçiş tonu, bataklık derinliği |
+| `04` | **Damp Loam** | `#5C362C` | `(92, 54, 44)` | Nemli sonbahar toprağı, çamur tabanı |
+| `05` | **Crimson Decay** | `#6B2D26` | `(107, 45, 38)` | Dökülmüş koyu kızıl akçaağaç yaprakları |
+| `06` | **Chestnut Wood** | `#85442B` | `(133, 68, 43)` | Kestane ahşap köprüler, kütük dokusu |
+| `07` | **Rust Terracotta** | `#9E472A` | `(158, 71, 42)` | Pas kızılı yaprak kümeleri, ODTÜ Yalıncak korusu |
+| `08` | **Burnt Amber** | `#B5592A` | `(181, 89, 42)` | Yanık kehribar kanopi orta tonu |
+| `09` | **Cinnamon Leaf** | `#C86D2B` | `(200, 109, 43)` | Tarçın turuncusu parlak yaprak geçişi |
+| `10` | **Harvest Gold** | `#E09F3E` | `(224, 159, 62)` | Hasat altını, fener ışığı halkası, meşe palamudu |
+| `11` | **Ochre Moss** | `#EBB85B` | `(235, 184, 91)` | Altın liken, sıcak huş ağacı yaprakları |
+| `12` | **Sunlit Birch** | `#F5D67B` | `(245, 214, 123)` | Güneş vuran huş kabuğu, UI vurgu rengi |
+| `13` | **Pale Sunbeam** | `#FAEBAC` | `(250, 235, 172)` | Relik çekirdeği, Bilim Ağacı meşalesi, kritik vuruş |
+| `14` | **Twilight Slate** | `#8C7A78` | `(140, 122, 120)` | ODTÜ Bilim Ağacı metalik gövdesi, kadim taş |
+| `15` | **Autumn Mist** | `#D4C8BE` | `(212, 200, 190)` | Eymir sabah sisi, rüzgar akış çizgileri |
+
+---
+
+### 📐 Piksel-Kusursuz (Pixel-Perfect) Görüntüleme Garantileri (`src/core/camera.py`, `src/rendering/renderer.py`)
+
+1. **Doğal `320×180` Sanal Tuval & Tam Sayı Ölçekleme:**
+   - Tüm dünya ve HUD önce `320×180` çözünürlüklü `self.canvas` yüzeyine çizilir, ardından pencere boyutuna göre yalnızca $\text{ scale } \in \{1\times, 2\times, 3\times, 4\times, 6\times\}$ tam sayı katsayılarıyla büyütülür. **Bilinear/Trilinear bulanıklaştırma kesinlikle yoktur.**
+2. **Sıfır Alt-Piksel Titremesi (Zero Sub-Pixel Jitter):**
+   - Fizik motoru `float` koordinatlarda çalışsa da kamera ve varlık çizimleri her karede `int(round(pos))` ile tam piksel ızgarasına kilitlenir.
+3. **Y-Sıralamalı (Y-Sorted) Derinlik İşleme:**
+   - Oyuncu, düşmanlar, ağaçlar, çalılar ve **ODTÜ Bilim Ağacı Anıtı** her karede `foot_y` (taban Y koordinatı) değerine göre sıralanır; böylece oyuncu ağaçların ve anıtın arkasından veya önünden doğal derinlik algısıyla geçer.
+4. **Verlet Entegrasyonlu Yaprak Parçacık Sistemi (`src/rendering/particles.py`):**
+   - Sahnede aynı anda uçuşan `160+` sonbahar yaprağı, zamanla evrilen **2B Simplex Rüzgar Vektör Alanı ($\vec{W}(x, y, t)$)** ve oyuncunun kılıç/nova darbelerinin oluşturduğu radyal şok dalgalarıyla hareket eder. Yapraklar dönerken piksel kırılmasını önlemek için 4 açılı (`0°`, `90°`, `180°`, `270°`) önceden fırınlanmış **Rotsprite** matrisleri kullanılır.
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## ⚔️ 5. Oynanış Döngüsü, Savaş Mekanikleri ve Kontroller
+
+Oyuncu, sonbahar korusuna çöken alacakaranlıkta **Güneş Közü Fenerini (Solar Ember Lantern)** taşıyan **Sonbahar Muhafızı (Autumn Keeper)** rolündedir:
+
+- **🔥 Fener Isısı (Lantern Warmth) & Hayatta Kalma:** Zamanla azalan fener ısınızı **ODTÜ Bilim Ağacı Anıtı**, simyacı kamp ateşleri (`campfire`) ve meşe palamutları (`Golden Acorn`) ile yenileyin.
+- **✨ 5 Hasat Reliği & Kadim Tapınak:** Haritanın derinliklerindeki **5 Hasat Reliğini (`Harvest Relic`)** toplayıp **Kadim Sonbahar Tapınağı'na (`[E]`)** dönerek bir sonraki prosedürel koru derinliğine (`Grove Depth 2, 3, ...`) geçin!
+- **🗡️ 3-Vuruşluk Solar Ember Kombo (`[SPACE]` / Sol Tık):** Ardışık vuruşlarda `Combo x1` $\rightarrow$ `Combo x2` $\rightarrow$ **`CRIT -4!` (`Combo x3`)** geniş açılı altın köz darbesi vurur ve çevredeki yaprakları savurur.
+- **💥 Harvest Nova Şok Dalgası (`[Q]` / Orta Tık):** $360^\circ$ çevredeki tüm düşmanları geri püskürten ve `28` altın yaprak parçacığı saçan alan etkili patlama.
+- **💨 Autumn Gust Dash (`[SHIFT]` / Sağ Tık):** Kısa süreli dokunulmazlık (i-frame) ve yaprak girdabı sağlayan rüzgar atılması.
+
+### 🎮 Klavye & Fare Kontrol Tablosu
+
+| Tuş / Girdi | Aksiyon / Komut | Teknik / Oynanış Açıklaması |
+| :---: | :--- | :--- |
+| **`W, A, S, D`** / **Ok Tuşları** | Hareket Et | 8 yönlü alt-piksel hareketi, `16×16` uzamsal özetleme çarpışma çözümü |
+| **`SPACE`** veya **Sol Tık** | **Solar Ember Slash** | 3-vuruşluk yakın dövüş kombosu (3. vuruş Kritik + Radyal Yaprak İtkisi) |
+| **`Q`** veya **Orta Tık** | **Harvest Nova** | $360^\circ$ alan etkili köz patlaması ve yüksek geri itme (Knockback) |
+| **`SHIFT`** veya **Sağ Tık** | **Autumn Gust Dash** | Hızlı rüzgar atılması (`0.20 sn` dokunulmazlık) |
+| **`E`** | **Tapınak Etkileşimi** | 5 Relik toplandığında Kadim Tapınağı uyandırır ve sonraki koruyu sentezler |
+| **`M`** | **Minimap Radar Aç/Kapa** | Sağ üstteki canlı biyom, relik, Bilim Ağacı ve tapınak radarını açar/kapatır |
+| **`TAB`** | **Tohum (Seed) Penceresi** | Canlı metin tohumu girme ve paylaşım kodu (`KODTU-XXXX-LEAF`) görüntüleme |
+| **`F1`** | **fBm & Rüzgar Katmanı** | Çok oktavlı Simplex gürültü, biyom ve 2B rüzgar vektör alanı görselleştiricisi |
+| **`F2`** | **47-Blob & Chunk Katmanı** | 8-bit `0..46` Blob otomatik döşeme indeksleri ve `16×16` chunk ızgarası |
+| **`F3`** | **Anında Yeniden Üretim** | `Xoshiro256**` akışından yeni bir tohum çekerek dünyayı `<35 ms` içinde yeniden kurar |
+| **`F4`** | **Dijkstra & A\* Katmanı** | Jeodezik uzaklık ısı haritası, Flow-Field vektörleri ve A\* en kısa yol çizgisi |
+| **`F5`** | **ODTÜ Tohum Seçkisi** | `ODTU-1956-DEVRIM`, `KODTU-2026-EYMIR`, `METU-BILIM-AGACI`, `ODTU-YALINCAK-FALL` arasında geçiş |
+
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
+
+## 🗂️ 6. Proje Dizin Mimarisi
 
 ```text
 kodtu-autumn-procgen/
-├── assets/
-│   ├── palettes/           # .hex ve .png formatında Sonbahar LUT dosyaları
-│   ├── sprites/            # 16x16 & 32x32 karakter, obje ve bitmask tileset'leri
-│   ├── shaders/            # Palet kuantizasyonu, sis ve rüzgâr sallanma (wind-swayshader'ları
-│   └── audio/              # Prosedürel pitch-shifting destekli yaprak hışırtısı SFX ve ambiyans
+├── README.md                          # Kapsamlı teknik dokümantasyon, ODTÜ mirası ve mimari rehber
+├── requirements.txt                   # Bağımlılıklar (pygame-ce, numpy, pillow, pytest)
+├── assets/                            # Deterministik olarak sentezlenen 16-bit varlıklar ve sesler
+│   ├── palettes/
+│   │   ├── autumn_16.hex              # 16-Renk Sonbahar HEX palet tanımı
+│   │   └── autumn_lut.png             # 1D Renk Arama Tablosu (LUT) dokusu
+│   ├── shaders/
+│   │   ├── autumn_lut.frag.glsl       # GLSL 330 Sonbahar LUT & Alacakaranlık Vinyet gölgelendiricisi
+│   │   └── pixel_upscale.vert.glsl    # GLSL 330 Tam Sayı Ölçekleme (Integer Scaling) köşe gölgelendiricisi
+│   ├── sprites/
+│   │   ├── autumn_tileset_47.png      # 47-Karo Blob otomatik döşeme (autotile) atlası
+│   │   ├── foliage_sheet.png          # Akçaağaç, Huş, Meşe, Mantar, Balkabağı ve Yaprak atlası
+│   │   └── entities_sheet.png         # Autumn Keeper, Wisp, Stalker, Golem, Elder Stag Warden atlası
+│   └── audio/                         # Prosedürel ADSR zarflı PCM WAV ses efektleri
+│       ├── wind_drone.wav             # Pembe gürültü + LFO alçak geçiren sonbahar rüzgarı
+│       ├── leaf_crunch_0..3.wav       # 4 farklı perdede kuru yaprak hışırtısı
+│       ├── slash_ember.wav            # Köz kılıcı savurma ve nova sesi
+│       ├── harvest_chime.wav          # Pentatonik (`C5-D5-F5-G5-A5`) relik toplama tınısı
+│       └── portal_activate.wav        # Tapınak uyanışı ve tohum geçiş akoru
+├── docs/
+│   ├── banners/                       # Prosedürel olarak üretilen yüksek çözünürlüklü infografik ve bannerlar
+│   │   ├── hero_odtu_kodtu_banner.png
+│   │   ├── pipeline_6stage_infographic.png
+│   │   ├── palette_lut_infographic.png
+│   │   └── section_divider_autumn.png
+│   ├── preview_gameplay.png           # Canlı 16-bit oynanış ekran görüntüsü
+│   └── preview_debug_f1_f4.png        # 4'lü [F1]-[F4] prosedürel telemetri vitrini
 ├── src/
-│   ├── core/               # Oyun döngüsü (Game Loop), Kamera & Viewport, Spatial Hash, Ses Sentezi
-│   ├── procgen/            # Prosedürel Üretim Motoru (Bağımsız Çekirdek Modül)
-│   │   ├── prng.py         # Xoshiro256** / Mulberry32 deterministik rastgele sayı üreteci
-│   │   ├── noise.py        # Simplex / Perlin FBM gürültü sentezleyici
-│   │   ├── automata.py     # Cellular Automata, Flood-Fill & Dijkstra topoloji çözücüler
-│   │   ├── autotile.py     # 47-Tile Blob Bitmasking hesaplayıcı
-│   │   ├── poisson.py      # Poisson Disk Sampling ekolojik dağıtıcı
-│   │   └── pipeline.py     # 6 aşamalı deterministik dünya üretim boru hattı
-│   ├── entities/           # Oyuncu, AI ajanları ve etkileşimli sonbahar nesneleri
-│   ├── rendering/          # Pixel-perfect yığın işleme (batching), Y-Sorting ve Verlet partikül motoru
-│   ├── ui/                 # Piksel font işleyici, Seed giriş/paylaşım ekranı ve HUD
-│   └── main.py             # Uygulama giriş noktası ve CLI argüman ayrıştırıcı
-├── tests/                  # Harita bağlantısallığı ve seed determinizm birim testleri
-├── docs/                   # Algoritma akış şemaları ve tasarım belgeleri
-├── requirements.txt        # Python bağımlılıkları (pygame-ce, numpy, pillow, pytest)
-└── README.md
+│   ├── main.py                        # Ana oyun döngüsü, CLI argümanları ve [F1]-[F5] kontrolcüsü
+│   ├── core/
+│   │   ├── palette.py                 # 16-Renk Sonbahar LUT sabitleri ve Hue-Shifting matematiği
+│   │   ├── camera.py                  # 320x180 tam sayı ölçekleme, Frustum Culling ve kamera sarsıntısı
+│   │   ├── spatial_hash.py            # 16x16 Chunk uzamsal özetleme ve O(1) çarpışma çözümü
+│   │   ├── asset_builder.py           # 100% deterministik piksel-sanatı ve ODTÜ Bilim Ağacı sentezleyicisi
+│   │   ├── audio_synth.py             # Prosedürel PCM ses sentezleyicisi ve çalışma zamanı mikseri
+│   │   └── banner_generator.py        # README için piksel-sanatı banner ve infografik üreticisi
+│   ├── procgen/
+│   │   ├── prng.py                    # FNV-1a, SplitMix64, Xoshiro256** ve Mulberry32 PRNG motoru
+│   │   ├── noise.py                   # Vektörize 2B Simplex fBm gürültü ve 2B rüzgar vektör alanı
+│   │   ├── automata.py                # B678/S345678 Hücresel Otomata, BFS Flood-Fill ve Dijkstra alanı
+│   │   ├── autotile.py                # 8-bit komşuluk maskeleme ve 256 -> 47 Blob indirgeme tablosu
+│   │   ├── poisson.py                 # Bridson O(N) Hızlı Poisson Disk Örneklemesi
+│   │   ├── structures.py              # ODTÜ Bilim Ağacı, Tapınak, A* köprüler ve tehdit bütçesi
+│   │   └── pipeline.py                # 6 aşamalı deterministik PCG orkestratörü ve milisaniye telemetrisi
+│   ├── entities/
+│   │   └── actors.py                  # Player, 4 düşman arketipi (Warden dahil), Relikler ve FloatingText
+│   ├── rendering/
+│   │   ├── particles.py               # Verlet entegrasyonlu yaprak fiziği ve Rotsprite dönüşleri
+│   │   └── renderer.py                # Y-Sorted sahne işleyicisi ve [F1]-[F4] hata ayıklama katmanları
+│   └── ui/
+│       ├── pixel_font.py              # Özel 5x7 piksel-sanatı bitmap yazı tipi motoru
+│       └── hud.py                     # Fener barı, Minimap radar, pusula, telemetri ve Tohum penceresi
+└── tests/
+    └── test_procgen.py                # 14 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, LUT ve ölçekleme testi
 ```
 
----
+<p align="center">
+  <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
+</p>
 
-## ⚡ 6. Performans ve Optimizasyon Metrikleri
+## 🚀 7. Hızlı Başlangıç & Doğrulama Testleri
 
-Prosedürel üretim sistemlerinin en büyük darboğazı olan üretim gecikmesi (generation hitchingve çizim çağrıları (draw calls) aşağıdaki mühendislik çözümleriyle optimize edilmiştir:
-
-*   **Chunk-Based Spatial Hashing:** Harita tek bir devasa dizide tutulmak yerine `16x16` veya `32x32` boyutlu yığınlara (chunks) bölünür. Çarpışma testi (collision detection) sadece oyuncunun bulunduğu ve komşu olduğu hücrelerde $\mathcal{O}(1)$ karmaşıklıkla çalışır.
-*   **Frustum Culling & Sprite Batching:** Kamera görüş alanı (viewportdışında kalan hiçbir karo veya yaprak partikülü GPU boru hattına gönderilmez.
-*   **Y-Sorting (Painter's Algorithm):** 2.5D derinlik hissi (top-down oblique perspektifiçin oyuncu, ağaçlar ve çalılar her karede `Y` ekseni taban koordinatlarına göre sıralanarak çizilir; böylece oyuncu ağaç gövdelerinin arkasından geçerken yaprakların altında kalabilir.
-*   **Seed Serialization:** Üretilen tüm dünya sadece **64-bitlik tek bir tam sayı (Seed String)** ile temsil edilir. Oyuncular beğendikleri bir sonbahar haritasının kodunu (Örn: `KODTU-8492-FALL`kopyalayıp başka bir bilgisayarda girdiğinde **piksel pikseline aynı harita, aynı ağaç konumları ve aynı rüzgâr örüntüsü** yeniden üretilir.
-
----
-
-## 🚀 7. Kurulum ve Derleme (Build & Run)
-
-Projeyi yerel ortamınızda klonlamak, deterministik harita üretecini test etmek veya oyunu doğrudan çalıştırmak için aşağıdaki adımları izleyin:
+### 1. Kurulum
 
 ```bash
-# 1. Repoyu klonlayın
-git clone https://github.com/arch-yunus/kodtu-autumn-procgen.git
-
-# 2. Proje dizinine ilerleyin
+# Depoyu klonlayın ve dizine girin
+git clone https://github.com/bahattinyunus/kodtu-autumn-procgen.git
 cd kodtu-autumn-procgen
 
-# 3. Bağımlılıkları yükleyin ve çalıştırın
+# Gerekli kütüphaneleri yükleyin (Python 3.10+)
 pip install -r requirements.txt
+```
+
+### 2. Oyunu Çalıştırma (Standart & ODTÜ Özel Tohumlarıyla)
+
+```bash
+# Varsayılan KODTÜ 2026 tohumu ve canlı PCG telemetri paneli ile başlatın
 python src/main.py --seed "KODTU2026" --debug-procgen
 
-# 4. Determinizm ve Topoloji Birim Testlerini Koşturun
+# ODTÜ Devrim Stadyumu Korusu tohumu ile başlatın
+python src/main.py --seed "ODTU-1956-DEVRIM" --debug-procgen
+
+# ODTÜ Bilim Ağacı Anıtı tohumu ile başlatın
+python src/main.py --seed "METU-BILIM-AGACI" --debug-procgen
+```
+
+### 3. Otomatik Test Paketi (`pytest`)
+
+Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **14 birim testini** çalıştırın:
+
+```bash
 pytest tests/ -v
 ```
 
-### Oyun İçi Kontroller (Gameplay Controls)
-*   `[W, A, S, D]` / `[Yön Tuşları]` : **Hareket** (Kuru yaprak yığınlarında hışırtı ve hız artışı sağlar).
-*   `[SPACE]` / `[Sol Tık]` : **Solar Ember Sweep** (Sıcak kehribar ışık dalgası savurur, düşmanları iter ve yaprakları havalandırır).
-*   `[SHIFT]` / `[Sağ Tık]` : **Autumn Gust Dash** (Rüzgâr izi bırakarak anlık kaçınma hamlesi yapar).
-*   `[E]` : **Tapınak Etkileşimi / Sonraki Biyom** (Hasat yadigârları toplandığında Kadim Sonbahar Tapınağını uyandırır).
-*   `[TAB]` : **Canlı Seed Giriş / Paylaşım Paneli** (Oyun içinde özel bir Seed metni yazıp dünyayı anında o tohumla üretir).
+```text
+tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED
+tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[KODTU2026] PASSED
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[KODTU-8492-FALL] PASSED
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[AUTUMN-JAM-01] PASSED
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[SONBAHAR-1923] PASSED
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[PIXEL-FOREST] PASSED
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED
+... 14 passed in 1.15s
+```
 
-### Geliştirici (DebugKısayolları
-Oyun çalışırken prosedürel üretim katmanlarını canlı olarak incelemek için:
-*   `[F1]` : **Noise & Biome Overlay** (Sıcaklık, nem ve yükseklik haritalarını renklendirerek gösterir).
-*   `[F2]` : **Bitmask & Grid Debug** (Hücre sınırlarını, bitmask indekslerini ve çarpışma kutularını açar).
-*   `[F3]` : **Instant Re-Seed** (Anlık olarak yeni bir rastgele tohum üretir ve dünyayı sıfırdan inşa eder).
-*   `[F4]` : **Pathfinding / Flood-Fill Visualizer** (Dijkstra uzaklık haritasını ve geçilebilir alan ağını gösterir).
-
----
-
-## 👨‍💻 8. Geliştirici ve Lisans
-
-*   **Mimari & Geliştirme:** **Bahattin Yunus Çetin** ([@arch-yunus](https://github.com/arch-yunus) / [@bahattinyunus](https://github.com/bahattinyunus))
-*   **Organizasyon:** KODTÜ Game Jam
-
-Bu proje **MIT Lisansı** altında açık kaynaklı olarak sunulmuştur. Prosedürel üretim algoritmalarını, bitmask tablolarını ve sonbahar renk paleti tanımlamalarını kendi projelerinizde özgürce inceleyebilir ve kullanabilirsiniz.
+<div align="center">
+  <br />
+  <p><b>🍁 Orta Doğu Teknik Üniversitesi (ODTÜ / METU) — KODTÜ Game Jam için sevgi, matematik ve piksel-sanatıyla geliştirilmiştir. 🍁</b></p>
+</div>

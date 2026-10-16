@@ -128,9 +128,10 @@ def synthesize_autumn_structures(
 ) -> List[StructurePlacement]:
     """
     Places deterministic autumn micro-structures:
-    1. 'stone_circle' framing the Ancient Autumn Shrine
-    2. 'campfire' safe warmth beacons along mid-distance clearings (d in [0.35, 0.72])
-    3. 'boardwalk' wooden planks along damp corridor crossings
+    1. 'bilim_agaci' (ODTÜ Tree of Science Monument) in the starting glade
+    2. 'stone_circle' framing the Ancient Autumn Shrine
+    3. 'campfire' safe warmth beacons along mid-distance clearings (d in [0.35, 0.72])
+    4. 'boardwalk' (Eymir Pier planks) along damp corridor crossings
     """
     height, width = walkable_grid.shape
     structures: List[StructurePlacement] = [
@@ -141,6 +142,20 @@ def synthesize_autumn_structures(
             radius_tiles=2,
         )
     ]
+
+    # Place ODTÜ Bilim Ağacı (Tree of Science Monument) 2 tiles North-East or North-West of spawn
+    for ox, oy in ((2, -1), (-2, -1), (0, -2), (2, 1)):
+        bx, by = spawn_tile[0] + ox, spawn_tile[1] + oy
+        if 2 <= bx < width - 2 and 2 <= by < height - 2 and walkable_grid[by, bx] == 0:
+            structures.append(
+                StructurePlacement(
+                    tile_x=bx,
+                    tile_y=by,
+                    structure_type="bilim_agaci",
+                    radius_tiles=1,
+                )
+            )
+            break
 
     # Select 2 open clearings for Alchemist Campfires
     candidates: List[Tuple[int, int]] = []

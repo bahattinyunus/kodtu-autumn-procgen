@@ -200,5 +200,16 @@ def test_astar_and_procedural_structures() -> None:
     assert len(astar_path) - 1 == int(world.dijkstra_dist[world.shrine_tile[1], world.shrine_tile[0]])
     assert len(world.structures) >= 2
     assert any(st.structure_type == "campfire" for st in world.structures)
+    assert any(st.structure_type == "bilim_agaci" for st in world.structures)
 
 
+def test_odtu_bilim_agaci_monument_and_curated_seeds() -> None:
+    """Verifies that all curated ODTÜ / METU seeds place the Bilim Ağacı monument and cycle cleanly."""
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="ODTU-1956-DEVRIM", debug_procgen=False, headless=True)
+    for _ in range(len(game.odtu_presets)):
+        assert any(st.structure_type == "bilim_agaci" for st in game.world.structures)
+        game.cycle_odtu_preset()
+        game.update(1.0 / 60.0)
+        game.render()

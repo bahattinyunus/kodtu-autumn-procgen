@@ -617,6 +617,43 @@ def _build_boardwalk_sprite() -> np.ndarray:
     return arr
 
 
+def _build_bilim_agaci_sprite() -> np.ndarray:
+    """
+    Renders the iconic 32x32 ODTÜ Bilim Ağacı (Tree of Science Monument, 1966)
+    in 16-bit Sonbahar pixel art with brutalist stone fins and golden torch embers.
+    """
+    arr = np.zeros((32, 32, 4), dtype=np.uint8)
+    # Circular red-white/crimson-gold ODTÜ pedestal base
+    _draw_circle_px(arr, 16, 26, 8, CRIMSON_DECAY)
+    _draw_circle_px(arr, 16, 26, 6, AUTUMN_MIST)
+    _draw_circle_px(arr, 16, 26, 4, WITHERED_BARK)
+
+    # Central brutalist trunk flaring upward into dynamic fins
+    for y in range(6, 26):
+        t = (26 - y) / 20.0
+        half_w = int(round(2.0 + (t * t) * 7.5))
+        for x in range(16 - half_w, 16 + half_w + 1):
+            offset = abs(x - 16)
+            # Carve vertical dynamic brutalist ribs/fins
+            if y < 16 and offset in (2, 5):
+                continue
+            if offset == half_w or y == 6:
+                arr[y, x] = (*DEEP_VOID, 255)
+            elif y <= 9 and offset % 2 == 0:
+                arr[y, x] = (*SUNLIT_BIRCH, 255)  # Torch of Science golden crown
+            elif x < 16:
+                fin_l = AUTUMN_MIST if offset % 2 == 0 else SLATE_FOG
+                arr[y, x] = (*fin_l, 255)
+            else:
+                fin_r = SLATE_FOG if offset % 2 == 0 else WITHERED_BARK
+                arr[y, x] = (*fin_r, 255)
+
+    # Glowing ODTÜ emblem spark at heart of monument
+    arr[15, 16] = (*PALE_SUNBEAM, 255)
+    arr[16, 16] = (*CRIMSON_DECAY, 255)
+    return arr
+
+
 def _build_shrine_sprite(awakened: bool = False) -> np.ndarray:
     """Renders the 32x32 Ancient Autumn Shrine (dormant or awakened with golden fire)."""
     arr = np.zeros((32, 32, 4), dtype=np.uint8)
@@ -731,6 +768,7 @@ class AssetBank:
             _ndarray_to_surface(_build_campfire_sprite(1)),
         ]
         self.boardwalk_surf = _ndarray_to_surface(_build_boardwalk_sprite())
+        self.bilim_agaci_surf = _ndarray_to_surface(_build_bilim_agaci_sprite())
 
         shrine_dormant = _build_shrine_sprite(False)
         shrine_awake = _build_shrine_sprite(True)

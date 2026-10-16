@@ -69,6 +69,8 @@ class GameHUD:
             for st in world.structures:
                 if st.structure_type == "campfire":
                     surf.set_at((st.tile_x, st.tile_y), BURNT_AMBER)
+                elif st.structure_type == "bilim_agaci":
+                    surf.set_at((st.tile_x, st.tile_y), SUNLIT_BIRCH)
             self._minimap_base_surf = surf
             self._minimap_seed_u64 = world.seed_uint64
         return self._minimap_base_surf
@@ -178,7 +180,7 @@ class GameHUD:
             pygame.draw.rect(canvas, DEEP_VOID, (4, NATIVE_HEIGHT - 14, NATIVE_WIDTH - 8, 11))
             self.font.draw_text(
                 canvas,
-                "[F1-F4]Debug [SPC]Slash [Q]Nova [SHF]Dash [TAB]Seed [M]Map",
+                "[F1-F4]Dbg [F5]ODTU [SPC]Hit [Q]Nova [SHF]Dash [TAB]Seed",
                 NATIVE_WIDTH // 2,
                 NATIVE_HEIGHT - 13,
                 AUTUMN_MIST,
