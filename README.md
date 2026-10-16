@@ -13,7 +13,7 @@
 [![Art Style: Pixelated](https://img.shields.io/badge/Art_Style-Pixelated_16--Bit_(320x180)-E09F3E?style=for-the-badge&labelColor=1A1118)](#-piksel-kusursuz-pixel-perfect-g%C3%B6rsel-m%C3%BChendislik)
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Color_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#-sonbahar-renk-kuram%C4%B1-hue-shifted-autumn-lut)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Stage_Deterministic_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#-deterministik-prosed%C3%BCrel-%C3%BCretim-mimarisi-pcg-pipeline)
-[![Tests: 15 Passed](https://img.shields.io/badge/Pytest_Suite-15%2F15_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
+[![Tests: 16 Passed](https://img.shields.io/badge/Pytest_Suite-16%2F16_Passed_(100%25)-EBB85B?style=for-the-badge&labelColor=1A1118)](#-h%C4%B1zl%C4%B1-ba%C5%9Flang%C4%B1%C3%A7--do%C4%9Frulama-testleri)
 
 </div>
 
@@ -259,6 +259,7 @@ Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/s
 | **`Q`** veya **Orta Tık** | **Harvest Nova** | $360^\circ$ alan etkili köz patlaması, yüksek geri itme ve $360^\circ$ mermi yansıtma |
 | **`SHIFT`** | **Autumn Gust Dash** | Afterimage hayalet izli hızlı rüzgar atılması (`0.22 sn` dokunulmazlık) |
 | **`B`** | **ODTÜ Kutsaması (Boon)** | Sıradaki ODTÜ Sonbahar Kutsamasını (`Devrim`, `Bilim`, `Yalıncak`, `Eymir`, `Hasat`) açar |
+| **`C`** | **ODTÜ Kutsama & Savaş Kodeksi** | Aktif ODTÜ kutsamalarını, infaz edilen düşman, yansıtılan küre ve palamut istatistiklerini açar |
 | **`E`** | **Tapınak Etkileşimi** | 5 Relik toplandığında Kadim Tapınağı uyandırır ve sonraki koruyu sentezler |
 | **`M`** | **Minimap Radar Aç/Kapa** | Sağ üstteki canlı biyom, relik, Bilim Ağacı ve tapınak radarını açar/kapatır |
 | **`TAB`** | **Tohum (Seed) Penceresi** | Canlı metin tohumu girme ve paylaşım kodu (`KODTU-XXXX-LEAF`) görüntüleme |
@@ -285,11 +286,11 @@ Haritadaki her **Hasat Reliği (`Harvest Relic`)** toplandığında (veya test/s
 | **1. Hyper Light Drifter**<br/>*(Heart Machine, 2016)* | Kılıç darbeleriyle mermi şarj etme (*Slash-to-Reload*), mermi yansıtma, Dash hayalet izleri ve Hue-Shifted atmosferik piksel sanatı. | Dünyası tamamen sabit/el yapımıdır; prosedürel üretim (PCG) içermez. | `Solar Ember Slash ([SPACE])` ile `Solar Bolt ([F])` şarj etme, `DEFLECT!` mermi yansıtma ve `DashGhost` izlerini **`%100` deterministik prosedürel dünya** ile birleştirir. |
 | **2. Core Keeper**<br/>*(Pugstorm, 2024)* | Hücresel otomata mağara sistemleri, çoklu biyom ekosistemi, otomatik karo döşeme (autotiling) ve ışık/meşale odaklı keşif. | Savaş sistemi daha yavaş ve kütleseldir; rüzgar/yaprak vektör fiziği bulunmaz. | $B678/S345678$ Otomata + **47-Karo Blob Bitmasking** ve `16×16` Chunk Spatial Hash mimarisini hızlı aksiyon ve **2B Verlet yaprak fiziğiyle** birleştirir. |
 | **3. Nuclear Throne**<br/>*(Vlambeer, 2015)* | Çıkmaz sokaksız dinamik seviye kazıyıcıları, **Hit-Stop** (mikro kare dondurma), kamera sarsıntısı ve mutasyon seçimleri. | Görsel paleti düşük kontrastlı çorak topraklardır; topolojik mesafe bütçelemesi basittir. | Vlambeer tarzı `38 ms` **Hit-Stop** ve $\text{Trauma}^2$ sarsıntısını, **Dijkstra Jeodezik Tehdit Bütçesi** ve **5 ODTÜ Kutsaması (`Autumn Boons`)** ile sunar. |
-| **4. Enter the Gungeon**<br/>*(Dodge Roll, 2016)* | Kusursuz tam sayı piksel ölçekleme, mermi cehennemi (bullet-hell) desenleri ve yakın dövüşle mermi kesme/yansıtma. | Önceden çizilmiş oda şablonlarını birleştirir; organik doğa/orman topoğrafyası üretmez. | *Elder Stag Warden*'ın 3'lü **Twilight Orb** yaylım ateşini kılıç veya `Harvest Nova ([Q])` ile düşmana geri yansıtma (`DEFLECT!`) mekaniğini organik ormanda sunar. |
+| **4. Enter the Gungeon**<br/>*(Dodge Roll, 2016)* | Kusursuz tam sayı piksel ölçekleme, mermi cehennemi (bullet-hell) desenleri, parçalanabilir çevre objeleri ve mermi kesme/yansıtma. | Önceden çizilmiş oda şablonlarını birleştirir; organik doğa/orman topoğrafyası üretmez. | *Elder Stag Warden*'ın 3'lü **Twilight Orb** yaylım ateşini yansıtma (`DEFLECT!`) ve balkabağı/çalıları parçalayarak **Altın Palamut (`+ACORN DROP!`)** düşürme mekaniğini sunar. |
 | **5. Wizard of Legend**<br/>*(Contingent99, 2018)* | Çok hızlı element büyü komboları, $360^\circ$ alan etkili novalar, rüzgar atılmaları ve sinerjik relik/kutsama dizilimleri. | Koridorlar dikdörtgen zindan karolarından ibarettir; mavi-gürültülü (Poisson) ekolojik dağılım yoktur. | `3-Hit Solar Combo` + `Harvest Nova [Q]` + `Solar Bolt [F]` + `Gust Dash [SHIFT]` dörtlüsünü **Bridson $\mathcal{O}(N)$ Poisson Disk** ormanında çalıştırır. |
 | **6. Don't Starve**<br/>*(Klei Entertainment)* | Sonbahar (*Reign of Giants*) biyom estetiği, karanlık/ısı yönetimi (fener/kamp ateşi) ve çevresel tehdit algısı. | Dövüş mekanikleri tek tuşlu ("kite & hit") ve basittir; piksel-sanatı yerine 2B vektör kukla kullanır. | Fener ısısı (*Lantern Warmth*) hayatta kalma gerilimini **ODTÜ Bilim Ağacı Meşalesi (`+15/sn`)**, simyacı kamp ateşleri ve derin kombo sistemiyle harmanlar. |
 | **7. Noita**<br/>*(Nolla Games, 2020)* | Deterministik tohum (seed) mimarisi ve her pikselin/parçacığın çevresel kuvvetlerle fiziksel etkileşime girmesi. | Yüksek CPU yükü nedeniyle düşük donanımlarda kare hızı düşüşleri yaşanabilir. | Zamanla evrilen **2B Simplex Rüzgar Vektör Alanı ($\vec{W}(x,y,t)$)** ve oyuncu saldırılarının radyal şok dalgalarıyla savrulan `160+` Verlet yaprağını `60 FPS`'te işler. |
-| **8. Children of Morta & Moonlighter** | Zengin 16-bit piksel animasyonları, Y-Sıralamalı (Y-Sorted) derinlik ve zindan/orman keşif döngüsü. | Prosedürel üretim aşamaları oyuncuya kapalı bir "kara kutu" (black-box) olarak çalışır. | **`[F1]`–`[F4]` Canlı Mühendislik Telemetrisi** ile gürültü matrislerini, 47-Blob indekslerini ve Dijkstra/A\* grafını oyun içinde anlık olarak görselleştirir! |
+| **8. Children of Morta & Moonlighter** | Zengin 16-bit piksel animasyonları, Y-Sıralamalı (Y-Sorted) derinlik ve zindan/orman keşif döngüsü. | Prosedürel üretim aşamaları oyuncuya kapalı bir "kara kutu" (black-box) olarak çalışır. | **`[F1]`–`[F4]` Canlı Mühendislik Telemetrisi** ve **`[C]` ODTÜ Kutsama Kodeksi** ile tüm algoritmik katmanları oyun içinde anlık olarak görselleştirir! |
 
 <p align="center">
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
@@ -333,7 +334,7 @@ kodtu-autumn-procgen/
 │   ├── core/
 │   │   ├── palette.py                 # 16-Renk Sonbahar LUT sabitleri ve Hue-Shifting matematiği
 │   │   ├── camera.py                  # 320x180 tam sayı ölçekleme, Frustum Culling ve kamera sarsıntısı
-│   │   ├── spatial_hash.py            # 16x16 Chunk uzamsal özetleme ve O(1) çarpışma çözümü
+│   │   ├── spatial_hash.py            # 16x16 Chunk uzamsal özetleme, O(1) çarpışma ve parçalanabilir flora
 │   │   ├── asset_builder.py           # 100% deterministik piksel-sanatı ve ODTÜ Bilim Ağacı sentezleyicisi
 │   │   ├── audio_synth.py             # Prosedürel PCM ses sentezleyicisi ve çalışma zamanı mikseri
 │   │   └── banner_generator.py        # README için piksel-sanatı banner ve rakip matrisi üreticisi
@@ -352,9 +353,9 @@ kodtu-autumn-procgen/
 │   │   └── renderer.py                # Y-Sorted sahne işleyicisi, mermi/hayalet çizimi ve [F1]-[F4] katmanları
 │   └── ui/
 │       ├── pixel_font.py              # Özel 5x7 piksel-sanatı bitmap yazı tipi motoru
-│       └── hud.py                     # Fener barı, Solar Bolt mermi göstergesi, Minimap ve Tohum penceresi
+│       └── hud.py                     # Fener barı, Boss barı, [C] Kutsama Kodeksi, Minimap ve Tohum penceresi
 └── tests/
-    └── test_procgen.py                # 15 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, Deflect ve Boon testi
+    └── test_procgen.py                # 16 kapsamlı determinizm, topoloji, ODTÜ Bilim Ağacı, Deflect ve Kodeks testi
 ```
 
 <p align="center">
@@ -389,7 +390,7 @@ python src/main.py --seed "METU-BILIM-AGACI" --debug-procgen
 
 ### 3. Otomatik Test Paketi (`pytest`)
 
-Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **15 birim testini** çalıştırın:
+Motorun determinizmini, `%100` mağara bağlantılılığını (sıfır yetim oda), Bridson Poisson Disk minimum mesafe garantisini, ODTÜ Bilim Ağacı Anıtı sentezini, *Hyper Light Drifter* tarzı Solar Bolt & Mermi Yansıtma (`DEFLECT!`) mekaniğini, parçalanabilir flora/palamut ganimetlerini, 47-Karo Blob bit maskesi doğruluğunu ve 16-renk Sonbahar LUT kısıtlamasını doğrulayan **16 birim testini** çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -411,7 +412,8 @@ tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED
 tests/test_procgen.py::test_astar_and_procedural_structures PASSED
 tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED
 tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED
-... 15 passed in 1.25s
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED
+... 16 passed in 1.35s
 ```
 
 <div align="center">

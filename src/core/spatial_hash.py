@@ -125,3 +125,47 @@ class ChunkSpatialHash:
                             rx += min_r * 0.5
 
         return rx, ry, hit
+
+    def destroy_destructible_props(self, cx: float, cy: float, radius: float) -> List[PropPlacement]:
+        """
+        Destroys destructible flora (`pumpkin`, `shrub`, `leaf_pile`) within `radius` of (cx, cy).
+        Removes their colliders/triggers in O(1) chunk time and returns the destroyed props.
+        """
+        destructible_types = {"pumpkin", "shrub", "leaf_pile"}
+        ch_x0 = max(0, int(cx - radius - 1) // CHUNK_SIZE_TILES)
+        ch_y0 = max(0, int(cy - radius - 1) // CHUNK_SIZE_TILES)
+        ch_x1 = int(cx + radius + 1) // CHUNK_SIZE_TILES
+        ch_y1 = int(cy + radius + 1) // CHUNK_SIZE_TILES
+
+        destroyed: List[PropPlacement] = []
+        r_sq = radius * radius
+        for chy in range(ch_y0, ch_y1 + 1):
+            for chx in range(ch_x0, ch_x1 + 1):
+                plist = self.chunk_props.get((chx, chy))
+                if not plist:
+                    continue
+                kept: List[PropPlacement] = []
+                for prop in plist:
+                    if (
+                        prop.prop_type in destructible_types
+                        and (prop.x - cx) ** 2 + (prop.y - cy) ** 2 <= r_sq
+                    ):
+                        destroyed.append(prop)
+                        tx, ty = int(prop.x), int(prop.y)
+                        if prop.solid and (tx, ty) in self.cell_colliders:
+                            self.cell_colliders[(tx, ty)] = [
+                                c
+                                for c in self.cell_colliders[(tx, ty)]
+                                if abs(c.x - prop.x) > 1e-4 or abs(c.y - prop.y) > 1e-4
+                            ]
+                        if prop.prop_type == "leaf_pile" and (tx, ty) in self.leaf_pile_cells:
+                            self.leaf_pile_cells[(tx, ty)] = [
+                                p
+                                for p in self.leaf_pile_cells[(tx, ty)]
+                                if abs(p.x - prop.x) > 1e-4 or abs(p.y - prop.y) > 1e-4
+                            ]
+                    else:
+                        kept.append(prop)
+                self.chunk_props[(chx, chy)] = kept
+        return destroyed
+

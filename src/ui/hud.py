@@ -21,7 +21,7 @@ from src.core.palette import (
     PALE_SUNBEAM,
     AUTUMN_MIST,
 )
-from src.entities.actors import Player, CollectibleItem
+from src.entities.actors import Player, CollectibleItem, EnemyAgent, AUTUMN_BOONS
 from src.procgen.pipeline import WorldData
 from src.rendering.renderer import (
     DEBUG_NONE,
@@ -33,11 +33,12 @@ from src.ui.pixel_font import PixelFontRenderer
 
 
 class GameHUD:
-    """Renders the pixel-perfect HUD, live minimap radar, telemetry overlay, and Seed Modal."""
+    """Renders the pixel-perfect HUD, live minimap radar, telemetry overlay, and Seed/Codex Modals."""
 
     def __init__(self) -> None:
         self.font = PixelFontRenderer()
         self.seed_modal_open = False
+        self.codex_modal_open = False
         self.seed_input_buffer = ""
         self.banner_text = ""
         self.banner_timer = 0.0
@@ -86,6 +87,7 @@ class GameHUD:
         show_procgen_telemetry: bool,
         draw_calls: int,
         culled_props: int,
+        enemies: Optional[List[EnemyAgent]] = None,
     ) -> None:
         # 1. Top-Left: Lantern Warmth Bar, Solar Bolt Ammo Pips & Relic/Boon Status
         pygame.draw.rect(canvas, DEEP_VOID, (4, 4, 114, 33))
@@ -184,6 +186,25 @@ class GameHUD:
                 pygame.draw.line(canvas, col, (cx, cy), (ax, ay), 2)
                 canvas.set_at((ax, ay), SUNLIT_BIRCH)
 
+        # 3b. Elder Stag Warden Mini-Boss Health Bar (when nearby & alive)
+        if enemies:
+            for en in enemies:
+                if en.alive and en.kind == "warden":
+                    if math.hypot(en.x - player.x, en.y - player.y) <= 10.5:
+                        bw = 116
+                        bx = (NATIVE_WIDTH - bw) // 2
+                        by = 28
+                        pygame.draw.rect(canvas, DEEP_VOID, (bx - 2, by - 2, bw + 4, 15))
+                        pygame.draw.rect(canvas, CRIMSON_DECAY, (bx - 2, by - 2, bw + 4, 15), 1)
+                        self.font.draw_text(
+                            canvas, "ELDER STAG WARDEN", NATIVE_WIDTH // 2, by - 1, SUNLIT_BIRCH, align_center=True
+                        )
+                        fill_w = max(0, int(round((bw - 4) * (en.hp / max(1, en.max_hp)))))
+                        pygame.draw.rect(canvas, PLUM_SHADOW, (bx + 2, by + 8, bw - 4, 3))
+                        if fill_w > 0:
+                            pygame.draw.rect(canvas, HARVEST_GOLD, (bx + 2, by + 8, fill_w, 3))
+                    break
+
         # 4. PCG Telemetry & Debug Overlay Bar
         if show_procgen_telemetry or debug_mode != DEBUG_NONE:
             self._render_telemetry_panel(canvas, world, fps, debug_mode, draw_calls, culled_props)
@@ -191,7 +212,7 @@ class GameHUD:
             pygame.draw.rect(canvas, DEEP_VOID, (4, NATIVE_HEIGHT - 14, NATIVE_WIDTH - 8, 11))
             self.font.draw_text(
                 canvas,
-                "[F1-F4]Dbg [F5]ODTU [SPC]Hit [Q]Nova [SHF]Dash [TAB]Seed",
+                "[F1-F4]Dbg [F5]ODTU [C]Codex [SPC]Hit [F]Bolt [Q]Nova",
                 NATIVE_WIDTH // 2,
                 NATIVE_HEIGHT - 13,
                 AUTUMN_MIST,
@@ -202,16 +223,18 @@ class GameHUD:
         if self.banner_timer > 0.0 and self.banner_text:
             bw = min(NATIVE_WIDTH - 20, len(self.banner_text) * 6 + 16)
             bx = (NATIVE_WIDTH - bw) // 2
-            by = 32
+            by = 45 if enemies else 32
             pygame.draw.rect(canvas, DEEP_VOID, (bx, by, bw, 15))
             pygame.draw.rect(canvas, HARVEST_GOLD, (bx, by, bw, 15), 1)
             self.font.draw_text(
                 canvas, self.banner_text, NATIVE_WIDTH // 2, by + 3, PALE_SUNBEAM, align_center=True
             )
 
-        # 6. Interactive Seed Input Modal ([TAB])
+        # 6. Interactive Seed Input Modal ([TAB]) or ODTÜ Boon Codex Modal ([C])
         if self.seed_modal_open:
             self._render_seed_modal(canvas, world)
+        elif self.codex_modal_open:
+            self._render_codex_modal(canvas, world, player)
 
     def _find_guidance_target(
         self, world: WorldData, player: Player, items: List[CollectibleItem]
@@ -322,3 +345,38 @@ class GameHUD:
             HARVEST_GOLD,
             align_center=True,
         )
+
+    def _render_codex_modal(self, canvas: pygame.Surface, world: WorldData, player: Player) -> None:
+        """[C] Renders the ODTÜ Autumn Boons & Combat Telemetry Codex Modal."""
+        mw, mh = 264, 114
+        mx = (NATIVE_WIDTH - mw) // 2
+        my = (NATIVE_HEIGHT - mh) // 2
+        pygame.draw.rect(canvas, DEEP_VOID, (mx, my, mw, mh))
+        pygame.draw.rect(canvas, HARVEST_GOLD, (mx, my, mw, mh), 2)
+
+        self.font.draw_text(
+            canvas,
+            "ODTU AUTUMN BOONS & COMBAT CODEX",
+            NATIVE_WIDTH // 2,
+            my + 5,
+            SUNLIT_BIRCH,
+            medium=True,
+            align_center=True,
+        )
+
+        for idx, (boon_id, title, desc) in enumerate(AUTUMN_BOONS):
+            by = my + 20 + idx * 14
+            unlocked = player.has_boon(boon_id)
+            pygame.draw.rect(canvas, PLUM_SHADOW, (mx + 8, by, mw - 16, 12))
+            tag = "[ON]" if unlocked else "[--]"
+            col = PALE_SUNBEAM if unlocked else AUTUMN_MIST
+            self.font.draw_text(canvas, f"{tag} {title}: {desc[:28]}", mx + 11, by + 2, col)
+
+        stats_str = (
+            f"SLAIN:{player.enemies_defeated} DEFLECT:{player.orbs_deflected} "
+            f"ACORN:{player.acorns_collected} [B]Unlock [C]Close"
+        )
+        self.font.draw_text(
+            canvas, stats_str, NATIVE_WIDTH // 2, my + mh - 14, HARVEST_GOLD, align_center=True
+        )
+

@@ -80,6 +80,16 @@ class AutumnProcGenGame:
         pygame.display.set_caption(
             f"KODTU: Autumn ProcGen Engine | Seed: {initial_seed} | 320x180 Pixel-Perfect"
         )
+        if not headless and sys.platform == "win32":
+            try:
+                import ctypes
+                hwnd = pygame.display.get_wm_info().get("window")
+                if hwnd:
+                    ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                    ctypes.windll.user32.SetForegroundWindow(hwnd)
+                    ctypes.windll.user32.BringWindowToTop(hwnd)
+            except Exception:
+                pass
 
         # Native 320x180 pixel-art canvas (strict integer scaling, zero bilinear blur)
         self.canvas = pygame.Surface((NATIVE_WIDTH, NATIVE_HEIGHT))
@@ -226,8 +236,14 @@ class AutumnProcGenGame:
                     continue
 
                 if event.key == pygame.K_ESCAPE:
+                    if self.hud.codex_modal_open:
+                        self.hud.codex_modal_open = False
+                        continue
                     return False
+                elif event.key == pygame.K_c:
+                    self.hud.codex_modal_open = not self.hud.codex_modal_open
                 elif event.key == pygame.K_TAB:
+                    self.hud.codex_modal_open = False
                     self.hud.seed_modal_open = True
                     self.hud.seed_input_buffer = self.world.seed_input
                 elif event.key == pygame.K_m:
@@ -287,7 +303,7 @@ class AutumnProcGenGame:
         return True
 
     def _get_move_vector(self) -> tuple[float, float]:
-        if self.hud.seed_modal_open:
+        if self.hud.seed_modal_open or self.hud.codex_modal_open:
             return 0.0, 0.0
         keys = pygame.key.get_pressed()
         mx = 0.0
@@ -332,6 +348,23 @@ class AutumnProcGenGame:
             self.leaf_system.spawn_burst(px_x, px_y, count=12, golden_bias=True)
             self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=36.0, strength=2.4)
 
+    def _smash_nearby_props(self, cx: float, cy: float, radius: float) -> None:
+        """Destroys nearby pumpkins/shrubs/leaf piles and drops Golden Acorns from pumpkins."""
+        destroyed = self.spatial_hash.destroy_destructible_props(cx, cy, radius)
+        for prop in destroyed:
+            self.sound.play_leaf_crunch()
+            self.leaf_system.spawn_burst(
+                prop.x * TILE_SIZE,
+                prop.y * TILE_SIZE,
+                count=14 if prop.prop_type == "pumpkin" else 8,
+                golden_bias=(prop.prop_type == "pumpkin"),
+            )
+            if prop.prop_type == "pumpkin":
+                self.items.append(
+                    CollectibleItem(x=prop.x, y=prop.y, kind="acorn", bob_phase=prop.x)
+                )
+                self.spawn_floating_text(prop.x, prop.y - 0.3, "+ACORN DROP!", HARVEST_GOLD)
+
     def _deflect_nearby_orbs(self, radius: float) -> None:
         """Deflects incoming enemy Twilight Orbs back at 1.6x speed and 2x damage."""
         for proj in self.projectiles:
@@ -370,8 +403,13 @@ class AutumnProcGenGame:
         )
         self.leaf_system.spawn_burst(sweep_cx, sweep_cy, count=12 if is_crit else 7, golden_bias=True)
 
-        # Deflect enemy Twilight Orbs within melee arc
+        # Deflect enemy Twilight Orbs & smash destructible flora within melee arc
         self._deflect_nearby_orbs(reach)
+        self._smash_nearby_props(
+            self.player.x + self.player.facing_x * 0.85,
+            self.player.y + self.player.facing_y * 0.85,
+            1.35,
+        )
 
         for enemy in self.enemies:
             if not enemy.alive:
@@ -410,8 +448,9 @@ class AutumnProcGenGame:
         self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=72.0, strength=4.8)
         self.spawn_floating_text(self.player.x, self.player.y - 0.5, "HARVEST NOVA!", PALE_SUNBEAM)
 
-        # Deflect all enemy orbs in a wide 360-degree ring
+        # Deflect all enemy orbs & smash destructible flora in a wide 360-degree ring
         self._deflect_nearby_orbs(2.95)
+        self._smash_nearby_props(self.player.x, self.player.y, 2.65)
 
         for enemy in self.enemies:
             if not enemy.alive:
@@ -670,6 +709,7 @@ class AutumnProcGenGame:
             show_procgen_telemetry=self.debug_procgen,
             draw_calls=self.renderer.last_draw_calls,
             culled_props=self.renderer.last_culled_props,
+            enemies=self.enemies,
         )
 
         # Strict Integer Scaling onto the display window (Zero Bilinear Blur)
