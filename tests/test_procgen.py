@@ -449,6 +449,107 @@ def test_atmospheric_weather_system_and_minimap_enhancements() -> None:
         game.render()
 
 
+def test_procedural_soundtrack_and_blade_dance_combo() -> None:
+    """
+    Verifies:
+    1. 8.0-second seamless procedural autumn soundtrack loop synthesizes cleanly with NumPy.
+    2. Player combo meter accumulation (0..6 hits) and [X] Bozkır Kılıç Dansı finisher activation.
+    3. Campfire sizzle and blade dance sound synthesizers produce valid PCM buffers.
+    """
+    from src.core.audio_synth import synth_autumn_theme, synth_campfire_sizzle, synth_blade_dance
+    from src.entities.actors import Player
+    import numpy as np
+
+    # 1. Procedural soundtrack synthesis
+    theme = synth_autumn_theme()
+    assert len(theme) == 176400  # 8.0s at 22050 Hz
+    assert np.max(np.abs(theme)) <= 1.0
+
+    # New combat sound synthesizers
+    sizzle = synth_campfire_sizzle()
+    dance_sfx = synth_blade_dance()
+    assert len(sizzle) > 0
+    assert len(dance_sfx) > 0
+    assert np.max(np.abs(sizzle)) <= 1.0
+    assert np.max(np.abs(dance_sfx)) <= 1.0
+
+    # 2. Player combo meter & Blade Dance finisher
+    p = Player(10.0, 10.0)
+    assert p.combo_hits == 0
+    assert not p.combo_ready
+    assert not p.trigger_blade_dance()
+
+    # Build combo with melee hits
+    for _ in range(5):
+        p.increment_combo(1)
+    assert p.combo_hits == 5
+    assert not p.combo_ready
+
+    # 6th hit reaches full combo
+    p.increment_combo(1)
+    assert p.combo_hits == 6
+    assert p.combo_ready
+
+    # Trigger Blade Dance
+    assert p.trigger_blade_dance()
+    assert p.combo_hits == 0
+    assert p.blade_dance_timer > 0.0
+    assert p.invuln_timer >= 0.70
+
+
+def test_enraged_warden_boss_and_campfire_roasting() -> None:
+    """
+    Verifies:
+    1. Elder Stag Warden enters Phase 2 Enraged state at <= 50% HP with increased speed and 8-way orb storm.
+    2. Campfire resting restores full warmth and roasts acorn into warm aura (+25s aura).
+    3. Headless full game loop executes campfire interaction and blade dance without errors.
+    """
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    # 1. Warden boss enraged phase
+    warden = EnemyAgent(x=20.0, y=20.0, kind="warden", seed_phase=0.0)
+    assert not warden.is_enraged
+    assert warden.hp == 12
+
+    # Damage warden below 50% (hp <= 6)
+    warden.apply_hit(6, source_x=19.0, source_y=20.0)
+    assert warden.hp == 6
+    assert warden.is_enraged
+
+    # 2. Campfire resting & acorn roasting in game
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+    game.player.warmth = 30.0
+    game.player.acorns_collected = 2
+
+    # Find a campfire structure
+    campfires = [st for st in game.world.structures if st.structure_type == "campfire"]
+    assert len(campfires) > 0
+    cf = campfires[0]
+
+    # Teleport player near campfire and interact
+    game.player.x = cf.tile_x + 0.5
+    game.player.y = cf.tile_y + 0.5
+    game._try_interact_action()
+
+    # Warmth restored to 100%, 1 acorn consumed, 25s aura granted
+    assert game.player.warmth == game.player.max_warmth
+    assert game.player.acorns_collected == 1
+    assert game.player.campfire_aura_timer == 25.0
+
+    # 3. Trigger blade dance in game loop
+    game.player.combo_hits = 6
+    game._perform_blade_dance()
+    assert game.player.combo_hits == 0
+    assert game.player.blade_dance_timer > 0.0
+
+    # Advance game loop across 10 frames
+    for _ in range(10):
+        game.update(0.016)
+        game.render()
+
+
+
 
 
 

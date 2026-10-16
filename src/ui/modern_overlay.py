@@ -274,21 +274,29 @@ class ModernStoryOverlay:
         for en in enemies:
             if en.alive and en.kind == "warden":
                 if math.hypot(en.x - player.x, en.y - player.y) <= 11.0:
-                    bw, bh = 360, 42
+                    bw, bh = 380, 44
                     bx = (sw - bw) // 2
                     by = 68
                     bpanel = pygame.Surface((bw, bh), pygame.SRCALPHA)
-                    bpanel.fill((*DEEP_VOID, 230))
-                    pygame.draw.rect(bpanel, CRIMSON_DECAY, (0, 0, bw, bh), 2, border_radius=6)
-                    b_lbl = self.f_small.render(
-                        "[!] ORMAN MUHAFIZI: KADİM GEYİK (ELDER STAG WARDEN)", True, SUNLIT_BIRCH
-                    )
+                    bpanel.fill((*DEEP_VOID, 235))
+                    border_color = SUNLIT_BIRCH if en.is_enraged else CRIMSON_DECAY
+                    pygame.draw.rect(bpanel, border_color, (0, 0, bw, bh), 2, border_radius=6)
+                    
+                    if en.is_enraged:
+                        boss_title = "[!] KADİM ÖFKE: KADİM GEYİK (ENRAGED WARDEN)"
+                        title_col = PALE_SUNBEAM
+                    else:
+                        boss_title = "[!] ORMAN MUHAFIZI: KADİM GEYİK (ELDER STAG WARDEN)"
+                        title_col = SUNLIT_BIRCH
+                        
+                    b_lbl = self.f_small.render(boss_title, True, title_col)
                     bpanel.blit(b_lbl, ((bw - b_lbl.get_width()) // 2, 5))
-                    pygame.draw.rect(bpanel, PLUM_SHADOW, (16, 25, bw - 32, 10), border_radius=4)
+                    pygame.draw.rect(bpanel, PLUM_SHADOW, (16, 26, bw - 32, 11), border_radius=4)
                     fill = max(0, int(round((bw - 32) * (en.hp / max(1, en.max_hp)))))
                     if fill > 0:
-                        pygame.draw.rect(bpanel, HARVEST_GOLD, (16, 25, fill, 10), border_radius=4)
-                    pygame.draw.rect(bpanel, BURNT_AMBER, (16, 25, bw - 32, 10), 1, border_radius=4)
+                        bar_col = SUNLIT_BIRCH if en.is_enraged else HARVEST_GOLD
+                        pygame.draw.rect(bpanel, bar_col, (16, 26, fill, 11), border_radius=4)
+                    pygame.draw.rect(bpanel, BURNT_AMBER, (16, 26, bw - 32, 11), 1, border_radius=4)
                     screen.blit(bpanel, (bx, by))
                 break
 
@@ -410,9 +418,9 @@ class ModernStoryOverlay:
         pygame.draw.rect(bar, BURNT_AMBER, (0, 0, bw, bh), 1, border_radius=6)
 
         txt = (
-            "[WASD] Yürü  •  [Sol Tık / SPACE] Kılıç & Mermi Yansıt  •  "
-            "[Sağ Tık / F] Köz Atışı  •  [SHIFT] Hızlı Atıl  •  [Q] Nova  •  "
-            "[H] KILAVUZ (Nasıl Oynanır)  •  [M] Harita  •  [C] Kutsamalar"
+            "[WASD] Yürü  •  [Sol Tık/SPACE] Kılıç & Yansıt  •  "
+            "[Sağ Tık/F] Köz Atışı  •  [SHIFT] Hızlı Atıl  •  [Q] Nova  •  [X] KILIÇ DANSI  •  "
+            "[E] Oku/Közle  •  [H] Kılavuz  •  [C] Kutsamalar"
         )
         lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))

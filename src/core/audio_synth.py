@@ -204,6 +204,92 @@ def synth_water_splash() -> np.ndarray:
     return (drip * 0.55 + splash * 0.45) * env * 0.35
 
 
+def synth_autumn_theme() -> np.ndarray:
+    """
+    Synthesizes an 8-second seamless looping 16-bit autumn soundtrack in D Dorian:
+    - Warm analog sub-drone & cello bassline (D2 -> Bb1 -> C2 -> A1)
+    - Melancholic chord swells with subtle tape vibrato
+    - Gentle pentatonic harp / kalimba arpeggio (D4, F4, G4, A4, C5, D5)
+    - Seamless crossfade boundary for artifact-free infinite loop.
+    """
+    duration = int(SAMPLE_RATE * 8.0)
+    t = np.linspace(0.0, 8.0, duration, endpoint=False)
+    music = np.zeros(duration, dtype=np.float64)
+
+    # 4 Chords across 8 seconds (2.0s per chord)
+    chords = [
+        # D minor
+        ([73.42, 146.83, 220.00, 293.66], [293.66, 349.23, 440.00, 523.25]),
+        # Bb Major 7
+        ([58.27, 116.54, 174.61, 220.00], [293.66, 349.23, 440.00, 587.33]),
+        # C Major / E
+        ([65.41, 130.81, 196.00, 261.63], [329.63, 392.00, 523.25, 659.25]),
+        # A minor
+        ([55.00, 110.00, 164.81, 220.00], [261.63, 329.63, 440.00, 523.25]),
+    ]
+
+    for ci, (bass_notes, arp_notes) in enumerate(chords):
+        c_start = ci * 2.0
+        c_end = c_start + 2.0
+        mask = (t >= c_start) & (t < c_end)
+        lt = t[mask] - c_start
+        chord_env = np.sin(np.pi * (lt / 2.0)) ** 1.5
+
+        # Bass drone & warm 2nd harmonic
+        for bi, bn in enumerate(bass_notes):
+            vibrato = 1.0 + 0.003 * np.sin(2.0 * np.pi * 4.5 * lt)
+            drone = np.sin(2.0 * np.pi * bn * vibrato * lt)
+            music[mask] += drone * chord_env * (0.16 / (bi + 1))
+
+        # Arpeggiated melody notes
+        for ai, an in enumerate(arp_notes):
+            arp_t0 = ai * 0.45
+            if arp_t0 < 2.0:
+                sub_mask = (lt >= arp_t0)
+                sub_t = lt[sub_mask] - arp_t0
+                note_env = np.exp(-sub_t * 3.8) * np.sin(np.pi * np.minimum(1.0, sub_t / 0.02))
+                music_idx = np.where(mask)[0][sub_mask]
+                music[music_idx] += (
+                    np.sin(2.0 * np.pi * an * sub_t)
+                    + 0.3 * np.sin(4.0 * np.pi * an * sub_t)
+                ) * note_env * 0.12
+
+    # Equal-power crossfade over 0.35s to make loop perfectly seamless
+    cf_len = int(SAMPLE_RATE * 0.35)
+    cf_in = np.linspace(0.0, 1.0, cf_len)
+    cf_out = 1.0 - cf_in
+    blended = music.copy()
+    blended[:cf_len] = music[:cf_len] * cf_in + music[-cf_len:] * cf_out
+    blended[-cf_len:] = blended[:cf_len]
+
+    return np.clip(blended * 0.48, -1.0, 1.0)
+
+
+def synth_campfire_sizzle() -> np.ndarray:
+    """Synthesizes sizzling embers and roasted chestnut pop at the campfire."""
+    rng = np.random.default_rng(777)
+    duration = int(SAMPLE_RATE * 0.38)
+    t = np.linspace(0.0, 0.38, duration, endpoint=False)
+    env = np.sin(np.pi * np.minimum(1.0, t / 0.04)) * np.exp(-t * 8.5)
+    hiss = rng.normal(0.0, 0.35, duration) * np.exp(-t * 12.0)
+    crackle = (rng.random(duration) > 0.88).astype(np.float64) * rng.normal(0.0, 0.6, duration)
+    pop = np.sin(2.0 * np.pi * 320.0 * np.exp(-t * 24.0) * t) * np.exp(-t * 30.0)
+    return (hiss * 0.45 + crackle * 0.35 + pop * 0.55) * env * 0.38
+
+
+def synth_blade_dance() -> np.ndarray:
+    """Synthesizes an omni-directional sonic flurry for the Bozkır Kılıç Dansı finisher."""
+    duration = int(SAMPLE_RATE * 0.45)
+    t = np.linspace(0.0, 0.45, duration, endpoint=False)
+    env = np.sin(np.pi * (t / 0.45)) * np.exp(-t * 3.5)
+    sweep1 = np.linspace(880.0, 220.0, duration)
+    sweep2 = np.linspace(440.0, 110.0, duration)
+    tone1 = np.sin(2.0 * np.pi * np.cumsum(sweep1) / SAMPLE_RATE)
+    tone2 = np.sin(2.0 * np.pi * np.cumsum(sweep2) / SAMPLE_RATE)
+    noise = np.random.default_rng(888).normal(0.0, 0.4, duration) * env
+    return (tone1 * 0.4 + tone2 * 0.3 + noise * 0.3) * env * 0.45
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -219,6 +305,9 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "kitabe_chime": audio_dir / "kitabe_chime.wav",
         "hit_hurt": audio_dir / "hit_hurt.wav",
         "wind_ambience": audio_dir / "wind_ambience.wav",
+        "autumn_theme": audio_dir / "autumn_theme.wav",
+        "campfire_sizzle": audio_dir / "campfire_sizzle.wav",
+        "blade_dance": audio_dir / "blade_dance.wav",
         "dialogue_blip": audio_dir / "dialogue_blip.wav",
         "deflect_clash": audio_dir / "deflect_clash.wav",
         "level_up": audio_dir / "level_up.wav",
@@ -242,6 +331,12 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["portal_activate"], synth_portal_activate())
     if not files["kitabe_chime"].exists():
         _save_wav_int16(files["kitabe_chime"], synth_kitabe_chime())
+    if not files["autumn_theme"].exists():
+        _save_wav_int16(files["autumn_theme"], synth_autumn_theme())
+    if not files["campfire_sizzle"].exists():
+        _save_wav_int16(files["campfire_sizzle"], synth_campfire_sizzle())
+    if not files["blade_dance"].exists():
+        _save_wav_int16(files["blade_dance"], synth_blade_dance())
     if not files["hit_hurt"].exists():
         _save_wav_int16(files["hit_hurt"], synth_hit_hurt())
     if not files["wind_ambience"].exists():
@@ -305,3 +400,12 @@ class SoundEngine:
         amb = self.sounds.get("wind_ambience")
         if amb is not None:
             amb.play(loops=-1)
+
+    def start_music(self) -> None:
+        """Starts the seamless procedural autumn musical soundtrack on loop."""
+        if not self.enabled:
+            return
+        theme = self.sounds.get("autumn_theme")
+        if theme is not None:
+            theme.set_volume(0.65)
+            theme.play(loops=-1)

@@ -132,6 +132,11 @@ class EnemyAgent:
 
         self.hp = self.max_hp
 
+    @property
+    def is_enraged(self) -> bool:
+        """Warden enters Enraged Phase 2 ('Kadim Öfke') when HP falls to 50% or below."""
+        return self.kind == "warden" and self.hp <= (self.max_hp // 2)
+
     def apply_hit(self, dmg: int, source_x: float, source_y: float, knockback: float = 7.5) -> bool:
         """Applies damage and radial knockback impulse. Returns True if defeated."""
         self.hp -= dmg
@@ -161,7 +166,7 @@ class EnemyAgent:
         if not self.alive:
             return
 
-        self.phase += dt * 4.5
+        self.phase += dt * (6.0 if self.is_enraged else 4.5)
         if self.hit_flash > 0.0:
             self.hit_flash = max(0.0, self.hit_flash - dt)
         self.shoot_cooldown = max(0.0, self.shoot_cooldown - dt)
@@ -170,10 +175,11 @@ class EnemyAgent:
         dy = player_y - self.y
         dist = math.hypot(dx, dy)
 
-        effective_aggro = self.aggro_range + player_noise_radius
+        effective_aggro = (self.aggro_range * (1.3 if self.is_enraged else 1.0)) + player_noise_radius
         if 0.05 < dist <= effective_aggro:
             dir_x = dx / dist
             dir_y = dy / dist
+            current_speed = self.speed
             if self.kind == "wisp":
                 perp_x, perp_y = -dir_y, dir_x
                 weave = math.sin(self.phase * 1.4) * 0.45
@@ -205,29 +211,52 @@ class EnemyAgent:
                     dir_x *= pounce
                     dir_y *= pounce
             elif self.kind == "warden":
-                # Elder Stag Warden surges forward in rhythmic antler charges & fires 3-way Twilight Orbs
-                surge = 1.35 if math.sin(self.phase * 0.8) > 0.55 else 0.90
-                dir_x *= surge
-                dir_y *= surge
-                if projectiles is not None and self.shoot_cooldown <= 0.0 and dist <= 7.2:
-                    self.shoot_cooldown = 2.2
-                    base_ang = math.atan2(dy, dx)
-                    for spread in (-0.28, 0.0, 0.28):
-                        ang = base_ang + spread
-                        projectiles.append(
-                            Projectile(
-                                x=self.x,
-                                y=self.y,
-                                vx=math.cos(ang) * 5.4,
-                                vy=math.sin(ang) * 5.4,
-                                owner="enemy",
-                                damage=14,
-                                radius=0.22,
-                                lifetime=2.1,
+                # Elder Stag Warden: Phase 1 has rhythmic surges & 3-way orbs; Phase 2 (Enraged) has rapid charges & 8-way ring volley
+                if self.is_enraged:
+                    current_speed = 3.45
+                    surge = 1.45 if math.sin(self.phase * 1.3) > 0.3 else 1.10
+                    dir_x *= surge
+                    dir_y *= surge
+                    if projectiles is not None and self.shoot_cooldown <= 0.0 and dist <= 8.5:
+                        self.shoot_cooldown = 1.75
+                        # 8-way circular radial Twilight Orb storm!
+                        for i in range(8):
+                            ang = (i / 8.0) * 2.0 * math.pi + (self.phase * 0.2)
+                            projectiles.append(
+                                Projectile(
+                                    x=self.x,
+                                    y=self.y,
+                                    vx=math.cos(ang) * 5.2,
+                                    vy=math.sin(ang) * 5.2,
+                                    owner="enemy",
+                                    damage=16,
+                                    radius=0.22,
+                                    lifetime=2.2,
+                                )
                             )
-                        )
-            self.vx = dir_x * self.speed
-            self.vy = dir_y * self.speed
+                else:
+                    surge = 1.35 if math.sin(self.phase * 0.8) > 0.55 else 0.90
+                    dir_x *= surge
+                    dir_y *= surge
+                    if projectiles is not None and self.shoot_cooldown <= 0.0 and dist <= 7.2:
+                        self.shoot_cooldown = 2.2
+                        base_ang = math.atan2(dy, dx)
+                        for spread in (-0.28, 0.0, 0.28):
+                            ang = base_ang + spread
+                            projectiles.append(
+                                Projectile(
+                                    x=self.x,
+                                    y=self.y,
+                                    vx=math.cos(ang) * 5.4,
+                                    vy=math.sin(ang) * 5.4,
+                                    owner="enemy",
+                                    damage=14,
+                                    radius=0.22,
+                                    lifetime=2.1,
+                                )
+                            )
+            self.vx = dir_x * current_speed
+            self.vy = dir_y * current_speed
         else:
             orbit_x = self.home_x + math.cos(self.phase * 0.45) * 1.1
             orbit_y = self.home_y + math.sin(self.phase * 0.45) * 1.1
@@ -319,6 +348,21 @@ class Player:
         # Harvest Nova 360-degree shockwave state
         self.nova_timer = 0.0
         self.nova_cooldown = 0.0
+
+        # Bozkır Kılıç Dansı / Leaf Blade Dance Combo Finisher ([X] / [R])
+        self.combo_hits = 0
+        self.combo_hits_max = 6
+        self.blade_dance_timer = 0.0
+        self.blade_dance_slash_count = 0
+        self.blade_dance_slash_cooldown = 0.0
+
+        # Közlenmiş Kestane / Campfire Warmth Aura (slower warmth decay + increased aura)
+        self.campfire_aura_timer = 0.0
+
+    @property
+    def combo_ready(self) -> bool:
+        """True when combo meter reaches 6 hits, enabling Bozkır Kılıç Dansı."""
+        return self.combo_hits >= self.combo_hits_max
 
     @property
     def anim_frame(self) -> int:
@@ -412,6 +456,21 @@ class Player:
         self.invuln_timer = max(self.invuln_timer, 0.30)
         return True
 
+    def increment_combo(self, amount: int = 1) -> None:
+        """Increments combo meter up to maximum (6 hits)."""
+        self.combo_hits = min(self.combo_hits_max, self.combo_hits + amount)
+
+    def trigger_blade_dance(self) -> bool:
+        """[X] / [R]: Triggers Bozkır Kılıç Dansı (Leaf Blade Dance) if combo meter is full."""
+        if not self.combo_ready or self.blade_dance_timer > 0.0:
+            return False
+        self.combo_hits = 0
+        self.blade_dance_timer = 0.65
+        self.blade_dance_slash_count = 4
+        self.blade_dance_slash_cooldown = 0.0
+        self.invuln_timer = max(self.invuln_timer, 0.70)
+        return True
+
     def update(
         self,
         dt: float,
@@ -436,6 +495,8 @@ class Player:
         self.nova_cooldown = max(0.0, self.nova_cooldown - dt)
         self.bolt_cooldown = max(0.0, self.bolt_cooldown - dt)
         self.noise_ripple_radius = max(0.0, self.noise_ripple_radius - dt * 4.5)
+        self.blade_dance_timer = max(0.0, self.blade_dance_timer - dt)
+        self.campfire_aura_timer = max(0.0, self.campfire_aura_timer - dt)
 
         # Passive Solar Bolt recharge & Devrim Torch warmth aura
         if self.solar_bolts < self.max_solar_bolts:

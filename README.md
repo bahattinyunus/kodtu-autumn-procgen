@@ -17,7 +17,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 20/20 Passed](https://img.shields.io/badge/Pytest_Suite-20%2F20_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 22/22 Passed](https://img.shields.io/badge/Pytest_Suite-22%2F22_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -257,12 +257,18 @@ Oyuncu, sonbahar alacakaranlığında bozkır korusuna adım atan ve elinde **G�
 ```
 
 - **🔥 Fener Isısı (Lantern Warmth):** Hayatta kalma enerjinizdir. Soğukta zamanla azalır. **ODTÜ Bilim Ağacı Anıtı** (`+15/sn`), simyacı kamp ateşleri ve dökülen meşe palamutları ile doldurulur.
-- **🗡️ 3-Vuruşluk Solar Kombo (`[SPACE]` / Sol Tık):** Vuruş 1 $\rightarrow$ Vuruş 2 $\rightarrow$ **Kritik Vuruş 3 (`CRIT -4!`)**. *Hyper Light Drifter* tarzı her başarılı yakın dövüş darbesi **`+1 Solar Bolt` mermisi doldurur**.
+- **🗡️ 3-Vuruşluk Solar Kombo (`[SPACE]` / Sol Tık):** Vuruş 1 $\rightarrow$ Vuruş 2 $\rightarrow$ **Kritik Vuruş 3 (`CRIT -4!`)**. *Hyper Light Drifter* tarzı her başarılı yakın dövüş darbesi **`+1 Solar Bolt` mermisi doldurur** ve kombo sayacını ilerletir.
+- **🌀 Bozkır Kılıç Dansı (`[X]` / `[R]` — Combo Finisher):** 6 başarılı yakın dövüş darbesi vurulduğunda kombo sayacı dolar ve `[X] KILIÇ DANSI HAZIR!` aktifleşir. Tetiklendiğinde oyuncu 4 yönlü ışık hızında atılma-kesiş gerçekleştirir (`-6 Hasar`, $360^\circ$ yaprak kasırgası, mermi saptırma ve 0.70s dokunulmazlık).
 - **🛡️ Mermi Yansıtma Mekaniği (`DEFLECT!`):** Düşmanların attığı karanlık küreleri tam zamanında kılıç darbesi (`[SPACE]`) veya `Harvest Nova ([Q])` ile vurduğunuzda mermi **`1.65x` hızla ve `2x` hasarla düşmana geri yansıtılır**.
+- **🌰 Közde Bozkır Kestanesi & Kamp Ateşi Dinlenmesi (`[E]`):** Kamp ateşi yanında `[E]` tuşuna basıldığında fener ısısı anında `%100` doldurulur; toplanan palamutlar közlenerek **25 saniyelik Sıcak Köz Aurası** (fener ışık menzili `%20` genişler, ayaz soğuk aşınması yarıya iner) kazanılır.
 - **☄️ Solar Ember Bolt (`[F]` / Sağ Tık):** Yüksek hızlı menzilli güneş közü fırlatır. Hasat Tacı kutsaması ile **3'lü yelpaze atışına** dönüşür.
 - **💥 Harvest Nova Şok Dalgası (`[Q]` / Orta Tık):** $360^\circ$ tüm düşmanları geri fırlatan ve mermileri saptıran alan etkili patlama.
 - **💨 Autumn Gust Dash (`[SHIFT]`):** Hayalet izleri (`DashGhost`) bırakan, 0.22 saniye dokunulmazlık sağlayan rüzgar atılması.
 - **🐺 Bozkır Kurdu (Steppe Shadow Wolf AI):** Uzak mesafede oyuncunun etrafını turlayan (flank), 3 karo yaklaştığında ani hız patlamasıyla saldıran (pounce) ve alt edildiğinde **Bozkır Reçinesi (`+BOZKIR REÇİNESİ! +12 Isı`)** düşüren çevik yırtıcı.
+- **🦌 2-Aşamalı Kadim Orman Muhafızı (Enraged Elder Stag Warden):**
+  - **Aşama 1 (Orman Muhafızı):** Ritmik boynuz hücumları ve 3'lü Alacakaranlık Küresi yaylımı.
+  - **Aşama 2 (Kadim Öfke - Enraged Phase @ <= %50 Can):** Gözleri ve boynuzları altın sarısı parıldar, hareket hızı `3.45` değerine fırlar, sürekli hücum eder ve $360^\circ$ 8 yönlü dairesel mermi fırtınası fırlatır.
+- **🎵 Prosedürel Sonbahar Melodisi (NumPy Synth Looping Soundtrack):** D Dorian modunda (D minor, Bb Maj7, C Maj, A min) 8.0 saniyelik kusursuz dikişsiz polifonik sonbahar melodisi, sub-bass rezonansı ve sıcak tape vibratosu ile oyun akışında dinamik olarak çalar.
 - **🌾 Dinamik Sonbahar Hava Sistemi (Atmospheric Weather Cycle):**
   - **Altın İkindi (Golden Solstice):** Hacimsel güneş huzmeleri (God Rays) ve usulca savrulan yapraklar.
   - **Alacakaranlık Ayazı (Twilight Frost):** Yoğunlaşan alacakaranlık vinyeti, artan soğuk aşınması ve parıldayan bozkır ateşböcekleri.
@@ -317,8 +323,9 @@ Her Hasat Reliği bulunduğunda ODTÜ efsanelerinden ilham alan 5 kalıcı kutsa
 | **`SPACE` / Sol Tık** | **Solar Slash** | 3-vuruşluk kombo, **`DEFLECT!` mermi yansıtma**, mermi şarjı |
 | **`F` / Sağ Tık** | **Solar Bolt** | Menzilli güneş közü atışı (Hasat Tacı ile 3'lü atış) |
 | **`Q` / Orta Tık** | **Harvest Nova** | $360^\circ$ alan patlaması, mermileri saptırma, yaprak girdabı |
+| **`X` / `R`** | **Bozkır Kılıç Dansı** | **6 vuruşla dolan Combo Finisher**: 4 yönlü ışık hızı flurisi |
 | **`SHIFT`** | **Gust Dash** | Hayalet izli hızlı atılma, 0.22s hasar dokunulmazlığı |
-| **`E`** | Etkileşim | Kitabe okuma, Bilim Ağacı meşalesi, Tapınak uyanışı |
+| **`E`** | Etkileşim & Közleme | Kitabe okuma, Kamp ateşinde kestane közleme, Tapınak geçişi |
 | **`H` / `Enter`** | **Başlangıç Kılavuzu** | 3 kutulu hızlı hedef ve kontrol rehberini açar/kapatır |
 | **`C`** | Savaş Kodeksi | Aktif kutsamaları ve sefer istatistiklerini gösterir |
 | **`B`** | Hızlı Boon | Sıradaki ODTÜ Sonbahar kutsamasını anında açar |
@@ -450,33 +457,35 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 20/20 Otomatik Test Paketini Çalıştırma (`pytest`)
+### 🧪 3. 22/22 Otomatik Test Paketini Çalıştırma (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini, 2-Aşamalı Öfkeli Muhafız boss savaşını, Közde Kestane aurasını, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
 ```
 
 ```text
-tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  5%]
-tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [ 10%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 35%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 40%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 45%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 50%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 55%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 60%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 65%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 70%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 75%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 80%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 85%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 90%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 95%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [100%]
+tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  4%]
+tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  9%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 31%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 36%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 40%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 45%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 50%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 54%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 59%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 63%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 68%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 72%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 77%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 81%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 86%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 90%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 95%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [100%]
 
-============================= 20 passed in 2.66s ==============================
+============================= 22 passed in 2.80s ==============================
 ```
 
 ---

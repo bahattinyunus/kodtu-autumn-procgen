@@ -135,6 +135,7 @@ class AutumnProcGenGame:
 
         self.load_seed(initial_seed, depth_level=1)
         self.sound.start_ambience()
+        self.sound.start_music()
 
     def spawn_floating_text(
         self, x: float, y: float, text: str, color: tuple[int, int, int] = SUNLIT_BIRCH
@@ -328,6 +329,8 @@ class AutumnProcGenGame:
                     self._unlock_next_boon()
                 elif event.key == pygame.K_q:
                     self._perform_harvest_nova()
+                elif event.key in (pygame.K_x, pygame.K_r):
+                    self._perform_blade_dance()
                 elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
                     self._perform_gust_dash()
                 elif event.key == pygame.K_e:
@@ -477,6 +480,9 @@ class AutumnProcGenGame:
                 if dot >= (-0.45 if is_crit else -0.25) or dist < 0.85:
                     defeated = enemy.apply_hit(dmg, self.player.x, self.player.y, knockback=8.5)
                     self.player.recharge_bolt_on_melee()
+                    self.player.increment_combo(1)
+                    if self.player.combo_ready:
+                        self.spawn_floating_text(self.player.x, self.player.y - 0.6, "[X] KILIÇ DANSI HAZIR!", SUNLIT_BIRCH)
                     self.camera.add_trauma(0.32 if is_crit else 0.20)
                     if is_crit or defeated:
                         self.hit_stop_timer = max(self.hit_stop_timer, 0.038)
@@ -520,10 +526,48 @@ class AutumnProcGenGame:
             if dist <= 2.85:
                 defeated = enemy.apply_hit(3, self.player.x, self.player.y, knockback=11.0)
                 self.player.recharge_bolt_on_melee()
+                self.player.increment_combo(1)
                 self.spawn_floating_text(enemy.x, enemy.y - 0.3, "-3 NOVA", SUNLIT_BIRCH)
                 if defeated:
                     self.player.enemies_defeated += 1
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+
+    def _perform_blade_dance(self) -> None:
+        """[X] / [R]: Bozkır Kılıç Dansı combo finisher flurry."""
+        if not self.player.trigger_blade_dance():
+            self.spawn_floating_text(
+                self.player.x,
+                self.player.y - 0.4,
+                f"KILIÇ DANSI: {self.player.combo_hits}/{self.player.combo_hits_max} VURUŞ GEREKİR",
+                CRIMSON_DECAY,
+            )
+            return
+
+        self.sound.play("blade_dance")
+        self.camera.add_trauma(0.50)
+        self.hit_stop_timer = 0.06
+        px_x = self.player.x * TILE_SIZE
+        px_y = self.player.y * TILE_SIZE
+        self.leaf_system.spawn_burst(px_x, px_y, count=48, golden_bias=True)
+        self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=88.0, strength=6.0)
+        self.spawn_floating_text(
+            self.player.x, self.player.y - 0.6, "BOZKIR KILIÇ DANSI!", PALE_SUNBEAM
+        )
+
+        # Multi-hit omnidirectional slash flurry
+        self._deflect_nearby_orbs(3.4)
+        self._smash_nearby_props(self.player.x, self.player.y, 3.2)
+
+        for enemy in self.enemies:
+            if not enemy.alive:
+                continue
+            dist = math.hypot(enemy.x - self.player.x, enemy.y - self.player.y)
+            if dist <= 3.4:
+                defeated = enemy.apply_hit(6, self.player.x, self.player.y, knockback=14.0)
+                self.spawn_floating_text(enemy.x, enemy.y - 0.35, "-6 DANSE!", HARVEST_GOLD)
+                if defeated:
+                    self.player.enemies_defeated += 1
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 14.0)
 
     def _try_interact_action(self) -> None:
         """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele or Shrine."""
@@ -540,6 +584,29 @@ class AutumnProcGenGame:
                     self.leaf_system.spawn_burst(
                         kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
                     )
+                    return
+            elif st.structure_type == "campfire":
+                cx, cy = st.tile_x + 0.5, st.tile_y + 0.5
+                if math.hypot(self.player.x - cx, self.player.y - cy) <= 2.0:
+                    self.sound.play("campfire_sizzle")
+                    self.player.warmth = self.player.max_warmth
+                    self.player.campfire_aura_timer = 25.0
+                    self.leaf_system.spawn_burst(
+                        cx * TILE_SIZE, cy * TILE_SIZE, count=24, golden_bias=True
+                    )
+                    if self.player.acorns_collected > 0:
+                        self.player.acorns_collected -= 1
+                        self.hud.show_banner(
+                            "KÖZDE BOZKIR KESTANESİ KAVRULDU! (TAM ISI + 25s SICAK KÖZ AURASI)",
+                            duration=3.5,
+                        )
+                        self.spawn_floating_text(cx, cy - 0.5, "KÖZLENMİŞ KESTANE!", HARVEST_GOLD)
+                    else:
+                        self.hud.show_banner(
+                            "KAMP ATEŞİNDE DİNLENİLDİ (TAM ISI + SICAK KÖZ AURASI)",
+                            duration=3.0,
+                        )
+                        self.spawn_floating_text(cx, cy - 0.5, "KAMP ATEŞİ DİNLENMESİ!", PALE_SUNBEAM)
                     return
 
         # 2. Check Shrine
@@ -602,8 +669,9 @@ class AutumnProcGenGame:
         # Atmospheric weather cycle & dynamic gameplay effects
         w_phase = int((self.time_sec // 40.0) % 3)
         if w_phase == 1:
-            # Twilight Frost: subtle extra cold decay
-            self.player.warmth = max(0.0, self.player.warmth - dt * 0.70)
+            # Twilight Frost: subtle extra cold decay (mitigated by 50% under campfire aura)
+            frost_factor = 0.50 if self.player.campfire_aura_timer > 0.0 else 1.0
+            self.player.warmth = max(0.0, self.player.warmth - dt * 0.70 * frost_factor)
         elif w_phase == 2:
             # Steppe Gale Surge: tailwind acceleration when moving
             if self.player.walk_timer > 0.0:
