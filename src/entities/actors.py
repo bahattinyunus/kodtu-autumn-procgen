@@ -111,6 +111,12 @@ class EnemyAgent:
             self.aggro_range = 7.5
             self.radius = 0.35
             self.damage = 18.0
+        elif kind == "wolf":
+            self.max_hp = 3
+            self.speed = 3.65
+            self.aggro_range = 7.2
+            self.radius = 0.32
+            self.damage = 14.0
         elif kind == "warden":
             self.max_hp = 12
             self.speed = 2.65
@@ -187,6 +193,17 @@ class EnemyAgent:
                             lifetime=1.9,
                         )
                     )
+            elif self.kind == "wolf":
+                # Bozkır Kurdu: Circling flank at range, pounces with speed burst when close
+                if dist > 3.0:
+                    perp_x, perp_y = -dir_y, dir_x
+                    flank = math.sin(self.phase * 2.2) * 0.65
+                    dir_x = (dir_x * 0.70) + (perp_x * flank)
+                    dir_y = (dir_y * 0.70) + (perp_y * flank)
+                else:
+                    pounce = 1.65 if math.sin(self.phase * 3.6) > 0.25 else 0.85
+                    dir_x *= pounce
+                    dir_y *= pounce
             elif self.kind == "warden":
                 # Elder Stag Warden surges forward in rhythmic antler charges & fires 3-way Twilight Orbs
                 surge = 1.35 if math.sin(self.phase * 0.8) > 0.55 else 0.90

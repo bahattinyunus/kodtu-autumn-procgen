@@ -176,6 +176,34 @@ def synth_level_up() -> np.ndarray:
     return signal * 0.26
 
 
+def synth_kitabe_chime() -> np.ndarray:
+    """Synthesizes a mystical metallic Hitit rune chime for historical ODTÜ steles."""
+    duration = int(SAMPLE_RATE * 0.75)
+    t = np.linspace(0.0, 0.75, duration, endpoint=False)
+    env = np.exp(-t * 4.2)
+    bell = (
+        np.sin(2.0 * np.pi * 528.0 * t)
+        + 0.65 * np.sin(2.0 * np.pi * 792.0 * t)
+        + 0.40 * np.sin(2.0 * np.pi * 1056.0 * t)
+        + 0.25 * np.sin(2.0 * np.pi * 1584.0 * t)
+        + 0.15 * np.sin(2.0 * np.pi * 2112.0 * t)
+    )
+    shimmer = 0.5 + 0.5 * np.sin(2.0 * np.pi * 6.0 * t)
+    return (bell * shimmer) * env * 0.28
+
+
+def synth_water_splash() -> np.ndarray:
+    """Synthesizes a soft liquid splash / droplet ripple for Eymir wetlands and boardwalks."""
+    rng = np.random.default_rng(505)
+    duration = int(SAMPLE_RATE * 0.14)
+    t = np.linspace(0.0, 0.14, duration, endpoint=False)
+    env = np.sin(np.pi * np.minimum(1.0, t / 0.03)) * np.exp(-t * 26.0)
+    sweep = np.linspace(620.0, 310.0, duration)
+    drip = np.sin(2.0 * np.pi * np.cumsum(sweep) / SAMPLE_RATE)
+    splash = np.convolve(rng.normal(0.0, 0.4, duration), np.ones(6) / 6.0, mode="same")
+    return (drip * 0.55 + splash * 0.45) * env * 0.35
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -184,9 +212,11 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "leaf_crunch_2": audio_dir / "leaf_crunch_2.wav",
         "leaf_crunch_3": audio_dir / "leaf_crunch_3.wav",
         "mud_step": audio_dir / "mud_step.wav",
+        "water_splash": audio_dir / "water_splash.wav",
         "slash_ember": audio_dir / "slash_ember.wav",
         "harvest_chime": audio_dir / "harvest_chime.wav",
         "portal_activate": audio_dir / "portal_activate.wav",
+        "kitabe_chime": audio_dir / "kitabe_chime.wav",
         "hit_hurt": audio_dir / "hit_hurt.wav",
         "wind_ambience": audio_dir / "wind_ambience.wav",
         "dialogue_blip": audio_dir / "dialogue_blip.wav",
@@ -202,12 +232,16 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["leaf_crunch_3"], synth_leaf_crunch(2, 1.14))
     if not files["mud_step"].exists():
         _save_wav_int16(files["mud_step"], synth_mud_step())
+    if not files["water_splash"].exists():
+        _save_wav_int16(files["water_splash"], synth_water_splash())
     if not files["slash_ember"].exists():
         _save_wav_int16(files["slash_ember"], synth_ember_sweep())
     if not files["harvest_chime"].exists():
         _save_wav_int16(files["harvest_chime"], synth_harvest_chime())
     if not files["portal_activate"].exists():
         _save_wav_int16(files["portal_activate"], synth_portal_activate())
+    if not files["kitabe_chime"].exists():
+        _save_wav_int16(files["kitabe_chime"], synth_kitabe_chime())
     if not files["hit_hurt"].exists():
         _save_wav_int16(files["hit_hurt"], synth_hit_hurt())
     if not files["wind_ambience"].exists():

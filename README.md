@@ -17,7 +17,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 18/18 Passed](https://img.shields.io/badge/Pytest_Suite-18%2F18_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 20/20 Passed](https://img.shields.io/badge/Pytest_Suite-20%2F20_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -262,7 +262,11 @@ Oyuncu, sonbahar alacakaranlığında bozkır korusuna adım atan ve elinde **G�
 - **☄️ Solar Ember Bolt (`[F]` / Sağ Tık):** Yüksek hızlı menzilli güneş közü fırlatır. Hasat Tacı kutsaması ile **3'lü yelpaze atışına** dönüşür.
 - **💥 Harvest Nova Şok Dalgası (`[Q]` / Orta Tık):** $360^\circ$ tüm düşmanları geri fırlatan ve mermileri saptıran alan etkili patlama.
 - **💨 Autumn Gust Dash (`[SHIFT]`):** Hayalet izleri (`DashGhost`) bırakan, 0.22 saniye dokunulmazlık sağlayan rüzgar atılması.
-- **⚡ Vuruş Duraksaması (`Hit-Stop`):** Kritik darbelerde ve mermi yansıtmalarında uygulanan `38 ms` ekran dondurması ve $\text{Trauma}^2$ kamera sarsıntısı.
+- **🐺 Bozkır Kurdu (Steppe Shadow Wolf AI):** Uzak mesafede oyuncunun etrafını turlayan (flank), 3 karo yaklaştığında ani hız patlamasıyla saldıran (pounce) ve alt edildiğinde **Bozkır Reçinesi (`+BOZKIR REÇİNESİ! +12 Isı`)** düşüren çevik yırtıcı.
+- **🌾 Dinamik Sonbahar Hava Sistemi (Atmospheric Weather Cycle):**
+  - **Altın İkindi (Golden Solstice):** Hacimsel güneş huzmeleri (God Rays) ve usulca savrulan yapraklar.
+  - **Alacakaranlık Ayazı (Twilight Frost):** Yoğunlaşan alacakaranlık vinyeti, artan soğuk aşınması ve parıldayan bozkır ateşböcekleri.
+  - **Bozkır Fırtınası (Steppe Gale Surge):** 2.2x hızlanan rüzgar vektör alanı, savrulan yaprak fırtınası ve rüzgar yönünde hareket eden oyuncuya **+%15 Tailwind hız desteği**.
 
 ### 🌟 Roguelite ODTÜ Kutsamaları (`Autumn Boons` — `[B]` veya Relik Toplama)
 Her Hasat Reliği bulunduğunda ODTÜ efsanelerinden ilham alan 5 kalıcı kutsamadan biri kazanılır:
@@ -446,9 +450,9 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 18/18 Otomatik Test Paketini Çalıştırma (`pytest`)
+### 🧪 3. 20/20 Otomatik Test Paketini Çalıştırma (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, mermi yansıtma (`DEFLECT!`) mekaniğini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -456,21 +460,23 @@ pytest tests/ -v
 
 ```text
 tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  5%]
-tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [ 11%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 38%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 44%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 50%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 55%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 61%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 66%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 72%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 77%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 83%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 88%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 94%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [100%]
+tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [ 10%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 35%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 40%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 45%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 50%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 55%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 60%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 65%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 70%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 75%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 80%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 85%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 90%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 95%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [100%]
 
-============================= 18 passed in 2.06s ==============================
+============================= 20 passed in 2.66s ==============================
 ```
 
 ---

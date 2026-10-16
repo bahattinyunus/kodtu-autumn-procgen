@@ -72,6 +72,8 @@ class GameHUD:
                     surf.set_at((st.tile_x, st.tile_y), BURNT_AMBER)
                 elif st.structure_type == "bilim_agaci":
                     surf.set_at((st.tile_x, st.tile_y), SUNLIT_BIRCH)
+                elif st.structure_type == "odtu_kitabe":
+                    surf.set_at((st.tile_x, st.tile_y), AUTUMN_MIST)
             self._minimap_base_surf = surf
             self._minimap_seed_u64 = world.seed_uint64
         return self._minimap_base_surf
@@ -162,6 +164,15 @@ class GameHUD:
             # Draw Shrine on minimap
             sx, sy = world.shrine_tile
             canvas.set_at((mm_x + sx, mm_y + sy), PALE_SUNBEAM)
+
+            # Draw live enemy blips on minimap radar
+            if enemies:
+                for en in enemies:
+                    if en.alive:
+                        ecol = PALE_SUNBEAM if en.kind == "warden" else (CRIMSON_DECAY if en.kind in ("wolf", "stalker") else RUST_TERRACOTTA)
+                        ex = max(0, min(world.width - 1, int(en.x)))
+                        ey = max(0, min(world.height - 1, int(en.y)))
+                        canvas.set_at((mm_x + ex, mm_y + ey), ecol)
 
             # Draw Player on minimap
             px, py = max(0, min(world.width - 1, int(player.x))), max(0, min(world.height - 1, int(player.y)))

@@ -486,7 +486,13 @@ class AutumnProcGenGame:
                     )
                     if defeated:
                         self.player.enemies_defeated += 1
-                        self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
+                        warmth_bonus = 15.0 if enemy.kind == "warden" else (12.0 if enemy.kind == "wolf" else 8.0)
+                        self.player.warmth = min(self.player.max_warmth, self.player.warmth + warmth_bonus)
+                        if enemy.kind == "wolf":
+                            self.items.append(
+                                CollectibleItem(x=enemy.x, y=enemy.y, kind="acorn", bob_phase=enemy.x)
+                            )
+                            self.spawn_floating_text(enemy.x, enemy.y - 0.4, "+BOZKIR REÇİNESİ!", HARVEST_GOLD)
                         self.leaf_system.spawn_burst(
                             enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=16, golden_bias=False
                         )
@@ -529,7 +535,7 @@ class AutumnProcGenGame:
                     title, _ = self.story.on_read_kitabe(idx)
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 15.0)
                     self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 8.0)
-                    self.sound.play("portal_activate")
+                    self.sound.play("kitabe_chime")
                     self.spawn_floating_text(kx, ky - 0.5, "KADİM ODTÜ MİRASI +ISI & HIZ", PALE_SUNBEAM)
                     self.leaf_system.spawn_burst(
                         kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
@@ -593,13 +599,25 @@ class AutumnProcGenGame:
                 alive_ghosts.append(dg)
         self.dash_ghosts = alive_ghosts
 
+        # Atmospheric weather cycle & dynamic gameplay effects
+        w_phase = int((self.time_sec // 40.0) % 3)
+        if w_phase == 1:
+            # Twilight Frost: subtle extra cold decay
+            self.player.warmth = max(0.0, self.player.warmth - dt * 0.70)
+        elif w_phase == 2:
+            # Steppe Gale Surge: tailwind acceleration when moving
+            if self.player.walk_timer > 0.0:
+                self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 0.25)
+
         # Periodically evolve the 2D Wind Vector Field with time
         self.wind_refresh_timer += dt
         if self.wind_refresh_timer >= 0.25:
             self.wind_refresh_timer = 0.0
-            self.world.wind_vx, self.world.wind_vy = compute_wind_vector_field(
+            wind_mult = 2.2 if w_phase == 2 else 1.0
+            vx, vy = compute_wind_vector_field(
                 self.world.wind_noise, self.world.width, self.world.height, time_sec=self.time_sec
             )
+            self.world.wind_vx, self.world.wind_vy = vx * wind_mult, vy * wind_mult
 
         mx, my = self._get_move_vector()
         stepped_leaves, stepped_mud = self.player.update(
@@ -644,7 +662,7 @@ class AutumnProcGenGame:
                 self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, radius_px=20.0, strength=1.2
             )
         elif stepped_mud:
-            self.sound.play("mud_step")
+            self.sound.play("water_splash")
 
         # Update Collectibles (Relics also unlock ODTÜ Autumn Boons & Story Memories!)
         for item in self.items:
@@ -785,6 +803,10 @@ class AutumnProcGenGame:
             self.hud.show_banner("DEVRİM FENERİ KORUNUN KALBİNDE YENİDEN YANDI")
 
     def render(self) -> None:
+        w_phase = int((self.time_sec // 40.0) % 3)
+        w_names = ["ALTIN İKİNDİ", "ALACAKARANLIK AYAZI", "BOZKIR FIRTINASI"]
+        w_name = w_names[w_phase]
+
         self.renderer.render_frame(
             canvas=self.canvas,
             world=self.world,
@@ -799,6 +821,7 @@ class AutumnProcGenGame:
             floating_texts=self.floating_texts,
             projectiles=self.projectiles,
             dash_ghosts=self.dash_ghosts,
+            weather_phase=w_phase,
         )
         # Render low-res canvas HUD only when debug modes, modals, or procgen telemetry are active
         if (
@@ -842,6 +865,7 @@ class AutumnProcGenGame:
             seed_input_buffer=self.hud.seed_input_buffer,
             banner_text=self.hud.banner_text,
             banner_timer=self.hud.banner_timer,
+            weather_name=w_name,
         )
         pygame.display.flip()
 

@@ -106,6 +106,7 @@ class WorldRenderer:
         floating_texts: Optional[List[FloatingText]] = None,
         projectiles: Optional[List[Projectile]] = None,
         dash_ghosts: Optional[List[DashGhost]] = None,
+        weather_phase: int = 0,
     ) -> None:
         if self.baked_terrain is None or self.baked_seed_uint64 != world.seed_uint64:
             self.bake_world_terrain(world)
@@ -339,14 +340,14 @@ class WorldRenderer:
                     self.font.draw_text(canvas, ft.text, fsx, fsy - 14, ft.color, align_center=True)
 
         # 6. Dynamic Lantern Vignette & Atmospheric Autumn Lighting Pass
-        self._render_autumn_lantern_vignette(canvas, camera, player, world, time_sec)
+        self._render_autumn_lantern_vignette(canvas, camera, player, world, time_sec, weather_phase)
 
         # 7. Subtle Drifting Autumn Mist (#D4C8BE) wisps near top/bottom edges
         self._render_autumn_mist_wisps(canvas, camera.x, camera.y, time_sec)
 
         # 8. Procedural Volumetric God Rays (Güneş Huzmeleri) & Steppe Firefly Spores
         self._render_autumn_god_rays(canvas, time_sec)
-        self._render_steppe_fireflies(canvas, camera, time_sec)
+        self._render_steppe_fireflies(canvas, camera, time_sec, weather_phase)
 
         # 9. If [F2] Bitmask & Grid Debug is active, render crisp grid, chunk bounds, bitmask IDs & colliders
         if debug_mode == DEBUG_BITMASK_GRID:
@@ -363,6 +364,7 @@ class WorldRenderer:
         player: Player,
         world: WorldData,
         time_sec: float,
+        weather_phase: int = 0,
     ) -> None:
         """
         Applies a modern cinematic autumn lighting vignette with a warm lantern glow
@@ -370,8 +372,9 @@ class WorldRenderer:
         toward atmospheric Deep Void (#1A1118) and Plum Shadow (#2C1820) at viewport edges.
         """
         vignette = pygame.Surface((NATIVE_WIDTH, NATIVE_HEIGHT), pygame.SRCALPHA)
-        # Deep atmospheric edge shadows
-        vignette.fill((*DEEP_VOID, 78))
+        # Deep atmospheric edge shadows (intensifies to 110 during Twilight Frost)
+        edge_alpha = 110 if weather_phase == 1 else 78
+        vignette.fill((*DEEP_VOID, edge_alpha))
 
         # Cut out soft warm radial halos around light sources
         pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
@@ -455,10 +458,15 @@ class WorldRenderer:
         canvas.blit(rays_surf, (0, 0))
 
     def _render_steppe_fireflies(
-        self, canvas: pygame.Surface, camera: PixelCamera, time_sec: float
+        self,
+        canvas: pygame.Surface,
+        camera: PixelCamera,
+        time_sec: float,
+        weather_phase: int = 0,
     ) -> None:
         """Renders drifting golden spore motes that oscillate gently in the steppe wind."""
-        for i in range(12):
+        count = 20 if weather_phase == 1 else (16 if weather_phase == 2 else 12)
+        for i in range(count):
             seed_off = i * 29.3
             fx = int(
                 (seed_off * 11 + time_sec * 8 + math.sin(time_sec * 1.4 + i) * 10 - camera.x * 0.25)

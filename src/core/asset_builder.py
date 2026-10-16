@@ -543,6 +543,33 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
         # Crimson thorns
         for tx, ty in ((2, 5), (13, 5), (3, 12), (12, 12), (8, 2)):
             arr[ty, tx] = (*BURNT_AMBER, 255)
+    elif kind == "wolf":
+        # Bozkır Kurdu (Steppe Shadow Wolf: fast, agile autumn predator)
+        for y in range(7 + bob, 14):
+            for x in range(3, 14):
+                if y == 13 and x in (4, 5, 11, 12):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                elif 8 + bob <= y <= 11 + bob and 4 <= x <= 12:
+                    col = RUST_TERRACOTTA if (x + y) % 2 == 0 else WITHERED_BARK
+                    arr[y, x] = (*col, 255)
+        # Bushy Tail (curving upwards at left)
+        arr[8 + bob, 2] = (*RUST_TERRACOTTA, 255)
+        arr[7 + bob, 1] = (*WITHERED_BARK, 255)
+        arr[6 + bob, 2] = (*BURNT_AMBER, 255)
+        # Wolf Head & Muzzle (facing right)
+        for y in range(5 + bob, 10 + bob):
+            for x in range(10, 15):
+                arr[y, x] = (*WITHERED_BARK, 255)
+        # Muzzle tip & sharp fangs
+        arr[8 + bob, 14] = (*DEEP_VOID, 255)
+        arr[9 + bob, 13] = (*AUTUMN_MIST, 255)
+        # Glowing amber predator eye
+        arr[6 + bob, 12] = (*SUNLIT_BIRCH, 255)
+        # Pointed lupine ears
+        arr[4 + bob, 10] = (*BURNT_AMBER, 255)
+        arr[3 + bob, 10] = (*DEEP_VOID, 255)
+        arr[4 + bob, 12] = (*BURNT_AMBER, 255)
+        arr[3 + bob, 12] = (*DEEP_VOID, 255)
     elif kind == "warden":
         # Elder Stag Warden (Crowned Shrine Guardian with Golden Antlers)
         for y in range(4 + bob, 15):
@@ -785,9 +812,9 @@ class AssetBank:
 
         # 5. Build Entities, Structures & Shrine Sheet
         self.entity_surfaces: Dict[Tuple[str, int], pygame.Surface] = {}
-        entities_sheet = np.zeros((32, 16 * 14, 4), dtype=np.uint8)
+        entities_sheet = np.zeros((32, 16 * 16, 4), dtype=np.uint8)
         ec = 0
-        for ekind in ("relic", "acorn", "wisp", "stalker", "golem", "warden"):
+        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden"):
             for f in range(2):
                 e_arr = _build_entity_sprite(ekind, f)
                 self.entity_surfaces[(ekind, f)] = _ndarray_to_surface(e_arr)

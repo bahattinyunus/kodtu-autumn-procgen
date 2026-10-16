@@ -89,6 +89,8 @@ class ModernStoryOverlay:
                     surf.set_at((st.tile_x, st.tile_y), BURNT_AMBER)
                 elif st.structure_type == "bilim_agaci":
                     surf.set_at((st.tile_x, st.tile_y), SUNLIT_BIRCH)
+                elif st.structure_type == "odtu_kitabe":
+                    surf.set_at((st.tile_x, st.tile_y), AUTUMN_MIST)
             self._minimap_surf = surf
             self._minimap_seed = world.seed_uint64
         return self._minimap_surf
@@ -107,13 +109,14 @@ class ModernStoryOverlay:
         seed_input_buffer: str = "",
         banner_text: str = "",
         banner_timer: float = 0.0,
+        weather_name: str = "ALTIN İKİNDİ",
     ) -> None:
         sw, sh = screen.get_size()
         if sw < 640 or sh < 360:
             return
 
         # 1. Top-Left: Clean Modern Status & Objective Panel
-        self._render_status_and_objective_panel(screen, world, player, items, story)
+        self._render_status_and_objective_panel(screen, world, player, items, story, weather_name)
 
         # 2. Top-Center: Directional Relic/Shrine Compass & Boss Health Bar
         self._render_compass_and_boss_bar(screen, sw, world, player, items, enemies)
@@ -149,6 +152,7 @@ class ModernStoryOverlay:
         player: Player,
         items: List[CollectibleItem],
         story: StoryManager,
+        weather_name: str = "ALTIN İKİNDİ",
     ) -> None:
         px, py = 16, 16
         pw, ph = 390, 108
@@ -206,9 +210,9 @@ class ModernStoryOverlay:
         )
         panel.blit(lbl_relic, (42, 55))
 
-        # Clear Objective Line at the bottom of the card
+        # Clear Objective Line & Weather Status at the bottom of the card
         obj_str = story.get_current_objective_text(player.relics_collected, world.total_relics)
-        lbl_obj = self.f_tiny.render(obj_str, True, AUTUMN_MIST)
+        lbl_obj = self.f_tiny.render(f"{obj_str}  •  [HAVA: {weather_name}]", True, AUTUMN_MIST)
         panel.blit(lbl_obj, (14, 83))
 
         screen.blit(panel, (px, py))

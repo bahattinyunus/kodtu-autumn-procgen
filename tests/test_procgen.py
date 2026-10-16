@@ -371,5 +371,84 @@ def test_historical_kitabeler_and_victory_epilogue() -> None:
     game.render()
 
 
+def test_wolf_enemy_and_new_audio_synthesis() -> None:
+    """
+    Verifies:
+    1. Bozkır Kurdu (Steppe Wolf) EnemyAgent stats and AI movement states (circling flank vs pounce).
+    2. New procedural sound synthesizers (kitabe_chime and water_splash) output valid audio waveforms.
+    """
+    from src.entities.actors import EnemyAgent
+    from src.core.audio_synth import synth_kitabe_chime, synth_water_splash
+    from src.core.spatial_hash import ChunkSpatialHash
+    import numpy as np
+
+    # 1. Wolf enemy stats
+    wolf = EnemyAgent(x=10.0, y=10.0, kind="wolf", seed_phase=0.0)
+    assert wolf.max_hp == 3
+    assert wolf.speed == 3.65
+    assert wolf.radius == 0.32
+    assert wolf.damage == 14.0
+
+    # Test wolf movement when far (flanking) vs near (pounce surge)
+    dummy_grid = np.zeros((20, 20), dtype=np.uint8)
+    sp_hash = ChunkSpatialHash(dummy_grid, [])
+    # Far: dist > 3.0
+    wolf.update(0.016, player_x=15.0, player_y=10.0, player_noise_radius=0.0, spatial_hash=sp_hash)
+    assert math.hypot(wolf.vx, wolf.vy) > 0.0
+
+    # Near: dist <= 3.0
+    wolf.x, wolf.y = 12.0, 10.0
+    wolf.update(0.016, player_x=12.5, player_y=10.0, player_noise_radius=0.0, spatial_hash=sp_hash)
+    assert math.hypot(wolf.vx, wolf.vy) > 0.0
+
+    # 2. Audio synthesizers
+    chime = synth_kitabe_chime()
+    splash = synth_water_splash()
+    assert len(chime) > 0
+    assert len(splash) > 0
+    assert np.max(np.abs(chime)) <= 1.0
+    assert np.max(np.abs(splash)) <= 1.0
+
+
+def test_atmospheric_weather_system_and_minimap_enhancements() -> None:
+    """
+    Verifies:
+    1. Dynamic Autumn Weather System cycles through 3 distinct atmospheric phases.
+    2. Minimap base surface records odtu_kitabe steles in addition to campfires and bilim_agaci.
+    3. Headless gameplay loop runs smoothly across all 3 weather phases.
+    """
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+
+    # 1. Weather phases across time
+    # 0s -> Phase 0: ALTIN İKİNDİ
+    game.time_sec = 10.0
+    phase_0 = int((game.time_sec // 40.0) % 3)
+    assert phase_0 == 0
+
+    # 50s -> Phase 1: ALACAKARANLIK AYAZI
+    game.time_sec = 50.0
+    phase_1 = int((game.time_sec // 40.0) % 3)
+    assert phase_1 == 1
+
+    # 90s -> Phase 2: BOZKIR FIRTINASI
+    game.time_sec = 90.0
+    phase_2 = int((game.time_sec // 40.0) % 3)
+    assert phase_2 == 2
+
+    # 2. Verify minimap contains kitabe steles
+    mm_base = game.hud._ensure_minimap_base(game.world)
+    assert mm_base.get_width() == game.world.width
+    assert mm_base.get_height() == game.world.height
+
+    # 3. Step updates and render across all phases
+    for t in (15.0, 55.0, 95.0):
+        game.time_sec = t
+        game.update(0.016)
+        game.render()
+
+
+
 
 

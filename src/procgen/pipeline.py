@@ -212,10 +212,13 @@ def _budget_entities_and_relics(
         if any((cx - ex) ** 2 + (cy - ey) ** 2 < 12.0 for ex, ey in enemy_tiles):
             continue
 
-        if cd >= 0.70 and threat_budget >= 3 and prng.random() < 0.45:
+        if cd >= 0.70 and threat_budget >= 3 and prng.random() < 0.40:
             etype = "golem"
             cost = 3
-        elif cd >= 0.42 and threat_budget >= 2 and prng.random() < 0.65:
+        elif cd >= 0.50 and threat_budget >= 2 and prng.random() < 0.45:
+            etype = "wolf"
+            cost = 2
+        elif cd >= 0.36 and threat_budget >= 2 and prng.random() < 0.65:
             etype = "stalker"
             cost = 2
         else:
