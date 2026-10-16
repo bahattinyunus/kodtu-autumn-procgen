@@ -109,6 +109,18 @@ HISTORICAL_ODTU_INSCRIPTIONS = [
         "'Stadyum basamaklarına boydan boya kazınan o tek kelime, zamanın ve rüzgarın aşındıramadığı bir kolektif "
         "irade manifestosudur. Bu yazı taşın değil, bağımsızlığa ve sorgulayan zihne adanmış bir gençliğin ruhuna kazınmıştır.' (+15 Isı & İlham Hızı)",
     ),
+    (
+        "1989 ODTÜ BİLGİSAYAR TOPLULUĞU (CCLUB) VE BİLİŞİM KIVILCIMI",
+        "'1989 yılında ODTÜ koridorlarında bir araya gelen bilişim tutkunları, Türkiye'nin ilk öğrenci bilgisayar topluluğunu kurdu. "
+        "Geleneksel KODTÜ maratonlarıyla algoritmaları sanata, kodları ormanın nefesine dönüştüren bu meşale, "
+        "bilginin özgürce paylaşıldığı her terminalde bugün de parıldar.' (+15 Isı & İlham Hızı)",
+    ),
+    (
+        "ALTI TAŞ VE BOZKIRIN MÜHENDİSLİK FELSEFESİ",
+        "'Kemal Kurdaş'ın hayali, Altuğ Bilgin Altıntaş ve nesiller boyu ODTÜ mühendislerinin ellerinde bir ilkeye dönüştü: "
+        "En sağlam sistemler, doğanın sadeliğini ve zarafetini algoritmalara nakşedenlerdir. "
+        "Kodu temiz yaz, doğaya saygı duy, bozkırın her çakıl taşında bir gelecek gör.' (+15 Isı & İlham Hızı)",
+    ),
 ]
 
 

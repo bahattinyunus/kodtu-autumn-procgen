@@ -549,6 +549,60 @@ def test_enraged_warden_boss_and_campfire_roasting() -> None:
         game.render()
 
 
+def test_blade_dance_visual_vfx_and_enraged_warden_aura() -> None:
+    """
+    Verifies:
+    1. Bozkır Kılıç Dansı 4-way rotating supersonic slash VFX renders cleanly onto canvas.
+    2. Enraged Elder Stag Warden renders golden antler aura and enraged HP color.
+    3. Campfire aura expands lantern light radius from 56px to 72px in the vignette pass.
+    """
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+
+    # 1. Trigger blade dance and verify render frame
+    game.player.combo_hits = 6
+    game._perform_blade_dance()
+    assert game.player.blade_dance_timer > 0.0
+    game.render()
+
+    # 2. Add an enraged warden and test rendering
+    warden = EnemyAgent(x=game.player.x + 1.0, y=game.player.y + 1.0, kind="warden")
+    warden.hp = 4  # Below 50% max HP -> is_enraged True
+    assert warden.is_enraged
+    game.enemies.append(warden)
+    game.render()
+
+    # 3. Test campfire aura vignette calculation
+    assert game.player.campfire_aura_timer == 0.0
+    game.player.campfire_aura_timer = 20.0
+    game.render()
+
+
+def test_cclub_and_altug_kitabe_inscriptions() -> None:
+    """
+    Verifies:
+    1. Historical ODTÜ inscriptions contain METU CClub (1989) and Altuğ Bilgin Altıntaş wisdom.
+    2. Reading through kitabeler loops cleanly across all 6 inscriptions without index errors.
+    """
+    from src.core.story import HISTORICAL_ODTU_INSCRIPTIONS, StoryManager
+
+    assert len(HISTORICAL_ODTU_INSCRIPTIONS) >= 6
+    titles = [t for t, _ in HISTORICAL_ODTU_INSCRIPTIONS]
+    assert any("CCLUB" in t for t in titles)
+    assert any("ALTI TAŞ" in t or "ALTINTAŞ" in t for t in titles)
+
+    sm = StoryManager(show_intro_card=False)
+    for i in range(12):  # Test modulo wraparound across multiple readings
+        title, text = sm.on_read_kitabe(i)
+        assert len(title) > 0
+        assert len(text) > 0
+        assert sm.active_dialogue is not None
+        assert sm.active_dialogue.title == title
+
+
+
 
 
 

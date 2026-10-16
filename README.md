@@ -17,7 +17,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 22/22 Passed](https://img.shields.io/badge/Pytest_Suite-22%2F22_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 24/24 Passed](https://img.shields.io/badge/Pytest_Suite-24%2F24_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -92,7 +92,7 @@
 </div>
 
 ### 🗿 Prosedürel ODTÜ Kitabeleri (`odtu_kitabe`)
-Oyuncu haritada dolaşırken antik taş anıtlarla karşılaşır. Yaklaşıp **`[E]`** tuşuna basıldığında ODTÜ'nün tarihine dair 4 gerçek yazıt daktilo efektiyle okunur. Her kitabe fener ısısını yeniler (`+15 Isı`) ve oyuncuya geçici ilham hızı verir:
+Oyuncu haritada dolaşırken antik taş anıtlarla karşılaşır. Yaklaşıp **`[E]`** tuşuna basıldığında ODTÜ'nün tarihine dair 6 gerçek yazıt daktilo efektiyle okunur. Her kitabe fener ısısını yeniler (`+15 Isı`) ve oyuncuya geçici ilham hızı verir:
 
 1. **1961 Kemal Kurdaş ve İlk Ağaç Seferberliği:**  
    *"3 Aralık 1961 sabahı binlerce öğrenci ve hoca çorak ayaza karşı ilk fidanı dikti. Bozkır 'burada yeşil büyümez' diyordu; o gün dikilen fidanlar bugün göğü yırtan orman oldu. Emek, tabiatın en çetin kuralını bile dize getirir."*
@@ -102,6 +102,10 @@ Oyuncu haritada dolaşırken antik taş anıtlarla karşılaşır. Yaklaşıp **
    *"Sabahın dondurucu kırağısında kürek çekenlerin nefesi gölün sisine karışır. Su akar, mevsimler döner; fakat irade bu kıyılarda ebediyen asılı kalır."*
 4. **1968 Devrim Stadyumu ve Kolektif Bilinç:**  
    *"Basamaklara kazınan o tek kelime ne boyadır ne taştır; rüzgarın silemediği, nesillerin teslim aldığı bir duruştur. Karanlık çökerse meşaleyi yakmak senin elindedir."*
+5. **1989 ODTÜ Bilgisayar Topluluğu (CClub) ve Bilişim Kıvılcımı:**  
+   *"Türkiye'nin ilk öğrenci bilgisayar topluluğunun kurucuları der ki: Kod sadece makineye verilen komut değildir; bozkırın ortasında kurulan mantık ve özgür düşünce mimarisidir."*
+6. **Altı Taş ve Bozkırın Mühendislik Felsefesi:**  
+   *"En sağlam sistemler, doğanın sadeliğini algoritmalara nakşedenlerdir. Kodu temiz yaz, doğaya saygı duy, bozkırın her çakıl taşında bir gelecek gör."*
 
 ### 🌲 Kampüs Temalı Biyom Çeşitliliği
 - **Yalıncak Kızıl Korusu (Crimson Canopy):** Yüksek rakımlı, yoğun kırmızı akçaağaçlar ve yaşlı meşelerle kaplı patikalar.
@@ -457,9 +461,9 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 22/22 Otomatik Test Paketini Çalıştırma (`pytest`)
+### 🧪 3. 24/24 Otomatik Test Paketini Çalıştırma (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini, 2-Aşamalı Öfkeli Muhafız boss savaşını, Közde Kestane aurasını, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü görsel flurry şok dalgalarını, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane aurasını, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -467,25 +471,27 @@ pytest tests/ -v
 
 ```text
 tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  4%]
-tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  9%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 31%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 36%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 40%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 45%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 50%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 54%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 59%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 63%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 68%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 72%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 77%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 81%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 86%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 90%]
-tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 95%]
-tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [100%]
+tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  8%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 29%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 33%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 37%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 41%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 45%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 50%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 54%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 58%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 62%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 66%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 70%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 75%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 79%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 83%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 87%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 91%]
+tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 95%]
+tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [100%]
 
-============================= 22 passed in 2.80s ==============================
+============================= 24 passed in 2.62s ==============================
 ```
 
 ---

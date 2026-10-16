@@ -238,7 +238,13 @@ class WorldRenderer:
                 hp: int = enemy.hp,
                 max_hp: int = enemy.max_hp,
                 is_boss: bool = enemy.kind == "warden",
+                is_enraged: bool = getattr(enemy, "is_enraged", False),
             ) -> None:
+                if is_boss and is_enraged:
+                    # Pulsing golden aura behind enraged warden
+                    pulse_r = int(round(11 + math.sin(time_sec * 6.0) * 2.5))
+                    pygame.draw.circle(canvas, BURNT_AMBER, (dx + 8, dy + 8), pulse_r + 2, 1)
+                    pygame.draw.circle(canvas, SUNLIT_BIRCH, (dx + 8, dy + 8), pulse_r, 1)
                 canvas.blit(s, (dx, dy))
                 if flash:
                     pygame.draw.rect(canvas, PALE_SUNBEAM, (dx + 3, dy + 3, 10, 10), 1)
@@ -248,7 +254,8 @@ class WorldRenderer:
                     by = dy - 3
                     fill_w = max(1, int(round(bw * (hp / max(1, max_hp)))))
                     pygame.draw.rect(canvas, DEEP_VOID, (bx - 1, by - 1, bw + 2, 3))
-                    pygame.draw.rect(canvas, SUNLIT_BIRCH if is_boss else CRIMSON_DECAY, (bx, by, fill_w, 1))
+                    hp_col = PALE_SUNBEAM if (is_boss and is_enraged) else (SUNLIT_BIRCH if is_boss else CRIMSON_DECAY)
+                    pygame.draw.rect(canvas, hp_col, (bx, by, fill_w, 1))
 
             y_sort_queue.append((ey, _draw_enemy))
 
@@ -272,6 +279,21 @@ class WorldRenderer:
                 trail_x = int(round(pl_sx - player.dash_dir_x * 6))
                 trail_y = int(round(pl_sy - player.dash_dir_y * 6))
                 pygame.draw.circle(canvas, SUNLIT_BIRCH, (trail_x, trail_y - 4), 4, 1)
+            if player.blade_dance_timer > 0.0:
+                # Omnidirectional Bozkır Kılıç Dansı 4-way supersonic slash storm
+                d_prog = 1.0 - (player.blade_dance_timer / 0.65)
+                spin_ang = d_prog * math.pi * 5.0
+                for blade_i in range(4):
+                    b_ang = spin_ang + (blade_i * math.pi * 0.5)
+                    b_rad = 14.0 + (d_prog * 18.0)
+                    bx = int(round(pl_sx + math.cos(b_ang) * b_rad))
+                    by = int(round(pl_sy - 4 + math.sin(b_ang) * b_rad))
+                    pygame.draw.line(canvas, PALE_SUNBEAM, (pl_sx, pl_sy - 4), (bx, by), 2)
+                    pygame.draw.circle(canvas, SUNLIT_BIRCH, (bx, by), 3)
+                # Outer shockwave leaf ring
+                ring_r = int(round(12.0 + d_prog * 28.0))
+                pygame.draw.circle(canvas, HARVEST_GOLD, (pl_sx, pl_sy - 4), ring_r, 1)
+
             canvas.blit(p_surf, (pl_sx - 8, pl_sy - 14))
             if player.attack_timer > 0.0:
                 self._draw_ember_sweep(
@@ -378,7 +400,8 @@ class WorldRenderer:
 
         # Cut out soft warm radial halos around light sources
         pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
-        halo_radius = int(round(56.0 + 4.0 * math.sin(time_sec * 3.5)))
+        base_halo = 72.0 if getattr(player, "campfire_aura_timer", 0.0) > 0.0 else 56.0
+        halo_radius = int(round(base_halo + 4.0 * math.sin(time_sec * 3.5)))
         # Warm inner glow around player
         pygame.draw.circle(vignette, (*PALE_SUNBEAM, 0), (pl_sx, pl_sy - 4), halo_radius)
         pygame.draw.circle(vignette, (*HARVEST_GOLD, 25), (pl_sx, pl_sy - 4), halo_radius + 18)
