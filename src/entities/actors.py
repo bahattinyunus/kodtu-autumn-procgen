@@ -360,6 +360,57 @@ class Player:
         # Közlenmiş Kestane / Campfire Warmth Aura (slower warmth decay + increased aura)
         self.campfire_aura_timer = 0.0
 
+        # ODTÜ Devrim Overdrive Mode ([Z] / [V])
+        self.overdrive_timer = 0.0
+        self.overdrive_max_duration = 10.0
+
+        # Bozkır Simyası / Acorn Alchemy Transmutations ([G])
+        self.transmute_count = 0
+        self.dash_cooldown_mult = 1.0
+
+    @property
+    def is_in_overdrive(self) -> bool:
+        """True when player is channeling ODTÜ Devrim Overdrive Mode."""
+        return self.overdrive_timer > 0.0
+
+    @property
+    def overdrive_ready(self) -> bool:
+        """Overdrive is ready when warmth is high and combo is maxed or at least 1 relic is gathered."""
+        return (
+            self.overdrive_timer <= 0.0
+            and self.warmth >= 70.0
+            and (self.combo_hits >= self.combo_hits_max or self.relics_collected >= 1)
+        )
+
+    def trigger_devrim_overdrive(self) -> bool:
+        """[Z] / [V]: Unleashes ODTÜ Devrim Overdrive with fiery aura, twin crescent slashes, and speed."""
+        if not self.overdrive_ready:
+            return False
+        self.overdrive_timer = self.overdrive_max_duration
+        self.solar_bolts = self.max_solar_bolts
+        self.leaf_boost_timer = max(self.leaf_boost_timer, self.overdrive_max_duration)
+        self.combo_hits = 0
+        return True
+
+    def transmute_acorns(self) -> Optional[str]:
+        """[G]: Transmutes 2 Acorns into a permanent run upgrade at a Campfire or Ancient Shrine."""
+        if self.acorns_collected < 2:
+            return None
+        self.acorns_collected -= 2
+        self.transmute_count += 1
+        upgrade_type = (self.transmute_count - 1) % 3
+        if upgrade_type == 0:
+            self.max_solar_bolts += 1
+            self.solar_bolts = self.max_solar_bolts
+            return "+1 MAKS GÜNEŞ KÖZÜ (KAPASİTE ARTTI)"
+        elif upgrade_type == 1:
+            self.dash_cooldown_mult *= 0.75
+            return "RÜZGAR ADIMI TILSIMI (ATILMA BEKLEMESİ -%25)"
+        else:
+            self.max_warmth += 15.0
+            self.warmth = self.max_warmth
+            return "KÖZ KALKAN SİMYASI (+15 MAKS FENER ISISI)"
+
     @property
     def combo_ready(self) -> bool:
         """True when combo meter reaches 6 hits, enabling Bozkır Kılıç Dansı."""
@@ -430,7 +481,7 @@ class Player:
             self.dash_dir_x = self.facing_x
             self.dash_dir_y = self.facing_y
         self.dash_timer = 0.16
-        self.dash_cooldown = 0.45 if self.has_boon("YALINCAK_GALE") else 0.65
+        self.dash_cooldown = (0.45 if self.has_boon("YALINCAK_GALE") else 0.65) * self.dash_cooldown_mult
         self.invuln_timer = max(self.invuln_timer, 0.22)
         return True
 
@@ -498,6 +549,7 @@ class Player:
         self.noise_ripple_radius = max(0.0, self.noise_ripple_radius - dt * 4.5)
         self.blade_dance_timer = max(0.0, self.blade_dance_timer - dt)
         self.campfire_aura_timer = max(0.0, self.campfire_aura_timer - dt)
+        self.overdrive_timer = max(0.0, self.overdrive_timer - dt)
 
         # Passive Solar Bolt recharge & Devrim Torch warmth aura
         if self.solar_bolts < self.max_solar_bolts:
@@ -537,6 +589,17 @@ class Player:
                 if abs(nx_dir) > 0.05:
                     self.facing_right = nx_dir > 0.0
                 boost = 1.24 if self.leaf_boost_timer > 0.0 else 1.0
+                if self.overdrive_timer > 0.0:
+                    boost *= 1.35
+                    if dash_ghosts is not None and int(self.walk_timer * 18.0) % 2 == 0:
+                        dash_ghosts.append(
+                            DashGhost(
+                                x=self.x,
+                                y=self.y,
+                                facing_right=self.facing_right,
+                                anim_frame=self.anim_frame,
+                            )
+                        )
                 vx = nx_dir * self.base_speed * boost
                 vy = ny_dir * self.base_speed * boost
                 self.walk_timer += dt

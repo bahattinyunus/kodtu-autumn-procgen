@@ -314,6 +314,54 @@ def synth_parry_spark() -> np.ndarray:
     return (spark1 * 0.4 + spark2 * 0.3 + ping * 0.4) * env * 0.42
 
 
+def synth_devrim_overdrive() -> np.ndarray:
+    """
+    Synthesizes a resonant, cinematic brass horn and fiery harmonic crescendo
+    when unleashing ODTÜ Devrim Overdrive Mode.
+    """
+    duration = int(SAMPLE_RATE * 1.25)
+    t = np.linspace(0.0, 1.25, duration, endpoint=False)
+    # Pitch sweep from D3 (146.8 Hz) up to A4 (440 Hz) and D5 (587.3 Hz)
+    f0 = 146.83 + (440.0 - 146.83) * (t / 1.25) ** 1.8
+    phase = 2.0 * np.pi * np.cumsum(f0) / SAMPLE_RATE
+
+    # Rich harmonic spectrum (horn/brass synthesis with odd & even partials)
+    h1 = np.sin(phase)
+    h2 = 0.60 * np.sin(2.0 * phase)
+    h3 = 0.35 * np.sin(3.0 * phase)
+    h4 = 0.20 * np.sin(4.0 * phase)
+
+    # Sub-bass rumble
+    sub = 0.40 * np.sin(2.0 * np.pi * 73.41 * t)
+
+    # Shimmering golden chorused sparkle
+    sparkle = 0.15 * np.sin(2.0 * np.pi * 880.0 * (1.0 + 0.05 * np.sin(2.0 * np.pi * 7.0 * t)) * t)
+
+    env = np.minimum(t / 0.12, 1.0) * np.exp(-t * 1.8)
+    wave = (h1 + h2 + h3 + h4 + sub + sparkle) * env * 0.58
+    return wave
+
+
+def synth_alchemy_chime() -> np.ndarray:
+    """
+    Synthesizes a crystalline pentatonic transmutation chime [D5, F#5, A5, D6, F#6]
+    for Bozkır Simya Ocağı (Acorn Transmutation Crucible).
+    """
+    duration = int(SAMPLE_RATE * 0.65)
+    wave = np.zeros(duration, dtype=np.float32)
+    pitches = [587.33, 739.99, 880.00, 1174.66, 1479.98]
+    for idx, f in enumerate(pitches):
+        start_offset = int(idx * 0.075 * SAMPLE_RATE)
+        sub_len = duration - start_offset
+        if sub_len <= 0:
+            continue
+        t_sub = np.linspace(0.0, sub_len / SAMPLE_RATE, sub_len, endpoint=False)
+        env = np.exp(-t_sub * 7.5)
+        chime = (np.sin(2.0 * np.pi * f * t_sub) + 0.35 * np.sin(2.0 * np.pi * 2.0 * f * t_sub)) * env
+        wave[start_offset:] += chime * 0.18
+    return wave
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -337,6 +385,8 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "dialogue_blip": audio_dir / "dialogue_blip.wav",
         "deflect_clash": audio_dir / "deflect_clash.wav",
         "level_up": audio_dir / "level_up.wav",
+        "devrim_overdrive": audio_dir / "devrim_overdrive.wav",
+        "alchemy_chime": audio_dir / "alchemy_chime.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -377,6 +427,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["deflect_clash"], synth_deflect_clash())
     if not files["level_up"].exists():
         _save_wav_int16(files["level_up"], synth_level_up())
+    if not files["devrim_overdrive"].exists():
+        _save_wav_int16(files["devrim_overdrive"], synth_devrim_overdrive())
+    if not files["alchemy_chime"].exists():
+        _save_wav_int16(files["alchemy_chime"], synth_alchemy_chime())
 
     return files
 

@@ -124,6 +124,7 @@ class AutumnProcGenGame:
         self.hit_stop_timer = 0.0
         self.target_victory_depth = target_victory_depth
         self.is_paused = False
+        self.tactical_map_open = False
 
         # Active world state
         self.world: WorldData
@@ -285,6 +286,12 @@ class AutumnProcGenGame:
                             self.hud.seed_input_buffer += ch
                     continue
 
+                if getattr(self, "tactical_map_open", False):
+                    if event.key in (pygame.K_ESCAPE, pygame.K_n, pygame.K_m, pygame.K_SPACE, pygame.K_RETURN):
+                        self.tactical_map_open = False
+                        continue
+                    continue
+
                 if self.is_paused:
                     if event.key in (pygame.K_p, pygame.K_SPACE, pygame.K_RETURN):
                         self.is_paused = False
@@ -299,6 +306,9 @@ class AutumnProcGenGame:
                         continue
                     elif event.key == pygame.K_c:
                         self.hud.codex_modal_open = not self.hud.codex_modal_open
+                        continue
+                    elif event.key == pygame.K_n:
+                        self.tactical_map_open = not self.tactical_map_open
                         continue
                     elif event.key == pygame.K_ESCAPE:
                         return False
@@ -319,6 +329,8 @@ class AutumnProcGenGame:
                     self.story.show_intro_card = not self.story.show_intro_card
                 elif event.key == pygame.K_c:
                     self.hud.codex_modal_open = not self.hud.codex_modal_open
+                elif event.key == pygame.K_n:
+                    self.tactical_map_open = not self.tactical_map_open
                 elif event.key == pygame.K_TAB:
                     self.hud.codex_modal_open = False
                     self.hud.seed_modal_open = True
@@ -356,6 +368,10 @@ class AutumnProcGenGame:
                     )
                 elif event.key == pygame.K_F5:
                     self.cycle_odtu_preset()
+                elif event.key in (pygame.K_z, pygame.K_v):
+                    self._perform_devrim_overdrive()
+                elif event.key == pygame.K_g:
+                    self._perform_steppe_alchemy()
                 elif event.key == pygame.K_SPACE:
                     self._perform_ember_attack()
                 elif event.key == pygame.K_f:
@@ -372,6 +388,9 @@ class AutumnProcGenGame:
                     self._try_interact_action()
 
             elif event.type == pygame.MOUSEBUTTONDOWN and not self.hud.seed_modal_open:
+                if getattr(self, "tactical_map_open", False):
+                    self.tactical_map_open = False
+                    continue
                 if self.is_paused:
                     self.is_paused = False
                     self.hud.show_banner("OYUN DEVAM EDİYOR", duration=1.5)
@@ -396,6 +415,7 @@ class AutumnProcGenGame:
     def _get_move_vector(self) -> tuple[float, float]:
         if (
             self.is_paused
+            or getattr(self, "tactical_map_open", False)
             or self.hud.seed_modal_open
             or self.hud.codex_modal_open
             or self.story.show_intro_card
@@ -490,9 +510,11 @@ class AutumnProcGenGame:
             return
         self.sound.play("slash_ember")
         is_crit = self.player.combo_step == 2
-        bonus_dmg = 1 if self.player.has_boon("BILIM_SPARK") else 0
+        overdrive_bonus = 2 if getattr(self.player, "is_in_overdrive", False) else 0
+        bonus_dmg = (1 if self.player.has_boon("BILIM_SPARK") else 0) + overdrive_bonus
         dmg = (4 if is_crit else 2) + bonus_dmg
-        reach = 2.15 if is_crit else 1.85
+        base_reach = 2.15 if is_crit else 1.85
+        reach = base_reach + (0.30 if getattr(self.player, "is_in_overdrive", False) else 0.0)
 
         px_x = self.player.x * TILE_SIZE
         px_y = self.player.y * TILE_SIZE
@@ -599,6 +621,72 @@ class AutumnProcGenGame:
                 if defeated:
                     self._on_enemy_defeated(enemy)
 
+    def _perform_devrim_overdrive(self) -> None:
+        """[Z] / [V]: Triggers ODTÜ Devrim Overdrive fiery mode."""
+        if self.player.trigger_devrim_overdrive():
+            self.sound.play("devrim_overdrive")
+            self.camera.add_trauma(0.55)
+            self.hit_stop_timer = 0.05
+            px_x = self.player.x * TILE_SIZE
+            px_y = self.player.y * TILE_SIZE
+            self.leaf_system.spawn_burst(px_x, px_y, count=36, golden_bias=True)
+            self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=80.0, strength=5.5)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.7, "🔥 DEVRİM OVERDRIVE!", PALE_SUNBEAM)
+            self.hud.show_banner("🔥 ODTÜ DEVRİM OVERDRIVE! HIZ +35%, ÇİFT HASAR & MENZİL!", duration=3.5)
+            self._deflect_nearby_orbs(3.2)
+            self._smash_nearby_props(self.player.x, self.player.y, 2.8)
+        else:
+            self.spawn_floating_text(
+                self.player.x,
+                self.player.y - 0.4,
+                "OVERDRIVE İÇİN %70+ ISI VE KOMBO GEREKİR!",
+                CRIMSON_DECAY,
+            )
+
+    def _perform_steppe_alchemy(self) -> None:
+        """[G]: Bozkır Simyası — Transmutes 2 Acorns at Campfire or Shrine into permanent upgrades."""
+        # Check proximity to Campfire, Bilim Ağacı, or Shrine (within 2.4 tiles)
+        near_alchemy_site = False
+        site_name = "Bozkır Ocağı"
+        for st in self.world.structures:
+            if st.structure_type in ("campfire", "bilim_agaci", "ancient_shrine"):
+                if math.hypot(self.player.x - (st.tile_x + 0.5), self.player.y - (st.tile_y + 0.5)) <= 2.4:
+                    near_alchemy_site = True
+                    site_name = "Bozkır Ateşi" if st.structure_type == "campfire" else "Bilim Ağacı"
+                    break
+        if not near_alchemy_site:
+            sx, sy = self.world.shrine_tile
+            if math.hypot(self.player.x - (sx + 0.5), self.player.y - (sy + 0.5)) <= 2.4:
+                near_alchemy_site = True
+                site_name = "Kadim Tapınak"
+
+        if not near_alchemy_site:
+            self.spawn_floating_text(
+                self.player.x,
+                self.player.y - 0.4,
+                "SİMYA İÇİN ATEŞ VEYA TAPINAK YANINA GİT!",
+                CRIMSON_DECAY,
+            )
+            return
+
+        res = self.player.transmute_acorns()
+        if res:
+            self.sound.play("alchemy_chime")
+            self.camera.add_trauma(0.35)
+            px_x = self.player.x * TILE_SIZE
+            px_y = self.player.y * TILE_SIZE
+            self.leaf_system.spawn_burst(px_x, px_y, count=28, golden_bias=True)
+            self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=60.0, strength=3.8)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.6, f"+{res}!", PALE_SUNBEAM)
+            self.hud.show_banner(f"🔮 BOZKIR SİMYASI ({site_name}): {res}", duration=3.8)
+        else:
+            self.spawn_floating_text(
+                self.player.x,
+                self.player.y - 0.4,
+                f"SİMYA İÇİN EN AZ 2 PALAMUT GEREKİR (Mevcut: {self.player.acorns_collected})",
+                CRIMSON_DECAY,
+            )
+
     def _try_interact_action(self) -> None:
         """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele or Shrine."""
         # 1. Check proximity to Historical Kitabeler
@@ -671,8 +759,13 @@ class AutumnProcGenGame:
         if typewriter_stepped and int(self.time_sec * 24) % 3 == 0:
             self.sound.play("dialogue_blip")
 
-        # Pause gameplay movement/enemies while reading Intro Card, Victory Modal, or when Paused
-        if self.is_paused or self.story.show_intro_card or getattr(self.story, "show_victory_modal", False):
+        # Pause gameplay movement/enemies while reading Intro Card, Victory Modal, Tactical Map, or when Paused
+        if (
+            self.is_paused
+            or getattr(self, "tactical_map_open", False)
+            or self.story.show_intro_card
+            or getattr(self.story, "show_victory_modal", False)
+        ):
             return
 
         # Vlambeer / Nuclear Throne style tactile Hit-Stop micro-freeze
@@ -1032,6 +1125,7 @@ class AutumnProcGenGame:
             banner_timer=self.hud.banner_timer,
             weather_name=w_name,
             is_paused=self.is_paused,
+            tactical_map_open=getattr(self, "tactical_map_open", False),
         )
         pygame.display.flip()
 

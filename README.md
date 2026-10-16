@@ -18,7 +18,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 29/29 Passed](https://img.shields.io/badge/Pytest_Suite-29%2F29_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 31/31 Passed](https://img.shields.io/badge/Pytest_Suite-31%2F31_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -263,6 +263,12 @@ Oyuncu, sonbahar alacakaranlığında bozkır korusuna adım atan ve elinde **G�
 
 - **🔥 Fener Isısı (Lantern Warmth):** Hayatta kalma enerjinizdir. Soğukta zamanla azalır. **ODTÜ Bilim Ağacı Anıtı** (`+15/sn`), simyacı kamp ateşleri ve dökülen meşe palamutları ile doldurulur.
 - **🗡️ 3-Vuruşluk Solar Kombo (`[SPACE]` / Sol Tık):** Vuruş 1 $\rightarrow$ Vuruş 2 $\rightarrow$ **Kritik Vuruş 3 (`CRIT -4!`)**. *Hyper Light Drifter* tarzı her başarılı yakın dövüş darbesi **`+1 Solar Bolt` mermisi doldurur** ve kombo sayacını ilerletir.
+- **🔥 ODTÜ Devrim Overdrive (`[Z]` / `[V]` — Revolutionary Power Mode):** Karakterin içindeki ODTÜ meşalesini harlayan devrim modu. Yüksek sıcaklıkta (%70+ Isı) ve kombo sayacı doluyken ya da en az 1 relik taşırken tetiklenir. 10 saniye boyunca oyuncuyu altın renkli alev aurası ve hayalet izleri bürür: **+%35 Hareket Hızı**, Solar Bolt mermilerinin anında tam dolumu, kılıç vuruşlarına **+2 Hasar ve +0.30 Genişletilmiş Saldırı Menzili** kazandırır. Görselde dinamik kromatik altın vinyet ekran çerçevesi, işitselde ise prosedürel pirinç kornası crescendo tınısı (`devrim_overdrive.wav`) eşlik eder.
+- **🔮 Bozkır Simyası & Palamut Dönüşümü (`[G]` — Steppe Alchemy Transmutation):** Kamp Ateşi, Bilim Ağacı veya Kadim Tapınak yanında toplanan 2 Meşe Palamudu feda edilerek kalıcı run geliştirmeleri yapılır. Her dönüşüm kristal pentatonik simya çanı (`alchemy_chime.wav`) ile mühürlenir:
+  - *1. Dönüşüm:* `+1 Maksimum Solar Bolt` (Köz mermi kapasitesi kalıcı artar)
+  - *2. Dönüşüm:* `Rüzgar Adımı Tılsımı` (Atılma bekleme süresi %25 kısalır)
+  - *3. Dönüşüm:* `Köz Kalkan Simyası` (+15 Maksimum Fener Isısı)
+- **🗺️ Tam Ekran Taktik Bozkır Haritası (`[N]` — Tactical Steppe Cartography):** 56×42 harita ızgarasının tamamını kontur topoğrafyası, biyom renk kodları, kitabeler, kamp ateşleri, toplanmamış anılık relikler ve oyuncunun dinamik yön okunu gösteren askeri hassasiyette kartografya modalı. Açıkken oyunu duraklatır.
 - **🌀 Bozkır Kılıç Dansı (`[X]` / `[R]` — Combo Finisher):** 6 başarılı yakın dövüş darbesi vurulduğunda kombo sayacı dolar ve `[X] KILIÇ DANSI HAZIR!` aktifleşir. Tetiklendiğinde oyuncu 4 yönlü ışık hızında atılma-kesiş gerçekleştirir (`-6 Hasar`, $360^\circ$ yaprak kasırgası, mermi saptırma ve 0.70s dokunulmazlık).
 - **🛡️ Mermi Yansıtma Mekaniği (`DEFLECT!`):** Düşmanların attığı karanlık küreleri tam zamanında kılıç darbesi (`[SPACE]`) veya `Harvest Nova ([Q])` ile vurduğunuzda mermi **`1.65x` hızla ve `2x` hasarla düşmana geri yansıtılır**.
 - **🌰 Közde Bozkır Kestanesi & Kamp Ateşi Dinlenmesi (`[E]`):** Kamp ateşi yanında `[E]` tuşuna basıldığında fener ısısı anında `%100` doldurulur; toplanan palamutlar közlenerek **25 saniyelik Sıcak Köz Aurası** (fener ışık menzili `%20` genişler, ayaz soğuk aşınması yarıya iner) kazanılır.
@@ -331,6 +337,9 @@ Her Hasat Reliği bulunduğunda ODTÜ efsanelerinden ilham alan 5 kalıcı kutsa
 | **`F` / Sağ Tık** | **Solar Bolt** | Menzilli güneş közü atışı (Hasat Tacı ile 3'lü atış) |
 | **`Q` / Orta Tık** | **Harvest Nova** | $360^\circ$ alan patlaması, mermileri saptırma, yaprak girdabı |
 | **`X` / `R`** | **Bozkır Kılıç Dansı** | **6 vuruşla dolan Combo Finisher**: 4 yönlü ışık hızı flurisi |
+| **`Z` / `V`** | **ODTÜ Devrim Overdrive** | **Alevli Devrim Modu**: %70+ Isı ile +%35 hız, +2 hasar, köz dolumu |
+| **`G`** | **Bozkır Simyası** | Ateş/Tapınak yanında 2 palamudu kalıcı stat artışına dönüştürür |
+| **`N`** | **Taktik Bozkır Haritası** | 56x42 tam ekran topoğrafik kartografya modalını açar/kapatır |
 | **`SHIFT`** | **Gust Dash** | Hayalet izli hızlı atılma, 0.22s hasar dokunulmazlığı |
 | **`E`** | Etkileşim & Közleme | Kitabe okuma, Kamp ateşinde kestane közleme, Tapınak geçişi |
 | **`P`** | **Oyunu Duraklat** | Simülasyonu dondurur ve duraklatma menüsü overlay'ini açar |
@@ -468,9 +477,9 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 29/29 Otomatik Test Paketi & GitHub Actions CI (`pytest`)
+### 🧪 3. 31/31 Otomatik Test Paketi & GitHub Actions CI (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü flurry efektlerini, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane dinlenmesini, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Kesintisiz Saga İlerlemesini, Ses/Müzik Mute ve Ses Seviyesi kontrollerini (`test_audio_mute_toggle_volume_and_pause_modal_control`), Kadim Boss Yenilgi Ganimeiti & Ayaz Diriliş mekaniğini (`test_boss_defeat_cinematic_drop_and_frost_respawn`), 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü flurry efektlerini, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane dinlenmesini, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Kesintisiz Saga İlerlemesini, Ses/Müzik Mute ve Ses Seviyesi kontrollerini, Kadim Boss Yenilgi Ganimeti & Ayaz Diriliş mekaniğini, ODTÜ Devrim Overdrive alevli güç modunu (`test_devrim_overdrive_mode_and_audio_synthesis`), Bozkır Simyası & Taktik Kartografya modalını (`test_steppe_alchemy_and_tactical_map_modal`), 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -479,31 +488,33 @@ pytest tests/ -v
 ```text
 tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  3%]
 tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  6%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 24%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 27%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 31%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 34%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 37%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 41%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 44%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 48%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 51%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 55%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 58%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 62%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 65%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 68%]
-tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 72%]
-tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 75%]
-tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 79%]
-tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 82%]
-tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 86%]
-tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [ 89%]
-tests/test_procgen.py::test_continuous_five_chapter_saga_and_ci_contract PASSED       [ 93%]
-tests/test_procgen.py::test_audio_mute_toggle_volume_and_pause_modal_control PASSED   [ 96%]
-tests/test_procgen.py::test_boss_defeat_cinematic_drop_and_frost_respawn PASSED       [100%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 22%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 25%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 29%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 32%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 35%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 38%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 41%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 45%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 48%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 51%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 54%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 58%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 61%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 64%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 67%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 70%]
+tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 74%]
+tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 77%]
+tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 80%]
+tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [ 83%]
+tests/test_procgen.py::test_continuous_five_chapter_saga_and_ci_contract PASSED       [ 87%]
+tests/test_procgen.py::test_audio_mute_toggle_volume_and_pause_modal_control PASSED   [ 90%]
+tests/test_procgen.py::test_boss_defeat_cinematic_drop_and_frost_respawn PASSED       [ 93%]
+tests/test_procgen.py::test_devrim_overdrive_mode_and_audio_synthesis PASSED          [ 96%]
+tests/test_procgen.py::test_steppe_alchemy_and_tactical_map_modal PASSED              [100%]
 
-============================= 29 passed in 3.71s ==============================
+============================= 31 passed in 3.88s ==============================
 ```
 
 #### 📦 Paket Kurulumu (`pyproject.toml`):

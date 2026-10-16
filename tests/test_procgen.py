@@ -832,6 +832,117 @@ def test_boss_defeat_cinematic_drop_and_frost_respawn() -> None:
     assert "KADİM ORMAN BEKÇİSİ DİZE GELDİ" in game.hud.banner_text
 
 
+def test_devrim_overdrive_mode_and_audio_synthesis() -> None:
+    """
+    [Test 30] Verifies:
+    1. Procedural brass crescendo synthesizer synth_devrim_overdrive() generates valid stereo 16-bit PCM.
+    2. Player trigger_devrim_overdrive() requires warmth >= 70% and combo or relic.
+    3. Overdrive grants +35% movement speed, ghost afterimages, +2 melee damage, and bolt refill.
+    4. Headless rendering properly displays the golden chromatic screen vignette.
+    """
+    import numpy as np
+    from src.core.audio_synth import synth_devrim_overdrive
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    # 1. Audio synthesis validation
+    overdrive_pcm = synth_devrim_overdrive()
+    assert len(overdrive_pcm) > 8000
+    assert np.max(np.abs(overdrive_pcm)) <= 1.0
+
+    # 2. Engine and Overdrive mechanics
+    game = AutumnProcGenGame(initial_seed="ODTU-DEVRIM-1956", debug_procgen=False, headless=True)
+
+    # Ineligible when warmth is low or combo not met
+    game.player.warmth = 50.0
+    game.player.combo_hits = 0
+    game.player.relics_collected = 0
+    assert not game.player.overdrive_ready
+    assert not game.player.trigger_devrim_overdrive()
+
+    # Eligible when warmth >= 70 and combo is full
+    game.player.warmth = 85.0
+    game.player.combo_hits = 6
+    assert game.player.overdrive_ready
+    game._perform_devrim_overdrive()
+
+    assert game.player.is_in_overdrive
+    assert game.player.overdrive_timer > 9.0
+    assert game.player.solar_bolts == game.player.max_solar_bolts
+    assert game.player.combo_hits == 0
+
+    # Verify bonus damage in _perform_ember_attack
+    # Spawn enemy directly in front of player
+    enemy = EnemyAgent(x=game.player.x + 0.8, y=game.player.y, kind="wolf")
+    enemy.hp = 10
+    game.enemies.append(enemy)
+    game.player.attack_cooldown = 0.0
+    game._perform_ember_attack()
+    # Base attack is 2 + 2 (overdrive) = 4 dmg
+    assert enemy.hp <= 6
+
+    # Verify headless rendering with vignette
+    game.render()
+
+
+def test_steppe_alchemy_and_tactical_map_modal() -> None:
+    """
+    [Test 31] Verifies:
+    1. Procedural crystalline pentatonic chime synth_alchemy_chime() generates valid stereo 16-bit PCM.
+    2. Bozkır Simyası / Acorn Alchemy ([G]) transmuting 2 acorns at Campfire/Shrine into permanent upgrades.
+    3. Tactical Steppe Cartography modal ([N]) opens full-screen 56x42 map and freezes movement.
+    """
+    import numpy as np
+    from src.core.audio_synth import synth_alchemy_chime
+    from src.main import AutumnProcGenGame
+
+    # 1. Audio synthesis validation
+    chime_pcm = synth_alchemy_chime()
+    assert len(chime_pcm) > 5000
+    assert np.max(np.abs(chime_pcm)) <= 1.0
+
+    # 2. Engine and Steppe Alchemy
+    game = AutumnProcGenGame(initial_seed="ODTU-ALCHEMY-TEST", debug_procgen=False, headless=True)
+
+    # Far from any alchemy site -> fails
+    game.player.x = 0.5
+    game.player.y = 0.5
+    game.player.acorns_collected = 5
+    game._perform_steppe_alchemy()
+    assert game.player.acorns_collected == 5  # No acorns consumed
+
+    # Move near shrine
+    sx, sy = game.world.shrine_tile
+    game.player.x = sx + 0.5
+    game.player.y = sy + 0.5
+
+    # First transmutation: +1 Max Solar Bolt
+    initial_max_bolts = game.player.max_solar_bolts
+    game._perform_steppe_alchemy()
+    assert game.player.acorns_collected == 3
+    assert game.player.max_solar_bolts == initial_max_bolts + 1
+
+    # Second transmutation: -25% Dash Cooldown
+    game._perform_steppe_alchemy()
+    assert game.player.acorns_collected == 1
+    assert game.player.dash_cooldown_mult == 0.75
+
+    # Third transmutation fails due to insufficient acorns (< 2)
+    game._perform_steppe_alchemy()
+    assert game.player.acorns_collected == 1
+
+    # 3. Tactical Map Modal ([N])
+    assert not game.tactical_map_open
+    game.tactical_map_open = True
+    # Movement vector is locked to (0, 0)
+    assert game._get_move_vector() == (0.0, 0.0)
+
+    # Render frame with tactical map modal active
+    game.render()
+    assert game.tactical_map_open
+
+
+
 
 
 

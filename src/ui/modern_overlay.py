@@ -111,10 +111,15 @@ class ModernStoryOverlay:
         banner_timer: float = 0.0,
         weather_name: str = "ALTIN İKİNDİ",
         is_paused: bool = False,
+        tactical_map_open: bool = False,
     ) -> None:
         sw, sh = screen.get_size()
         if sw < 640 or sh < 360:
             return
+
+        # 0. Fiery Overdrive Screen Edge Vignette
+        if getattr(player, "is_in_overdrive", False):
+            self._render_overdrive_vignette(screen, sw, sh, getattr(player, "overdrive_timer", 0.0))
 
         # 1. Top-Left: Clean Modern Status & Objective Panel
         self._render_status_and_objective_panel(screen, world, player, items, story, weather_name)
@@ -123,7 +128,7 @@ class ModernStoryOverlay:
         self._render_compass_and_boss_bar(screen, sw, world, player, items, enemies)
 
         # 3. Top-Right: Chapter Title & Crisp 2x Minimap Radar
-        if show_minimap and not seed_modal_open and not codex_open:
+        if show_minimap and not seed_modal_open and not codex_open and not tactical_map_open:
             self._render_minimap_panel(screen, sw, world, player, items)
 
         # 4. Bottom-Center: Story Dialogue Box (or Minimalist Control Hint Bar)
@@ -143,6 +148,8 @@ class ModernStoryOverlay:
             self._render_victory_modal_hd(screen, sw, sh, world, player, story)
         elif is_paused:
             self._render_pause_modal_hd(screen, sw, sh)
+        elif tactical_map_open:
+            self._render_tactical_map_hd(screen, sw, sh, world, player, items, enemies, story)
         elif codex_open:
             self._render_codex_modal_hd(screen, sw, sh, world, player, story)
         elif seed_modal_open:
@@ -172,9 +179,16 @@ class ModernStoryOverlay:
 
         # Lantern Warmth Bar
         warm_pct = max(0.0, min(1.0, player.warmth / max(1.0, player.max_warmth)))
-        lbl_warm = self.f_small.render(
-            f"DEVRİM FENERİ ISISI: %{int(round(warm_pct * 100))}", True, SUNLIT_BIRCH
-        )
+        if getattr(player, "is_in_overdrive", False):
+            warm_title = f"DEVRİM OVERDRIVE: {player.overdrive_timer:.1f}s!"
+            warm_col = PALE_SUNBEAM
+        elif getattr(player, "overdrive_ready", False):
+            warm_title = f"FENER %{int(round(warm_pct * 100))} • [Z] DEVRİM HARLA!"
+            warm_col = HARVEST_GOLD
+        else:
+            warm_title = f"DEVRİM FENERİ ISISI: %{int(round(warm_pct * 100))}"
+            warm_col = SUNLIT_BIRCH
+        lbl_warm = self.f_small.render(warm_title, True, warm_col)
         panel.blit(lbl_warm, (56, 10))
 
         bar_x, bar_y, bar_w, bar_h = 56, 30, 195, 14
@@ -421,13 +435,132 @@ class ModernStoryOverlay:
         pygame.draw.rect(bar, BURNT_AMBER, (0, 0, bw, bh), 1, border_radius=6)
 
         txt = (
-            "[WASD] Yürü  •  [Sol Tık/SPACE] Kılıç & Yansıt  •  "
-            "[Sağ Tık/F] Köz Atışı  •  [SHIFT] Hızlı Atıl  •  [Q] Nova  •  [X] KILIÇ DANSI  •  "
-            "[E] Oku/Közle  •  [P] Duraklat  •  [U] Ses  •  [H] Kılavuz  •  [C] Kutsamalar"
+            "[WASD] Yürü  •  [SPACE] Kılıç & Yansıt  •  [F] Köz Atışı  •  [Z] DEVRİM HARLA  •  "
+            "[X] KILIÇ DANSI  •  [Q] Nova  •  [E] Oku/Közle  •  [G] SİMYA  •  [N] Harita  •  [P] Duraklat"
         )
         lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))
         screen.blit(bar, (bx, by))
+
+    def _render_overdrive_vignette(self, screen: pygame.Surface, sw: int, sh: int, timer: float) -> None:
+        """Renders an intense, pulsing golden-amber chromatic border when Devrim Overdrive is active."""
+        pulse = 0.55 + 0.45 * math.sin(timer * 9.0)
+        thick = int(6 + 6 * pulse)
+        border_surf = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        col = (245, 214, 123, int(120 * pulse))
+        pygame.draw.rect(border_surf, col, (0, 0, sw, thick))
+        pygame.draw.rect(border_surf, col, (0, sh - thick, sw, thick))
+        pygame.draw.rect(border_surf, col, (0, 0, thick, sh))
+        pygame.draw.rect(border_surf, col, (sw - thick, 0, thick, sh))
+        pygame.draw.rect(
+            border_surf,
+            (255, 235, 175, int(180 * pulse)),
+            (thick // 2, thick // 2, sw - thick, sh - thick),
+            2,
+        )
+        screen.blit(border_surf, (0, 0))
+
+    def _render_tactical_map_hd(
+        self,
+        screen: pygame.Surface,
+        sw: int,
+        sh: int,
+        world: WorldData,
+        player: Player,
+        items: List[CollectibleItem],
+        enemies: List[EnemyAgent],
+        story: StoryManager,
+    ) -> None:
+        dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        dim.fill((*DEEP_VOID, 228))
+        screen.blit(dim, (0, 0))
+
+        tile_px = 13
+        mw = world.width * tile_px
+        mh = world.height * tile_px
+        pw = mw + 60
+        ph = mh + 104
+        px = (sw - pw) // 2
+        py = (sh - ph) // 2
+
+        panel = pygame.Surface((pw, ph), pygame.SRCALPHA)
+        panel.fill((*PLUM_SHADOW, 250))
+        pygame.draw.rect(panel, HARVEST_GOLD, (0, 0, pw, ph), 2, border_radius=10)
+        pygame.draw.rect(panel, BURNT_AMBER, (4, 4, pw - 8, ph - 8), 1, border_radius=8)
+
+        t_str = f"ODTÜ BOZKIR TAKTİK HARİTASI & TOPOĞRAFYA — SEED: {world.seed_input}"
+        t_lbl = self.f_title.render(t_str, True, PALE_SUNBEAM)
+        panel.blit(t_lbl, ((pw - t_lbl.get_width()) // 2, 14))
+
+        sub_str = f"Bölüm {story.chapter}: {story.chapter_title}   |   Boyut: 56x42 Koro   |   Derinlik: {world.depth_level}"
+        s_lbl = self.f_small.render(sub_str, True, SUNLIT_BIRCH)
+        panel.blit(s_lbl, ((pw - s_lbl.get_width()) // 2, 44))
+
+        map_surf = pygame.Surface((mw, mh))
+        map_surf.fill(DEEP_VOID)
+
+        for ty in range(world.height):
+            for tx in range(world.width):
+                is_wall = world.walkable_grid[ty, tx] != 0
+                b = int(world.biome_grid[ty, tx])
+                if is_wall:
+                    col = WITHERED_BARK if b != 1 else PLUM_SHADOW
+                else:
+                    if b == 0:
+                        col = BURNT_AMBER
+                    elif b == 1:
+                        col = CRIMSON_DECAY
+                    elif b == 2:
+                        col = OCHRE_CLAY
+                    else:
+                        col = RUST_TERRACOTTA
+                pygame.draw.rect(map_surf, col, (tx * tile_px, ty * tile_px, tile_px, tile_px))
+
+        for st in world.structures:
+            stx = int((st.tile_x + 0.5) * tile_px)
+            sty = int((st.tile_y + 0.5) * tile_px)
+            if st.structure_type == "campfire":
+                pygame.draw.circle(map_surf, BURNT_AMBER, (stx, sty), 7)
+                pygame.draw.circle(map_surf, PALE_SUNBEAM, (stx, sty), 4)
+            elif st.structure_type == "bilim_agaci":
+                pygame.draw.circle(map_surf, SUNLIT_BIRCH, (stx, sty), 8)
+                pygame.draw.circle(map_surf, HARVEST_GOLD, (stx, sty), 4)
+            elif st.structure_type == "odtu_kitabe":
+                pygame.draw.rect(map_surf, AUTUMN_MIST, (stx - 4, sty - 5, 8, 10))
+
+        shx, shy = world.shrine_tile
+        ssx = int((shx + 0.5) * tile_px)
+        ssy = int((shy + 0.5) * tile_px)
+        pygame.draw.circle(map_surf, PALE_SUNBEAM, (ssx, ssy), 9)
+        pygame.draw.circle(map_surf, HARVEST_GOLD, (ssx, ssy), 6)
+        pygame.draw.circle(map_surf, CRIMSON_DECAY, (ssx, ssy), 3)
+
+        for it in items:
+            if not it.collected and it.kind == "relic":
+                rx = int(it.x * tile_px)
+                ry = int(it.y * tile_px)
+                pygame.draw.circle(map_surf, PALE_SUNBEAM, (rx, ry), 5)
+                pygame.draw.circle(map_surf, HARVEST_GOLD, (rx, ry), 3)
+
+        plx = int(player.x * tile_px)
+        ply = int(player.y * tile_px)
+        pygame.draw.circle(map_surf, PALE_SUNBEAM, (plx, ply), 8, 2)
+        pygame.draw.circle(map_surf, (255, 255, 255), (plx, ply), 4)
+        adx = int(plx + player.facing_x * 8)
+        ady = int(ply + player.facing_y * 8)
+        pygame.draw.line(map_surf, (255, 255, 255), (plx, ply), (adx, ady), 2)
+
+        pygame.draw.rect(map_surf, HARVEST_GOLD, (0, 0, mw, mh), 2)
+        panel.blit(map_surf, (30, 66))
+
+        leg_str = (
+            "[N] / [ESC] Kapat  •  ▲ Ekin (Oyuncu)  •  ★ Kadim Tapınak  •  "
+            "🔥 Kamp Ateşi [G: Simya]  •  ✦ Bilim Ağacı  •  📜 Kitabe  •  ◆ Sonbahar Anısı"
+        )
+        leg_lbl = self.f_small.render(leg_str, True, PALE_SUNBEAM)
+        panel.blit(leg_lbl, ((pw - leg_lbl.get_width()) // 2, ph - 28))
+
+        screen.blit(panel, (px, py))
 
     def _render_pause_modal_hd(self, screen: pygame.Surface, sw: int, sh: int) -> None:
         dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
