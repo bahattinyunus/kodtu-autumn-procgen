@@ -26,7 +26,18 @@
 
 > *"Bilim ve tekniğin ışığında, ODTÜ bozkırından yükselen sonbahar ormanının her bir yaprağını matematiksel determinizm ile yeniden dokuyoruz."*
 
-**KODTÜ: Autumn ProcGen Engine**, **Orta Doğu Teknik Üniversitesi (ODTÜ / METU)** bünyesinde düzenlenen **KODTÜ Game Jam** yarışmasının üç temel tasarım kısıtlamasını sıradan bir oyun prototipi olarak değil; akademik düzeyde doğrulanabilir, yüksek performanslı ve sıfır dış bağımlılıklı (**100% Kod-Tabanlı Varlık & Ses Sentezi**) bir **Prosedürel Oyun Motoru Mimarisi** olarak hayata geçirmek üzere tasarlanmıştır:
+### 🎓 KODTÜ Nedir? ODTÜ Bilgisayar Topluluğu (CClub) ve Game Jam Ruhu
+
+**KODTÜ**, Türkiye'nin en köklü ve saygın mühendislik kurumlarından **Orta Doğu Teknik Üniversitesi (ODTÜ / METU)** bünyesinde faaliyet gösteren **ODTÜ Bilgisayar Topluluğu (METU Computer Club - CClub)** tarafından geleneksel olarak düzenlenen, algoritma, yazılım ve oyun geliştirme maratonudur:
+
+- **ODTÜ Bilgisayar Topluluğu (CClub):** 1989 yılında kurulan CClub, Türkiye'nin ilk ve en köklü bilişim topluluklarından biri olup, her yıl *Geleneksel Programlama Yarışması*, *ODTÜ Bilişim Günleri* ve **KODTÜ Game Jam** gibi prestijli organizasyonlarla genç yetenekleri teknoloji ekosisteminde buluşturur.
+- **KODTÜ Game Jam Yarışma Felsefesi:** Katılımcıların sınırlı bir süre (genellikle 48 saat) ve katı teknik kısıtlamalar altında en yüksek mühendislik kalitesini, özgün oyun mekaniğini ve estetik uyumu sergilemelerini hedefler.
+- **Yarışmanın Zorunlu 3 Kısıtı:**
+  1. 🎨 **Art Stili: `Pixelated`** (Retro piksel estetiği, keskin ızgara düzeni)
+  2. 🍂 **Renk Paleti: `Sonbahar`** (Hüzünlü ve sıcak sonbahar renk uyumu)
+  3. 🎲 **İçereceği Mekanik: `Procedural Generation`** (Rastgele / Prosedürel Üretim Mimarisi)
+
+**KODTÜ: Autumn ProcGen Engine**, bu üç kısıtlamayı alelade bir jam prototipi olarak değil; akademik düzeyde doğrulanabilir, yüksek performanslı ve sıfır dış bağımlılıklı (**%100 Kod-Tabanlı Varlık & Ses Sentezi**) bir **Prosedürel Oyun Motoru ve Hikaye Başyapıtı** olarak hayata geçirmek üzere geliştirilmiştir:
 
 | KODTÜ Yarışma Kısıtı | Mühendislik Çözümümüz & Mimari Standart | Doğrulama Metriği |
 | :--- | :--- | :--- |
@@ -36,12 +47,23 @@
 
 ---
 
+### 🖥️ ODTÜ & KODTÜ Özel 1080p Masaüstü Duvar Kağıdı (Desktop Wallpaper)
+
+Projemiz için özel olarak geliştirilen prosedürel görsel motoru (`src/core/banner_generator.py`), 16-Renk Sonbahar paletini, ODTÜ Bilim Ağacı Anıtı'nı ve gün batımı gökyüzünü bir araya getiren **1920×1080 Ultra HD Masaüstü Duvar Kağıdı** sentezler:
+
+<div align="center">
+  <img src="docs/banners/odtu_campus_wallpaper_1080p.png" alt="ODTÜ & KODTÜ 1080p Desktop Wallpaper" width="100%" />
+  <p><i>Masaüstü Duvar Kağıdı (1920x1080): ODTÜ Bilim Ağacı Anıtı, Alacakaranlık Halesi, Devrim Feneri ve Savrulan Verlet Yaprakları</i></p>
+</div>
+
+---
+
 ### 🌲 ODTÜ Kampüsü ve Sonbahar Mirası Oyunun Kalbinde!
 
-ODTÜ'nün insan eliyle bozkırdan yaratılan efsanevi ormanı, sonbahar aylarında kızıl akçaağaçların, altın huşların ve çam iğnelerinin eşsiz bir renk senfonisine dönüşür. Motorumuz, **ODTÜ kültürünün sembollerini** doğrudan prosedürel üretim algoritmalarına ve oynanış mekaniklerine entegre eder:
+ODTÜ'nün 1956 yılından beri insan eliyle bozkırdan yarattığı efsanevi ormanı, sonbahar aylarında kızıl akçaağaçların, altın huşların ve çam iğnelerinin eşsiz bir renk senfonisine dönüşür. Motorumuz, **ODTÜ kültürünün sembollerini** doğrudan prosedürel üretim algoritmalarına ve oynanış mekaniklerine entegre eder:
 
 1. **🗿 ODTÜ Bilim Ağacı Anıtı (`bilim_agaci` Structure):**
-   - Her prosedürel korunun başlangıç açıklığında (Starting Glade), Tamer Başoğlu'nun ikonik **ODTÜ Bilim Ağacı** heykelinin 16-bit piksel-sanatı yorumu yükselir (`32×32` piksel, dinamik meşale parıltısı ile).
+   - Her prosedürel korunun başlangıç açıklığında (Starting Glade), Tamer Başoğlu'nun 1966 tarihli ikonik **ODTÜ Bilim Ağacı** heykelinin 16-bit piksel-sanatı yorumu yükselir (`32×32` piksel, dinamik meşale parıltısı ile).
    - **Oynanış Etkisi (*ODTÜ Bilim Meşalesi Buff*):** Oyuncu Bilim Ağacı'nın $2.4$ karo yakınına geldiğinde fener ısısı saniyede **`+15.0 Warmth/sn`** hızla yenilenir ve anıttan altın sarısı (`#F5D67B`) yaprak fırtınası yayılır.
 2. **🍁 ODTÜ Kampüs Biyomları (Yalıncak, Eymir ve Devrim Korusu):**
    - İki boyutlu **Yükseklik ($E$) × Nem ($M$)** Simplex fBm matrisi, ODTÜ doğasını yansıtan 3 farklı biyom sentezler:
@@ -352,6 +374,7 @@ kodtu-autumn-procgen/
 ├── docs/
 │   ├── banners/                       # Prosedürel olarak üretilen yüksek çözünürlüklü infografik ve bannerlar
 │   │   ├── hero_odtu_kodtu_banner.png
+│   │   ├── odtu_campus_wallpaper_1080p.png  # 1920x1080 Ultra HD Masaüstü Duvar Kağıdı
 │   │   ├── pipeline_6stage_infographic.png
 │   │   ├── palette_lut_infographic.png
 │   │   ├── competitor_matrix_infographic.png

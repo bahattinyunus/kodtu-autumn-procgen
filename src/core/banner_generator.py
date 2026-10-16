@@ -21,6 +21,7 @@ if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
 import pygame
+import numpy as np
 
 from src.core.asset_builder import AssetBank
 from src.core.palette import (
@@ -548,6 +549,141 @@ def generate_competitor_infographic(out_path: Path) -> None:
     pygame.image.save(surf, str(out_path))
 
 
+def generate_odtu_campus_wallpaper(assets: AssetBank, out_path: Path) -> None:
+    """
+    Renders a stunning 1920x1080 Ultra HD Desktop Wallpaper:
+    "ODTÜ & KODTÜ: Sonbahar Bozkırından Yükselen Orman"
+    Features a sweeping sunset autumn sky with gradient dithering,
+    the brutalist ODTÜ Bilim Ağacı monument glowing at twilight, Devrim Stadium
+    autumn forest vista, Verlet foliage swirls, and authentic campus typography.
+    """
+    w, h = 1920, 1080
+    surf = pygame.Surface((w, h))
+    surf.fill(DEEP_VOID)
+
+    # 1. Sky Gradient (Sunset Crimson to Plum Dusk)
+    for y in range(h // 2):
+        t = y / (h * 0.5)
+        if t < 0.35:
+            col = PLUM_SHADOW
+        elif t < 0.65:
+            col = CRIMSON_DECAY
+        elif t < 0.85:
+            col = BURNT_AMBER
+        else:
+            col = HARVEST_GOLD
+        pygame.draw.line(surf, col, (0, y), (w, y))
+
+    # 2. Golden Sunlit Horizon & Twilight Mist
+    sun_cx, sun_cy = 960, 480
+    for r in range(320, 40, -20):
+        alpha = int(25 * (1.0 - r / 320.0))
+        glow = pygame.Surface((w, h), pygame.SRCALPHA)
+        pygame.draw.circle(glow, (*PALE_SUNBEAM, alpha), (sun_cx, sun_cy), r)
+        surf.blit(glow, (0, 0))
+
+    # 3. Distant ODTÜ Campus Forest Canopy (Multi-layered Y-Sorted Mountains & Trees)
+    tree_surfs = [
+        assets.prop_surfaces[("tree_oak", 0)],
+        assets.prop_surfaces[("tree_maple", 0)],
+        assets.prop_surfaces[("tree_birch", 0)],
+    ]
+    # Distant silhouetted hills
+    for x in range(0, w, 4):
+        hy = int(480 + 35 * math.sin(x * 0.005) + 18 * math.sin(x * 0.015))
+        pygame.draw.line(surf, WITHERED_BARK, (x, hy), (x, h))
+
+    # Midground dense autumn forest layer (scaled 4x pixel trees)
+    rng = np.random.default_rng(1956)
+    for tx in range(-40, w + 40, 24):
+        ty = int(510 + rng.uniform(-15, 60))
+        t_idx = int(rng.integers(0, 3))
+        scaled_tree = pygame.transform.scale(tree_surfs[t_idx], (96, 96))
+        surf.blit(scaled_tree, (tx, ty))
+
+    # Foreground ground plane
+    pygame.draw.rect(surf, DAMSON_MOSS, (0, 680, w, h - 680))
+    for y in range(680, h):
+        t = (y - 680) / (h - 680)
+        c = OCHRE_CLAY if t < 0.3 else (WITHERED_BARK if t < 0.7 else DEEP_VOID)
+        pygame.draw.line(surf, c, (0, y), (w, y))
+
+    # 4. Giant Majestic ODTÜ Bilim Ağacı Monument (Center Stage, 256x256 pixel art)
+    scaled_monument = pygame.transform.scale(assets.bilim_agaci_surf, (280, 280))
+    mon_x = 960 - 140
+    mon_y = 680 - 240
+    # Warm beacon aura beneath monument
+    mon_glow = pygame.Surface((w, h), pygame.SRCALPHA)
+    pygame.draw.circle(mon_glow, (*PALE_SUNBEAM, 40), (960, mon_y + 140), 220)
+    pygame.draw.circle(mon_glow, (*HARVEST_GOLD, 65), (960, mon_y + 140), 140)
+    surf.blit(mon_glow, (0, 0))
+    surf.blit(scaled_monument, (mon_x, mon_y))
+
+    # 5. Devrim Lantern & Autumn Keeper Silhouette on a rock
+    scaled_player = pygame.transform.scale(assets.player_frames_right[0], (72, 72))
+    surf.blit(scaled_player, (720, 650))
+    # Lantern flame glow
+    p_glow = pygame.Surface((w, h), pygame.SRCALPHA)
+    pygame.draw.circle(p_glow, (*PALE_SUNBEAM, 110), (748, 672), 36)
+    pygame.draw.circle(p_glow, (*HARVEST_GOLD, 50), (748, 672), 70)
+    surf.blit(p_glow, (0, 0))
+
+    # 6. Swirling Verlet Autumn Leaves in the Wind across 1920x1080 canvas
+    for i in range(120):
+        lx = int(rng.uniform(0, w))
+        ly = int(rng.uniform(300, h - 40))
+        lcol = PALE_SUNBEAM if i % 4 == 0 else (SUNLIT_BIRCH if i % 2 == 0 else COPPER_LEAF)
+        lr = int(rng.integers(3, 8))
+        pygame.draw.circle(surf, lcol, (lx, ly), lr)
+        pygame.draw.circle(surf, DEEP_VOID, (lx, ly), lr, 1)
+
+    # 7. Cinematic Branding & Typography Overlays
+    pygame.font.init()
+    f_huge = pygame.font.SysFont("segoeui,arial,verdana", 38, bold=True)
+    f_sub = pygame.font.SysFont("segoeui,arial,verdana", 20, bold=True)
+    f_quote = pygame.font.SysFont("segoeui,arial,verdana", 18, bold=True)
+    f_creds = pygame.font.SysFont("consolas,monospace", 15, bold=False)
+
+    # Top-Left ODTÜ Header Card
+    card_w, card_h = 780, 115
+    hcard = pygame.Surface((card_w, card_h), pygame.SRCALPHA)
+    hcard.fill((*DEEP_VOID, 230))
+    pygame.draw.rect(hcard, HARVEST_GOLD, (0, 0, card_w, card_h), 2, border_radius=8)
+    _draw_text_clean(hcard, f_huge, "ORTA DOĞU TEKNİK ÜNİVERSİTESİ", 28, 16, PALE_SUNBEAM, DEEP_VOID)
+    _draw_text_clean(
+        hcard, f_sub, "ODTÜ BİLGİSAYAR TOPLULUĞU (CClub)  •  KODTÜ GAME JAM 2026", 28, 70, SUNLIT_BIRCH, DEEP_VOID
+    )
+    surf.blit(hcard, (60, 50))
+
+    # Bottom-Right Specs & Quote Card
+    qcard_w, qcard_h = 780, 100
+    qcard = pygame.Surface((qcard_w, qcard_h), pygame.SRCALPHA)
+    qcard.fill((*DEEP_VOID, 235))
+    pygame.draw.rect(qcard, BURNT_AMBER, (0, 0, qcard_w, qcard_h), 2, border_radius=8)
+    _draw_text_clean(
+        qcard,
+        f_quote,
+        "'Bozkırdan yükselen bu orman, her sonbaharda küllerinden yeniden doğar.'",
+        24,
+        18,
+        PALE_SUNBEAM,
+        DEEP_VOID,
+    )
+    _draw_text_clean(
+        qcard,
+        f_creds,
+        "100% Deterministic PCG  •  16-Color Autumn Spectrum  •  Integer-Scaled Pixel Art",
+        24,
+        58,
+        HARVEST_GOLD,
+        DEEP_VOID,
+    )
+    surf.blit(qcard, (w - qcard_w - 60, h - qcard_h - 50))
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    pygame.image.save(surf, str(out_path))
+
+
 def build_all_banners() -> None:
     os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
     os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
@@ -560,8 +696,10 @@ def build_all_banners() -> None:
     generate_palette_infographic(assets, banners_dir / "palette_lut_infographic.png")
     generate_competitor_infographic(banners_dir / "competitor_matrix_infographic.png")
     generate_section_divider(banners_dir / "section_divider_autumn.png")
+    generate_odtu_campus_wallpaper(assets, banners_dir / "odtu_campus_wallpaper_1080p.png")
     pygame.quit()
 
 
 if __name__ == "__main__":
     build_all_banners()
+
