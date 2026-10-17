@@ -138,6 +138,7 @@ class EnemyAgent:
 
         self.hp = self.max_hp
         self.has_roared = False
+        self.distraction_timer = 0.0
 
     @property
     def is_enraged(self) -> bool:
@@ -177,6 +178,9 @@ class EnemyAgent:
         if self.hit_flash > 0.0:
             self.hit_flash = max(0.0, self.hit_flash - dt)
         self.shoot_cooldown = max(0.0, self.shoot_cooldown - dt)
+        self.distraction_timer = max(0.0, self.distraction_timer - dt)
+        if self.distraction_timer > 0.0:
+            return
 
         dx = player_x - self.x
         dy = player_y - self.y
@@ -300,6 +304,138 @@ class EnemyAgent:
 
 
 
+class SteppeCompanion:
+    """
+    ODTÜ Bozkır Yoldaşı (Steppe Guardian Kangal Companion):
+    A loyal campus dog companion following the player through the autumn forest.
+    - Follows player at a faithful distance (spring/steering physics).
+    - Alerts the player by barking when enemies approach or hidden relics are nearby.
+    - Can be petted ([E]) to restore +12 Warmth and trigger happy leaf bursts.
+    - Staggers or distracts nearby enemies periodically in combat.
+    """
+
+    def __init__(self, x: float, y: float, name: str = "Bozkır Kangalı") -> None:
+        self.x = x
+        self.y = y
+        self.name = name
+        self.kind = "companion"
+        self.facing_right = True
+        self.is_moving = False
+        self.anim_timer = 0.0
+        self.bark_cooldown = 0.0
+        self.alert_cooldown = 0.0
+        self.distract_cooldown = 0.0
+        self.tail_wag_timer = 0.0
+        self.pet_timer = 0.0
+        self.petted_count = 0
+        self.base_speed = 4.2
+        self.radius = 0.30
+        self.bark_alert_trigger = False
+
+    @property
+    def anim_frame(self) -> int:
+        if self.is_moving:
+            return int(self.anim_timer * 7.0) % 2
+        return 1 if self.tail_wag_timer > 0.0 and int(self.tail_wag_timer * 6.0) % 2 == 0 else 0
+
+    def pet(self, player: Optional[Any] = None) -> bool:
+        """[E] Interactively pet the companion, boosting morale and warmth."""
+        self.petted_count += 1
+        self.tail_wag_timer = 3.5
+        self.pet_timer = 1.2
+        if player is not None:
+            player.warmth = min(player.max_warmth, player.warmth + 12.0)
+            if hasattr(player, "pets_count"):
+                player.pets_count += 1
+        return True
+
+    def update(
+        self,
+        dt: float,
+        player_x: float = 0.0,
+        player_y: float = 0.0,
+        enemies: Optional[List[EnemyAgent]] = None,
+        spatial_hash: Optional[ChunkSpatialHash] = None,
+        target_x: Optional[float] = None,
+        target_y: Optional[float] = None,
+    ) -> Tuple[bool, bool, Optional[str]]:
+        """
+        Updates companion position, barking alerts, and combat support.
+        Returns (did_bark, did_distract_enemy, alert_message).
+        """
+        if target_x is not None:
+            player_x = target_x
+        if target_y is not None:
+            player_y = target_y
+        if enemies is None:
+            enemies = []
+
+        self.bark_cooldown = max(0.0, self.bark_cooldown - dt)
+        self.alert_cooldown = max(0.0, self.alert_cooldown - dt)
+        self.distract_cooldown = max(0.0, self.distract_cooldown - dt)
+        self.tail_wag_timer = max(0.0, self.tail_wag_timer - dt)
+        self.pet_timer = max(0.0, self.pet_timer - dt)
+        self.bark_alert_trigger = False
+
+        # 1. Follow Player Behavior
+        dx = player_x - self.x
+        dy = player_y - self.y
+        dist = math.hypot(dx, dy)
+
+        did_bark = False
+        did_distract = False
+        alert_msg: Optional[str] = None
+
+        target_follow_dist = 1.6
+        if dist > target_follow_dist:
+            self.is_moving = True
+            self.anim_timer += dt
+            speed_mult = 1.55 if dist > 4.0 else (1.20 if dist > 2.5 else 1.0)
+            step = min(dist - target_follow_dist, self.base_speed * speed_mult * dt)
+            nx_dir = dx / max(1e-5, dist)
+            ny_dir = dy / max(1e-5, dist)
+
+            if abs(nx_dir) > 0.05:
+                self.facing_right = nx_dir > 0.0
+
+            cand_x = self.x + nx_dir * step
+            cand_y = self.y + ny_dir * step
+            if spatial_hash is not None:
+                rx, ry, _ = spatial_hash.resolve_circle_collision(cand_x, cand_y, self.radius)
+                self.x, self.y = rx, ry
+            else:
+                self.x, self.y = cand_x, cand_y
+        else:
+            self.is_moving = False
+
+        # 2. Alert Bark on Approaching Enemies (within 5.5 tiles)
+        nearby_threats = [
+            en for en in enemies if en.alive and math.hypot(en.x - self.x, en.y - self.y) <= 5.5
+        ]
+        if nearby_threats and self.bark_cooldown <= 0.0 and self.alert_cooldown <= 0.0:
+            self.bark_cooldown = 7.0
+            self.alert_cooldown = 7.0
+            self.tail_wag_timer = 2.0
+            self.bark_alert_trigger = True
+            did_bark = True
+            alert_msg = "HAV! 🐾 YOLDAŞ TEHLİKEYİ SEZDİ!"
+
+        # 3. Combat Distraction / Stagger on Closest Enemy (within 2.2 tiles)
+        close_threats = [
+            en for en in enemies if en.alive and math.hypot(en.x - self.x, en.y - self.y) <= 2.2
+        ]
+        if close_threats and self.distract_cooldown <= 0.0:
+            target = min(close_threats, key=lambda en: math.hypot(en.x - self.x, en.y - self.y))
+            self.distract_cooldown = 7.5
+            target.distraction_timer = 2.0
+            target.apply_hit(3, self.x, self.y, knockback=7.0)
+            did_distract = True
+            did_bark = True
+            alert_msg = f"🐾 {self.name.upper()} ATILDI! (-3 DARBE)"
+
+        return did_bark, did_distract, alert_msg
+
+
 class Player:
     """
     The Autumn Keeper controlled by the user.
@@ -328,6 +464,7 @@ class Player:
         self.acorns_collected = 0
         self.enemies_defeated = 0
         self.orbs_deflected = 0
+        self.pets_count = 0
 
         # Hyper Light Drifter style Ranged Solar Bolt ammo (recharged by melee hits & time)
         self.max_solar_bolts = 4

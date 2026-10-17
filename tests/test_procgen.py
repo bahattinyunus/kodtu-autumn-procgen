@@ -1168,6 +1168,137 @@ def test_chronicle_ledger_modal_and_ritual_halo() -> None:
     game.render()
 
 
+def test_steppe_companion_kangal_and_bark_synthesis() -> None:
+    """
+    Verifies:
+    1. Procedural synthesizers for companion bark and leaf scatter generate valid audio buffers.
+    2. SteppeCompanion follows the player, updates animations, and alerts with barking when enemies approach.
+    3. Enemy distraction occurs when enemies enter companion distraction radius.
+    4. Petting the companion ([E]) grants +12 warmth, triggers pet animation, increments player.pets_count,
+       and unlocks the COMPANION_FRIEND achievement.
+    """
+    from src.core.audio_synth import synth_companion_bark, synth_leaf_scatter
+    from src.entities.actors import SteppeCompanion, EnemyAgent, Player
+    from src.main import AutumnProcGenGame
+
+    # 1. Procedural audio synthesis validation
+    bark_wav = synth_companion_bark()
+    assert isinstance(bark_wav, np.ndarray) and len(bark_wav) > 1000
+    assert float(np.max(np.abs(bark_wav))) > 0.05
+
+    scatter_wav = synth_leaf_scatter()
+    assert isinstance(scatter_wav, np.ndarray) and len(scatter_wav) > 1000
+    assert float(np.max(np.abs(scatter_wav))) > 0.05
+
+    # 2. SteppeCompanion movement and steering physics
+    player = Player(x=10.0, y=10.0)
+    companion = SteppeCompanion(x=10.0, y=10.0)
+    assert companion.kind == "companion"
+    assert companion.pet_timer == 0.0
+
+    # Companion stays close when distance is small
+    companion.update(dt=0.1, target_x=10.5, target_y=10.0, enemies=[], spatial_hash=None)
+    assert companion.is_moving is False
+
+    # Companion chases when player runs far ahead
+    companion.update(dt=0.2, target_x=16.0, target_y=10.0, enemies=[], spatial_hash=None)
+    assert companion.is_moving is True
+    assert companion.x > 10.0
+
+    # 3. Enemy alert barking and combat distraction
+    enemy = EnemyAgent(x=12.0, y=10.0, kind="wolf")
+    companion.alert_cooldown = 0.0
+    companion.update(dt=0.1, target_x=10.0, target_y=10.0, enemies=[enemy], spatial_hash=None)
+    assert companion.bark_alert_trigger is True
+    assert enemy.distraction_timer > 0.0
+
+    # 4. Interactive petting mechanic
+    player.warmth = 40.0
+    player.pets_count = 0
+    petted = companion.pet(player)
+    assert petted is True
+    assert player.warmth == 52.0  # +12 warmth
+    assert player.pets_count == 1
+    assert companion.pet_timer > 0.0
+
+    # 5. In-game integration test with AutumnProcGenGame
+    game = AutumnProcGenGame(initial_seed="KANGAL-TEST-SEED", debug_procgen=False, headless=True)
+    assert hasattr(game, "companion") and isinstance(game.companion, SteppeCompanion)
+
+    # Place companion next to player away from any structure and interact
+    game.player.x = 25.0
+    game.player.y = 25.0
+    game.companion.x = 25.5
+    game.companion.y = 25.0
+    game.companion.pet_timer = 0.0
+    start_pets = game.player.pets_count
+    game._try_interact_action()
+    assert game.player.pets_count == start_pets + 1
+    assert "COMPANION_FRIEND" in game.story.unlocked_achievements
+
+
+def test_bozkir_achievements_system_and_leaf_pile_scattering() -> None:
+    """
+    Verifies:
+    1. Bozkir Achievements registry contains all 8 defined campus milestones.
+    2. StoryManager.unlock_achievement records progress without duplicates.
+    3. Destroying leaf piles via attack or gust dash scatters leaves and unearths bonus resources.
+    4. Headless rendering of game frame and ledger modal with companion and achievements.
+    """
+    from src.core.story import ACHIEVEMENT_REGISTRY, StoryManager
+    from src.procgen.poisson import PropPlacement
+    from src.core.spatial_hash import CHUNK_SIZE_TILES
+    from src.main import AutumnProcGenGame
+
+    # 1. Registry validation
+    assert len(ACHIEVEMENT_REGISTRY) == 8
+    expected_keys = {
+        "FIRST_DEFLECT", "PERFECT_PARRY", "COMPANION_FRIEND", "BILIM_CEREMONY",
+        "STEPPE_ALCHEMY", "BLADE_DANCE", "DEVRIM_OVERDRIVE", "CHRONICLE_HISTORIAN"
+    }
+    assert {ach.key for ach in ACHIEVEMENT_REGISTRY} == expected_keys
+
+    # 2. StoryManager unlock mechanics
+    story = StoryManager()
+    ach = story.unlock_achievement("FIRST_DEFLECT")
+    assert ach is not None
+    assert ach.key == "FIRST_DEFLECT"
+    assert "FIRST_DEFLECT" in story.unlocked_achievements
+
+    # Duplicate unlock returns None
+    assert story.unlock_achievement("FIRST_DEFLECT") is None
+    assert len(story.unlocked_achievements) == 1
+
+    # 3. Leaf pile scattering and gust dash destruction
+    game = AutumnProcGenGame(initial_seed="EYMIR-SCATTER-TEST", debug_procgen=False, headless=True)
+    leaf_drift = PropPlacement(
+        x=game.player.x + 0.6,
+        y=game.player.y + 0.2,
+        prop_type="leaf_pile",
+        solid=False,
+        biome=1,
+        variant=0,
+    )
+    chx = int(leaf_drift.x) // CHUNK_SIZE_TILES
+    chy = int(leaf_drift.y) // CHUNK_SIZE_TILES
+    game.spatial_hash.chunk_props[(chx, chy)].append(leaf_drift)
+    initial_decor_count = len(game.spatial_hash.chunk_props[(chx, chy)])
+
+    # Smash prop
+    game._smash_nearby_props(game.player.x, game.player.y, radius=1.5)
+    assert len(game.spatial_hash.chunk_props[(chx, chy)]) == initial_decor_count - 1
+
+    # 4. Headless rendering coverage with companion and ledger modal
+    game.hud.ledger_modal_open = True
+    game.story.unlock_achievement("COMPANION_FRIEND")
+    game.story.unlock_achievement("BILIM_CEREMONY")
+    game.render()
+
+    game.hud.ledger_modal_open = False
+    game.render()
+
+
+
 
 
 

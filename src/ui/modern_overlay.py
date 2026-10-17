@@ -883,7 +883,7 @@ class ModernStoryOverlay:
         stat_h = 76
         stats = [
             ("ANIT & KİTABELER", f"{getattr(story, 'steles_read', 0)} Okundu • {'HALELİ' if getattr(player, 'bilim_ritual_timer', 0.0) > 0.0 else 'HAZIR'}", PALE_SUNBEAM),
-            ("SİMYA DÖNÜŞÜMÜ", f"{getattr(player, 'transmute_count', 0)} Palamut Sentezi", SUNLIT_BIRCH),
+            ("BOZKIR YOLDAŞI", f"{getattr(player, 'pets_count', 0)} Kez Sevildi • Sadık Dost", SUNLIT_BIRCH),
             ("KUSURSUZ PARRİ", f"{getattr(player, 'perfect_parries', 0)} Parri / {player.orbs_deflected} Deflect", HARVEST_GOLD),
             ("BOZKIR SAVAŞI", f"{player.enemies_defeated} İnfaz • {player.combo_hits_max} Max Kombo", RUST_TERRACOTTA),
         ]
@@ -926,7 +926,8 @@ class ModernStoryOverlay:
         rsurf.fill((*DEEP_VOID, 230))
         pygame.draw.rect(rsurf, WITHERED_BARK, (0, 0, rw, rh), 1, border_radius=8)
 
-        lbl_rt = self.f_small.render("🗺️ KODTÜ RESMİ SEFER TOHUMLARI LİSTESİ ([TAB] ile Girin)", True, HARVEST_GOLD)
+        ach_count = len(getattr(story, "unlocked_achievements", set()))
+        lbl_rt = self.f_small.render(f"🗺️ KODTÜ RESMİ SEFER TOHUMLARI & 🏆 BOZKIR BAŞARIMLARI ({ach_count}/8 Açıldı)", True, HARVEST_GOLD)
         rsurf.blit(lbl_rt, (16, 8))
 
         curated = [

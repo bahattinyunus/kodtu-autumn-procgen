@@ -445,6 +445,52 @@ def synth_distant_thunder() -> np.ndarray:
     return wave
 
 
+def synth_companion_bark() -> np.ndarray:
+    """
+    Synthesizes a warm, cheerful, resonant canine bark for the ODTÜ Bozkır Kangalı companion.
+    Two quick acoustic pulses with formant harmonics decaying rapidly.
+    """
+    duration = int(SAMPLE_RATE * 0.28)
+    wave = np.zeros(duration, dtype=np.float32)
+    pulses = [(0.0, 0.12, 1.0), (0.13, 0.14, 0.65)]
+    for start_t, pulse_len, amp in pulses:
+        idx_start = int(start_t * SAMPLE_RATE)
+        sub_len = int(pulse_len * SAMPLE_RATE)
+        if idx_start + sub_len > duration:
+            sub_len = duration - idx_start
+        if sub_len <= 0:
+            continue
+        t = np.linspace(0.0, pulse_len, sub_len, endpoint=False)
+        freq = 220.0 - 80.0 * (t / pulse_len)
+        phase = 2.0 * np.pi * np.cumsum(freq) / SAMPLE_RATE
+        env = (t / 0.015) * np.exp(-t * 28.0)
+        env = np.clip(env, 0.0, 1.0) * np.exp(-t * 18.0)
+        bark = (
+            np.sin(phase)
+            + 0.55 * np.sin(2.0 * phase)
+            + 0.25 * np.sin(3.0 * phase)
+            + 0.12 * np.sin(4.0 * phase)
+        )
+        noise = np.random.uniform(-0.15, 0.15, sub_len)
+        wave[idx_start : idx_start + sub_len] += (bark + noise) * env * (amp * 0.45)
+    return wave
+
+
+def synth_leaf_scatter() -> np.ndarray:
+    """
+    Synthesizes a rich, multi-layered dry foliage whoosh and scatter crunch
+    when kicking through or destroying deep autumn leaf drifts.
+    """
+    duration = int(SAMPLE_RATE * 0.36)
+    t = np.linspace(0.0, 0.36, duration, endpoint=False)
+    whoosh = np.sin(2.0 * np.pi * 120.0 * t) * np.exp(-t * 9.0)
+    crackle_1 = np.random.uniform(-0.4, 0.4, duration) * np.exp(-t * 12.0)
+    crackle_2 = np.random.uniform(-0.3, 0.3, duration) * np.exp(-((t - 0.08) ** 2) / 0.015)
+    env = np.sin(np.pi * (t / 0.36)) ** 0.65
+    wave = (whoosh * 0.35 + crackle_1 * 0.45 + crackle_2 * 0.35) * env * 0.50
+    return wave
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -474,6 +520,8 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "spring_splash": audio_dir / "spring_splash.wav",
         "bilim_chime": audio_dir / "bilim_chime.wav",
         "distant_thunder": audio_dir / "distant_thunder.wav",
+        "companion_bark": audio_dir / "companion_bark.wav",
+        "leaf_scatter": audio_dir / "leaf_scatter.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -526,6 +574,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["bilim_chime"], synth_bilim_chime())
     if not files["distant_thunder"].exists():
         _save_wav_int16(files["distant_thunder"], synth_distant_thunder())
+    if not files["companion_bark"].exists():
+        _save_wav_int16(files["companion_bark"], synth_companion_bark())
+    if not files["leaf_scatter"].exists():
+        _save_wav_int16(files["leaf_scatter"], synth_leaf_scatter())
 
     return files
 

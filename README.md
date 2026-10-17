@@ -18,7 +18,7 @@
 [![Palette: Sonbahar](https://img.shields.io/badge/Renk_Paleti-16--Renk_Sonbahar_LUT-F5D67B?style=for-the-badge&labelColor=1A1118)](#bolum-5)
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
-[![Tests: 36/36 Passed](https://img.shields.io/badge/Pytest_Suite-36%2F36_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Tests: 38/38 Passed](https://img.shields.io/badge/Pytest_Suite-38%2F38_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -345,7 +345,7 @@ Her Hasat Reliği bulunduğunda ODTÜ efsanelerinden ilham alan 5 kalıcı kutsa
 | **`G`** | **Bozkır Simyası** | Ateş/Tapınak yanında 2 palamudu kalıcı stat artışına dönüştürür |
 | **`N`** | **Taktik Bozkır Haritası** | 56x42 tam ekran topoğrafik kartografya modalını açar/kapatır |
 | **`SHIFT`** | **Gust Dash** | Hayalet izli hızlı atılma, 0.22s hasar dokunulmazlığı |
-| **`E`** | **Etkileşim & Bilim Ayini** | **Bilim Ağacı Ayini (30s halo & tam ısı)**, Kitabe okuma, Kamp ateşi közleme, Şifa Pınarı, Tapınak geçişi |
+| **`E`** | **Etkileşim & Yoldaş Sevme** | **Bozkır Kangalı Sevme (+12 Isı & Moral)**, **Bilim Ağacı Ayini (30s halo & tam ısı)**, Kitabe okuma, Kamp ateşi közleme, Şifa Pınarı, Tapınak geçişi |
 | **`J`** | **ODTÜ Sefer Günlüğü** | **Run Chronicles Modalı**: Canlı Akademik Onur Notu (S/A/B/C), parri, simya, kitabe metrikleri |
 | **`P`** | **Oyunu Duraklat** | Simülasyonu dondurur ve duraklatma menüsü overlay'ini açar |
 | **`U`** | **Sesi Aç / Kapat** | Master ses ve fon müziği sessize alma (Mute toggle) |
@@ -482,9 +482,9 @@ python src/main.py --seed "METU-BILIM-AGACI"
 python src/main.py --seed "KODTU-2026-EYMIR"
 ```
 
-### 🧪 3. 36/36 Otomatik Test Paketi & GitHub Actions CI (`pytest`)
+### 🧪 3. 38/38 Otomatik Test Paketi & GitHub Actions CI (`pytest`)
 
-Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü flurry efektlerini, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane dinlenmesini, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Kesintisiz Saga İlerlemesini, Ses/Müzik Mute ve Ses Seviyesi kontrollerini, Kadim Boss Yenilgi Ganimeti & Ayaz Diriliş mekaniğini, ODTÜ Devrim Overdrive alevli güç modunu (`test_devrim_overdrive_mode_and_audio_synthesis`), Bozkır Simyası & Taktik Kartografya modalını (`test_steppe_alchemy_and_tactical_map_modal`), Bozkır Kuzgunu hava yırtıcısı & çığlık sentezini (`test_steppe_raven_enemy_and_screech_synthesis`), Eymir Şifa Pınarı etkileşimini (`test_eymir_spring_structure_and_healing`), Mükemmel Savurma & ODTÜ Akademik Onur Derecelendirmesini (`test_perfect_parry_and_academic_grade_evaluator`), Bilim Ağacı Ayini & Uzak Gök Gürültüsü Sentezini (`test_bilim_agaci_ceremony_and_thunder_synthesis`), Sefer Günlüğü & Ayin Halesi Modallarını (`test_chronicle_ledger_modal_and_ritual_halo`), 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
+Tüm topolojik garantileri, sıfır çıkmaz sokak kuralını, Poisson Disk mavi-gürültü yarıçaplarını, ODTÜ Bilim Ağacı ve Kitabeleri etkileşimini, Bozkır Kurdu AI davranışını, Dinamik Hava Sistemi döngüsünü, mermi yansıtma (`DEFLECT!`) mekaniğini, Prosedürel Sonbahar Melodisi sentezini, Bozkır Kılıç Dansı kombo bitiricisini & 4-yönlü flurry efektlerini, 2-Aşamalı Öfkeli Muhafız boss savaşını & parıldayan altın boynuz aurasını, Közde Kestane dinlenmesini, METU CClub & Altuğ Bilgin Altıntaş kitabelerini, 5-Bölümlük Kesintisiz Saga İlerlemesini, Ses/Müzik Mute ve Ses Seviyesi kontrollerini, Kadim Boss Yenilgi Ganimeti & Ayaz Diriliş mekaniğini, ODTÜ Devrim Overdrive alevli güç modunu (`test_devrim_overdrive_mode_and_audio_synthesis`), Bozkır Simyası & Taktik Kartografya modalını (`test_steppe_alchemy_and_tactical_map_modal`), Bozkır Kuzgunu hava yırtıcısı & çığlık sentezini (`test_steppe_raven_enemy_and_screech_synthesis`), Eymir Şifa Pınarı etkileşimini (`test_eymir_spring_structure_and_healing`), Mükemmel Savurma & ODTÜ Akademik Onur Derecelendirmesini (`test_perfect_parry_and_academic_grade_evaluator`), Bilim Ağacı Ayini & Uzak Gök Gürültüsü Sentezini (`test_bilim_agaci_ceremony_and_thunder_synthesis`), Sefer Günlüğü & Ayin Halesi Modallarını (`test_chronicle_ledger_modal_and_ritual_halo`), ODTÜ Bozkır Yoldaşı Kangal & Havlama Sentezini (`test_steppe_companion_kangal_and_bark_synthesis`), Bozkır Başarımları Sistemi & Yaprak Yığını Dağılmasını (`test_bozkir_achievements_system_and_leaf_pile_scattering`), 1280x720 Modern HD arayüzü ve 16-renk Sonbahar LUT uyumunu doğrulayan testleri çalıştırın:
 
 ```bash
 pytest tests/ -v
@@ -493,38 +493,40 @@ pytest tests/ -v
 ```text
 tests/test_procgen.py::test_seed_serialization_and_xoshiro256_determinism PASSED       [  2%]
 tests/test_procgen.py::test_multi_octave_simplex_fbm_bounds PASSED                     [  5%]
-tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 19%]
-tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 22%]
-tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 25%]
-tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 27%]
-tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 30%]
-tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 33%]
-tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 36%]
-tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 38%]
-tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 41%]
-tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 44%]
-tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 47%]
-tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 50%]
-tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 52%]
-tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 55%]
-tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 58%]
-tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 61%]
-tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 63%]
-tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 66%]
-tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 69%]
-tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [ 72%]
-tests/test_procgen.py::test_continuous_five_chapter_saga_and_ci_contract PASSED       [ 75%]
-tests/test_procgen.py::test_audio_mute_toggle_volume_and_pause_modal_control PASSED   [ 77%]
-tests/test_procgen.py::test_boss_defeat_cinematic_drop_and_frost_respawn PASSED       [ 80%]
-tests/test_procgen.py::test_devrim_overdrive_mode_and_audio_synthesis PASSED          [ 83%]
-tests/test_procgen.py::test_steppe_alchemy_and_tactical_map_modal PASSED              [ 86%]
-tests/test_procgen.py::test_steppe_raven_enemy_and_screech_synthesis PASSED          [ 88%]
-tests/test_procgen.py::test_eymir_spring_structure_and_healing PASSED                 [ 91%]
-tests/test_procgen.py::test_perfect_parry_and_academic_grade_evaluator PASSED         [ 94%]
-tests/test_procgen.py::test_bilim_agaci_ceremony_and_thunder_synthesis PASSED         [ 97%]
-tests/test_procgen.py::test_chronicle_ledger_modal_and_ritual_halo PASSED             [100%]
+tests/test_procgen.py::test_topology_single_component_connectivity_and_dijkstra[...]  [ 18%]
+tests/test_procgen.py::test_47_tile_blob_autotiling_lut PASSED                        [ 21%]
+tests/test_procgen.py::test_poisson_disk_sampling_exclusion_zone PASSED                [ 23%]
+tests/test_procgen.py::test_full_world_pipeline_determinism PASSED                     [ 26%]
+tests/test_procgen.py::test_autumn_chromatic_palette_compliance PASSED                 [ 28%]
+tests/test_procgen.py::test_headless_engine_and_debug_overlays PASSED                 [ 31%]
+tests/test_procgen.py::test_astar_and_procedural_structures PASSED                     [ 34%]
+tests/test_procgen.py::test_odtu_bilim_agaci_monument_and_curated_seeds PASSED         [ 36%]
+tests/test_procgen.py::test_solar_bolts_boons_and_orb_deflection PASSED                [ 39%]
+tests/test_procgen.py::test_destructible_props_and_codex_modal PASSED                  [ 42%]
+tests/test_procgen.py::test_story_manager_and_modern_hd_overlay PASSED                 [ 44%]
+tests/test_procgen.py::test_historical_kitabeler_and_victory_epilogue PASSED           [ 47%]
+tests/test_procgen.py::test_wolf_enemy_and_new_audio_synthesis PASSED                  [ 50%]
+tests/test_procgen.py::test_atmospheric_weather_system_and_minimap_enhancements PASSED [ 52%]
+tests/test_procgen.py::test_procedural_soundtrack_and_blade_dance_combo PASSED         [ 55%]
+tests/test_procgen.py::test_enraged_warden_boss_and_campfire_roasting PASSED          [ 57%]
+tests/test_procgen.py::test_blade_dance_visual_vfx_and_enraged_warden_aura PASSED     [ 60%]
+tests/test_procgen.py::test_cclub_and_altug_kitabe_inscriptions PASSED                [ 63%]
+tests/test_procgen.py::test_five_chapters_story_progression PASSED                     [ 65%]
+tests/test_procgen.py::test_boss_roar_and_parry_spark_synthesizers PASSED             [ 68%]
+tests/test_procgen.py::test_continuous_five_chapter_saga_and_ci_contract PASSED       [ 71%]
+tests/test_procgen.py::test_audio_mute_toggle_volume_and_pause_modal_control PASSED   [ 73%]
+tests/test_procgen.py::test_boss_defeat_cinematic_drop_and_frost_respawn PASSED       [ 76%]
+tests/test_procgen.py::test_devrim_overdrive_mode_and_audio_synthesis PASSED          [ 78%]
+tests/test_procgen.py::test_steppe_alchemy_and_tactical_map_modal PASSED              [ 81%]
+tests/test_procgen.py::test_steppe_raven_enemy_and_screech_synthesis PASSED          [ 84%]
+tests/test_procgen.py::test_eymir_spring_structure_and_healing PASSED                 [ 86%]
+tests/test_procgen.py::test_perfect_parry_and_academic_grade_evaluator PASSED         [ 89%]
+tests/test_procgen.py::test_bilim_agaci_ceremony_and_thunder_synthesis PASSED         [ 92%]
+tests/test_procgen.py::test_chronicle_ledger_modal_and_ritual_halo PASSED             [ 94%]
+tests/test_procgen.py::test_steppe_companion_kangal_and_bark_synthesis PASSED         [ 97%]
+tests/test_procgen.py::test_bozkir_achievements_system_and_leaf_pile_scattering PASSED [100%]
 
-============================= 36 passed in 4.81s ==============================
+============================= 38 passed in 4.97s ==============================
 ```
 
 #### 📦 Paket Kurulumu (`pyproject.toml`):

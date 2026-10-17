@@ -38,11 +38,12 @@ from src.entities.actors import (
     FloatingText,
     Projectile,
     DashGhost,
+    SteppeCompanion,
     spawn_world_entities,
 )
 from src.procgen.noise import compute_wind_vector_field
 from src.procgen.pipeline import generate_autumn_world, WorldData
-from src.procgen.prng import Xoshiro256StarStar, format_seed_code
+from src.procgen.prng import Xoshiro256StarStar, format_seed_code, hash_coords_2d
 from src.rendering.particles import VerletLeafSystem
 from src.rendering.renderer import (
     WorldRenderer,
@@ -161,6 +162,7 @@ class AutumnProcGenGame:
 
         sx, sy = self.world.spawn_tile
         self.player = Player(float(sx) + 0.5, float(sy) + 0.5)
+        self.companion = SteppeCompanion(float(sx) + 1.2, float(sy) + 0.6, name="Bozkır Kangalı")
         if depth_level > 1 and prev_boons:
             for _ in range(len(prev_boons)):
                 self.player.grant_next_boon()
@@ -495,23 +497,41 @@ class AutumnProcGenGame:
             px_y = self.player.y * TILE_SIZE
             self.leaf_system.spawn_burst(px_x, px_y, count=12, golden_bias=True)
             self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=36.0, strength=2.4)
+            self._smash_nearby_props(self.player.x, self.player.y, 1.25)
 
     def _smash_nearby_props(self, cx: float, cy: float, radius: float) -> None:
-        """Destroys nearby pumpkins/shrubs/leaf piles and drops Golden Acorns from pumpkins."""
+        """Destroys nearby pumpkins/shrubs/leaf piles, unearthing acorns, embers, and whooshing leaf drifts."""
         destroyed = self.spatial_hash.destroy_destructible_props(cx, cy, radius)
         for prop in destroyed:
-            self.sound.play_leaf_crunch()
-            self.leaf_system.spawn_burst(
-                prop.x * TILE_SIZE,
-                prop.y * TILE_SIZE,
-                count=14 if prop.prop_type == "pumpkin" else 8,
-                golden_bias=(prop.prop_type == "pumpkin"),
-            )
-            if prop.prop_type == "pumpkin":
-                self.items.append(
-                    CollectibleItem(x=prop.x, y=prop.y, kind="acorn", bob_phase=prop.x)
+            if prop.prop_type == "leaf_pile":
+                self.sound.play("leaf_scatter")
+                self.leaf_system.spawn_burst(
+                    prop.x * TILE_SIZE, prop.y * TILE_SIZE, count=24, golden_bias=True
                 )
-                self.spawn_floating_text(prop.x, prop.y - 0.3, "+ACORN DROP!", HARVEST_GOLD)
+                self.leaf_system.apply_radial_impulse(
+                    prop.x * TILE_SIZE, prop.y * TILE_SIZE, radius_px=48.0, strength=3.4
+                )
+                if hash_coords_2d(int(prop.x * 10), int(prop.y * 10), 0xC001) % 100 < 35:
+                    self.items.append(
+                        CollectibleItem(x=prop.x, y=prop.y, kind="acorn", bob_phase=prop.x)
+                    )
+                    self.spawn_floating_text(prop.x, prop.y - 0.3, "+GİZLİ PALAMUT!", HARVEST_GOLD)
+                else:
+                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 4.0)
+                    self.spawn_floating_text(prop.x, prop.y - 0.3, "+4 YAPRAK KÖZÜ", PALE_SUNBEAM)
+            else:
+                self.sound.play_leaf_crunch()
+                self.leaf_system.spawn_burst(
+                    prop.x * TILE_SIZE,
+                    prop.y * TILE_SIZE,
+                    count=14 if prop.prop_type == "pumpkin" else 8,
+                    golden_bias=(prop.prop_type == "pumpkin"),
+                )
+                if prop.prop_type == "pumpkin":
+                    self.items.append(
+                        CollectibleItem(x=prop.x, y=prop.y, kind="acorn", bob_phase=prop.x)
+                    )
+                    self.spawn_floating_text(prop.x, prop.y - 0.3, "+ACORN DROP!", HARVEST_GOLD)
 
     def _deflect_nearby_orbs(self, radius: float) -> None:
         """Deflects incoming enemy Twilight Orbs back at 1.6x speed and 2x damage."""
@@ -526,6 +546,10 @@ class AutumnProcGenGame:
                 proj.damage = 6 if self.player.has_boon("EYMIR_REFLECT") else 5
                 proj.lifetime = 1.8
                 self.player.orbs_deflected += 1
+                ach = self.story.unlock_achievement("FIRST_DEFLECT")
+                if ach:
+                    self.sound.play("level_up")
+                    self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=3.8)
                 self.player.recharge_bolt_on_melee()
                 if self.player.has_boon("EYMIR_REFLECT"):
                     self.player.warmth = min(self.player.max_warmth, self.player.warmth + 6.0)
@@ -637,6 +661,10 @@ class AutumnProcGenGame:
         self.spawn_floating_text(
             self.player.x, self.player.y - 0.6, "BOZKIR KILIÇ DANSI!", PALE_SUNBEAM
         )
+        ach = self.story.unlock_achievement("BLADE_DANCE")
+        if ach:
+            self.sound.play("level_up")
+            self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
 
         # Multi-hit omnidirectional slash flurry
         self._deflect_nearby_orbs(3.4)
@@ -664,6 +692,10 @@ class AutumnProcGenGame:
             self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=80.0, strength=5.5)
             self.spawn_floating_text(self.player.x, self.player.y - 0.7, "🔥 DEVRİM OVERDRIVE!", PALE_SUNBEAM)
             self.hud.show_banner("🔥 ODTÜ DEVRİM OVERDRIVE! HIZ +35%, ÇİFT HASAR & MENZİL!", duration=3.5)
+            ach = self.story.unlock_achievement("DEVRIM_OVERDRIVE")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
             self._deflect_nearby_orbs(3.2)
             self._smash_nearby_props(self.player.x, self.player.y, 2.8)
         else:
@@ -710,6 +742,10 @@ class AutumnProcGenGame:
             self.leaf_system.apply_radial_impulse(px_x, px_y, radius_px=60.0, strength=3.8)
             self.spawn_floating_text(self.player.x, self.player.y - 0.6, f"+{res}!", PALE_SUNBEAM)
             self.hud.show_banner(f"🔮 BOZKIR SİMYASI ({site_name}): {res}", duration=3.8)
+            ach = self.story.unlock_achievement("STEPPE_ALCHEMY")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
         else:
             self.spawn_floating_text(
                 self.player.x,
@@ -719,7 +755,7 @@ class AutumnProcGenGame:
             )
 
     def _try_interact_action(self) -> None:
-        """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele, Campfire, Spring, Bilim Ağacı or Shrine."""
+        """[E] Interacts with Historical Kitabeler, Campfire, Spring, Bilim Ağacı, Shrine, or Steppe Kangal Companion."""
         closest_st = None
         closest_idx = -1
         closest_dist = 999.0
@@ -744,6 +780,11 @@ class AutumnProcGenGame:
                 self.leaf_system.spawn_burst(
                     kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
                 )
+                if len(self.story.read_kitabes) >= 3:
+                    ach = self.story.unlock_achievement("CHRONICLE_HISTORIAN")
+                    if ach:
+                        self.sound.play("level_up")
+                        self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
                 return
             elif st.structure_type == "campfire":
                 cx, cy = st.tile_x + 0.5, st.tile_y + 0.5
@@ -786,12 +827,34 @@ class AutumnProcGenGame:
                 self.leaf_system.spawn_burst(bx * TILE_SIZE, by * TILE_SIZE, count=36, golden_bias=True)
                 self.hud.show_banner("ODTÜ BİLİM AĞACI AYİNİ AKTİF! (30s BİLİM HALESİ & TAM ISI)", duration=4.0)
                 self.spawn_floating_text(bx, by - 0.7, "BİLİM AĞACI HARLANDI!", PALE_SUNBEAM)
+                ach = self.story.unlock_achievement("BILIM_CEREMONY")
+                if ach:
+                    self.sound.play("level_up")
+                    self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
                 return
 
         # 2. Check Shrine
-        self._try_interact_shrine()
+        if self._try_interact_shrine():
+            return
 
-    def _try_interact_shrine(self) -> None:
+        # 3. Check proximity to Steppe Kangal Companion
+        if hasattr(self, "companion") and self.companion is not None:
+            comp_dist = math.hypot(self.player.x - self.companion.x, self.player.y - self.companion.y)
+            if comp_dist <= 1.8:
+                self.companion.pet(self.player)
+                self.sound.play("companion_bark")
+                self.leaf_system.spawn_burst(
+                    self.companion.x * TILE_SIZE, self.companion.y * TILE_SIZE, count=24, golden_bias=True
+                )
+                self.spawn_floating_text(self.companion.x, self.companion.y - 0.5, "SEVİLDİ! <3", PALE_SUNBEAM)
+                self.hud.show_banner("🐾 BOZKIR KANGALI SEVİLDİ! (+12 ISI & SADIK DOST ENERJİSİ)", duration=3.2)
+                ach = self.story.unlock_achievement("COMPANION_FRIEND")
+                if ach:
+                    self.sound.play("level_up")
+                    self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
+                return
+
+    def _try_interact_shrine(self) -> bool:
         sx, sy = self.world.shrine_tile
         dist = math.hypot(self.player.x - (sx + 0.5), self.player.y - (sy + 0.5))
         if dist <= 2.2:
@@ -812,6 +875,8 @@ class AutumnProcGenGame:
             else:
                 rem = self.world.total_relics - self.player.relics_collected
                 self.hud.show_banner(f"KADİM TAPINAK UYKUDA: {rem} ANILIK KRİSTAL DAHA GEREKLİ")
+            return True
+        return False
 
     def update(self, dt: float) -> None:
         self.time_sec += dt
@@ -883,6 +948,18 @@ class AutumnProcGenGame:
         stepped_leaves, stepped_mud = self.player.update(
             dt, mx, my, self.spatial_hash, self.world.biome_grid, self.dash_ghosts
         )
+
+        # Update Steppe Kangal Companion
+        if hasattr(self, "companion"):
+            did_bark, did_distract, alert_msg = self.companion.update(
+                dt, self.player.x, self.player.y, self.enemies, self.spatial_hash
+            )
+            if did_bark:
+                self.sound.play("companion_bark")
+            if alert_msg:
+                self.spawn_floating_text(
+                    self.companion.x, self.companion.y - 0.5, alert_msg, SUNLIT_BIRCH
+                )
 
         # Warmth regeneration near Alchemist Campfires & ODTÜ Bilim Ağacı Monument
         self.bilim_aura_timer = max(0.0, self.bilim_aura_timer - dt)
@@ -1143,6 +1220,10 @@ class AutumnProcGenGame:
             self.player.perfect_parries += 1
             self.spawn_floating_text(self.player.x, self.player.y - 0.5, "MÜKEMMEL SAVURMA!", PALE_SUNBEAM)
             self.hud.show_banner("⚡ MÜKEMMEL SAVURMA! (HASAR BLOKLANDI +12 ISI & KÖZ DOLUMU)", duration=2.8)
+            ach = self.story.unlock_achievement("PERFECT_PARRY")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
             self.leaf_system.spawn_burst(self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=16, golden_bias=True)
             for en in self.enemies:
                 if en.alive and math.hypot(en.x - self.player.x, en.y - self.player.y) <= 2.2:
@@ -1180,6 +1261,7 @@ class AutumnProcGenGame:
             projectiles=self.projectiles,
             dash_ghosts=self.dash_ghosts,
             weather_phase=w_phase,
+            companion=getattr(self, "companion", None),
         )
         # Render low-res canvas HUD only when debug modes, modals, or procgen telemetry are active
         if (

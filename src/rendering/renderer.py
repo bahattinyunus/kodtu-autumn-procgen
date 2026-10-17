@@ -33,6 +33,7 @@ from src.entities.actors import (
     FloatingText,
     Projectile,
     DashGhost,
+    SteppeCompanion,
 )
 from src.procgen.pipeline import WorldData
 from src.procgen.prng import hash_coords_2d
@@ -108,6 +109,7 @@ class WorldRenderer:
         projectiles: Optional[List[Projectile]] = None,
         dash_ghosts: Optional[List[DashGhost]] = None,
         weather_phase: int = 0,
+        companion: Optional[SteppeCompanion] = None,
     ) -> None:
         if self.baked_terrain is None or self.baked_seed_uint64 != world.seed_uint64:
             self.bake_world_terrain(world)
@@ -344,6 +346,38 @@ class WorldRenderer:
                             ),
                         )
                     )
+
+        # 3h. Steppe Guardian Kangal Companion
+        if companion is not None:
+            c_px_x = companion.x * TILE_SIZE
+            c_px_y = companion.y * TILE_SIZE
+            csx, csy = camera.world_to_screen(c_px_x, c_px_y)
+            if -20 <= csx <= NATIVE_WIDTH + 20 and -20 <= csy <= NATIVE_HEIGHT + 20:
+                c_surf = self.assets.entity_surfaces.get(("companion", companion.anim_frame))
+                if c_surf is not None:
+                    if not companion.facing_right:
+                        c_surf = pygame.transform.flip(c_surf, True, False)
+
+                    def _draw_companion(s=c_surf, sx=csx, sy=csy, comp=companion) -> None:
+                        # Soft ground shadow
+                        pygame.draw.ellipse(canvas, (*DEEP_VOID, 120), (sx - 7, sy - 2, 14, 5))
+                        canvas.blit(s, (sx - 8, sy - 12))
+                        # Tail wag spark or heart sparkle when petted
+                        if comp.tail_wag_timer > 0.0:
+                            pygame.draw.circle(
+                                canvas,
+                                PALE_SUNBEAM,
+                                (sx - 4 if comp.facing_right else sx + 4, sy - 13),
+                                2,
+                            )
+                            pygame.draw.circle(
+                                canvas,
+                                HARVEST_GOLD,
+                                (sx - 4 if comp.facing_right else sx + 4, sy - 13),
+                                1,
+                            )
+
+                    y_sort_queue.append((c_px_y, _draw_companion))
 
         # Execute Painter's Algorithm (strict Y-order sort)
         y_sort_queue.sort(key=lambda entry: entry[0])

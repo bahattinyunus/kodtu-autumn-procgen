@@ -138,6 +138,26 @@ HISTORICAL_ODTU_INSCRIPTIONS = [
 ]
 
 
+@dataclass
+class BozkirAchievement:
+    key: str
+    title: str
+    description: str
+    icon: str
+
+
+ACHIEVEMENT_REGISTRY: List[BozkirAchievement] = [
+    BozkirAchievement("FIRST_DEFLECT", "ÇELİK & YANSITMA", "Düşman gölge küresini kılıçla geri yansıt (DEFLECT)", "⚡"),
+    BozkirAchievement("PERFECT_PARRY", "KUSURSUZ SAVURMA", "Düşman saldırısını darbe anında savuşturarak parri yap", "🛡️"),
+    BozkirAchievement("COMPANION_FRIEND", "KAMPÜSÜN SADIK DOSTU", "Bozkır Kangalı yoldaşını [E] ile sevip moral bul", "🐾"),
+    BozkirAchievement("BILIM_CEREMONY", "1956 BİLİM MEŞALESİ", "ODTÜ Bilim Ağacı Anıtı ayinini [E] ile harlayarak hale kazan", "✦"),
+    BozkirAchievement("STEPPE_ALCHEMY", "BOZKIR SİMYACISI", "Ateş veya tapınak yanında meşe palamutlarını simyala [G]", "🔮"),
+    BozkirAchievement("BLADE_DANCE", "KASIRGA DANSI", "6 kombo vuruşuna ulaşıp Bozkır Kılıç Dansını icra et [X]", "⚔️"),
+    BozkirAchievement("DEVRIM_OVERDRIVE", "1968 DEVRİM RUHU", "%70+ ısı ile ODTÜ Devrim Overdrive alevli modunu aç [Z]", "🔥"),
+    BozkirAchievement("CHRONICLE_HISTORIAN", "KADİM HAFIZA", "ODTÜ Tarihsel Kitabelerinden en az 3 tanesini oku", "📜"),
+]
+
+
 class StoryManager:
     """
     Manages accessible, clear, story-driven progression, dialogue boxes,
@@ -152,6 +172,17 @@ class StoryManager:
         self.dialogue_timer = 0.0
         self.seen_triggers: set[str] = set()
         self.read_kitabes: set[int] = set()
+        self.unlocked_achievements: set[str] = set()
+
+    def unlock_achievement(self, key: str) -> Optional[BozkirAchievement]:
+        """Unlocks an in-game achievement if not already earned."""
+        if key in self.unlocked_achievements:
+            return None
+        ach = next((a for a in ACHIEVEMENT_REGISTRY if a.key == key), None)
+        if ach is not None:
+            self.unlocked_achievements.add(key)
+            return ach
+        return None
 
     def on_read_kitabe(self, kitabe_idx: int) -> tuple[str, str]:
         idx = kitabe_idx % len(HISTORICAL_ODTU_INSCRIPTIONS)

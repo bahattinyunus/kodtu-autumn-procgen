@@ -607,6 +607,38 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
         for ax, ay in ((4, 1), (3, 2), (5, 2), (6, 3), (11, 1), (12, 2), (10, 2), (9, 3)):
             py = min(15, ay + bob)
             arr[py, ax] = (*SUNLIT_BIRCH, 255)
+    elif kind == "companion":
+        # ODTÜ Bozkır Kangalı (Steppe Guardian Dog Companion)
+        # Sandy ochre coat, characteristic dark muzzle, folded ears, proud curled tail
+        leg_offset = 1 if frame == 1 else 0
+        for y in range(7 + bob, 13):
+            for x in range(3, 13):
+                if y == 12 and x in (4 - leg_offset, 5, 10, 11 + leg_offset):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                elif 8 + bob <= y <= 11 + bob and 4 <= x <= 11:
+                    col = HARVEST_GOLD if (x + y) % 2 == 0 else OCHRE_CLAY
+                    arr[y, x] = (*col, 255)
+        # Amber collar
+        for y in range(7 + bob, 10 + bob):
+            arr[y, 9] = (*BURNT_AMBER, 255)
+        # Curled Kangal Tail
+        arr[7 + bob, 2] = (*OCHRE_CLAY, 255)
+        arr[6 + bob, 2] = (*HARVEST_GOLD, 255)
+        arr[5 + bob, 3] = (*PALE_SUNBEAM, 255)
+        # Head & Black Mask
+        for y in range(4 + bob, 9 + bob):
+            for x in range(9, 14):
+                if x >= 12 or (y >= 7 + bob and x >= 11):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                else:
+                    arr[y, x] = (*HARVEST_GOLD, 255)
+        # Warm friendly eye
+        arr[5 + bob, 11] = (*SUNLIT_BIRCH, 255)
+        arr[7 + bob, 14] = (*DEEP_VOID, 255)
+        if frame == 1:
+            arr[8 + bob, 13] = (*CRIMSON_DECAY, 255)
+        arr[3 + bob, 9] = (*WITHERED_BARK, 255)
+        arr[4 + bob, 8] = (*WITHERED_BARK, 255)
     else:  # golem
         # Heavy Hollow Bark Golem
         for y in range(2 + bob, 15):
@@ -850,9 +882,9 @@ class AssetBank:
 
         # 5. Build Entities, Structures & Shrine Sheet
         self.entity_surfaces: Dict[Tuple[str, int], pygame.Surface] = {}
-        entities_sheet = np.zeros((32, 16 * 16, 4), dtype=np.uint8)
+        entities_sheet = np.zeros((32, 16 * 20, 4), dtype=np.uint8)
         ec = 0
-        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden", "raven"):
+        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden", "raven", "companion"):
             for f in range(2):
                 e_arr = _build_entity_sprite(ekind, f)
                 self.entity_surfaces[(ekind, f)] = _ndarray_to_surface(e_arr)
