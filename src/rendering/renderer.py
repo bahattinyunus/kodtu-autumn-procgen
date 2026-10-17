@@ -205,6 +205,17 @@ class WorldRenderer:
                         pygame.draw.circle(canvas, SLATE_FOG, (dx, dy), 8, 1)
                         canvas.blit(s, (dx - 8, dy - 9))
                     y_sort_queue.append((sy_px, _draw_spring))
+            elif st.structure_type == "yalincak_dolmen":
+                yx_px = (st.tile_x + 0.5) * TILE_SIZE
+                yy_px = (st.tile_y + 0.5) * TILE_SIZE
+                ysx, ysy = camera.world_to_screen(yx_px, yy_px)
+                if -32 <= ysx <= NATIVE_WIDTH + 32 and -32 <= ysy <= NATIVE_HEIGHT + 32:
+                    dolmen_s = self.assets.dolmen_surf
+                    def _draw_dolmen(dx: int = ysx, dy: int = ysy, s=dolmen_s) -> None:
+                        pygame.draw.circle(canvas, PALE_SUNBEAM, (dx, dy), 16, 1)
+                        pygame.draw.circle(canvas, HARVEST_GOLD, (dx, dy), 12, 1)
+                        canvas.blit(s, (dx - 16, dy - 20))
+                    y_sort_queue.append((yy_px, _draw_dolmen))
 
         # 3c. Ancient Autumn Shrine (32x32)
         shx = (world.shrine_tile[0] + 0.5) * TILE_SIZE
@@ -318,6 +329,29 @@ class WorldRenderer:
                     pygame.draw.circle(canvas, PALE_SUNBEAM, (px_c, py_c), 2)
                     pygame.draw.circle(canvas, HARVEST_GOLD, (px_c, py_c), 1)
                 pygame.draw.circle(canvas, SUNLIT_BIRCH, (pl_sx, pl_sy - 6), 16, 1)
+
+            if getattr(player, "yalincak_blessing_timer", 0.0) > 0.0:
+                # ODTÜ Yalıncak Ancient Steppe Aegis (ancient runic bronze aegis ring)
+                a_spin = -time_sec * 2.5
+                for r_i in range(4):
+                    r_ang = a_spin + (r_i * math.pi / 2.0)
+                    rx_c = int(round(pl_sx + math.cos(r_ang) * 15.0))
+                    ry_c = int(round(pl_sy - 6 + math.sin(r_ang) * 15.0))
+                    pygame.draw.rect(canvas, PALE_SUNBEAM, (rx_c - 1, ry_c - 1, 3, 3))
+                pygame.draw.circle(canvas, HARVEST_GOLD, (pl_sx, pl_sy - 6), 18, 1)
+
+            if getattr(player, "cyclone_timer", 0.0) > 0.0:
+                # Bozkır Rüzgarı Kasırgası (Swirling leaf whirlwind spirals)
+                c_spin = time_sec * 8.5
+                for c_i in range(8):
+                    c_ang = c_spin + (c_i * math.pi / 4.0)
+                    c_r = 10.0 + (c_i * 2.2) + 2.0 * math.sin(time_sec * 10.0 + c_i)
+                    cx_p = int(round(pl_sx + math.cos(c_ang) * c_r))
+                    cy_p = int(round(pl_sy - 6 + math.sin(c_ang) * c_r))
+                    col_c = SUNLIT_BIRCH if c_i % 2 == 0 else BURNT_AMBER
+                    pygame.draw.circle(canvas, col_c, (cx_p, cy_p), 2)
+                    pygame.draw.circle(canvas, HARVEST_GOLD, (cx_p, cy_p), 1)
+                pygame.draw.circle(canvas, PALE_SUNBEAM, (pl_sx, pl_sy - 6), 24, 1)
 
             canvas.blit(p_surf, (pl_sx - 8, pl_sy - 14))
             if player.attack_timer > 0.0:
@@ -459,6 +493,8 @@ class WorldRenderer:
         pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
         if getattr(player, "bilim_ritual_timer", 0.0) > 0.0:
             base_halo = 92.0
+        elif getattr(player, "yalincak_blessing_timer", 0.0) > 0.0:
+            base_halo = 86.0
         elif getattr(player, "campfire_aura_timer", 0.0) > 0.0:
             base_halo = 72.0
         else:
@@ -469,13 +505,13 @@ class WorldRenderer:
         pygame.draw.circle(vignette, (*HARVEST_GOLD, 25), (pl_sx, pl_sy - 4), halo_radius + 18)
         pygame.draw.circle(vignette, (*PLUM_SHADOW, 55), (pl_sx, pl_sy - 4), halo_radius + 36)
 
-        # Warm halos around Bilim Ağacı and Campfires
+        # Warm halos around Bilim Ağacı, Yalıncak Dolmeni and Campfires
         for st in world.structures:
             st_sx, st_sy = camera.world_to_screen(
                 (st.tile_x + 0.5) * TILE_SIZE, (st.tile_y + 0.5) * TILE_SIZE
             )
             if -30 <= st_sx <= NATIVE_WIDTH + 30 and -30 <= st_sy <= NATIVE_HEIGHT + 30:
-                rad = 48 if st.structure_type == "bilim_agaci" else 36
+                rad = 48 if st.structure_type in ("bilim_agaci", "yalincak_dolmen") else 36
                 pygame.draw.circle(vignette, (*PALE_SUNBEAM, 0), (st_sx, st_sy), rad)
                 pygame.draw.circle(vignette, (*HARVEST_GOLD, 30), (st_sx, st_sy), rad + 14)
 

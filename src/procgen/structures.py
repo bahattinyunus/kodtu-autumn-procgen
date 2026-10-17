@@ -213,6 +213,7 @@ def synthesize_autumn_structures(
                 )
 
     # Select 1 candidate clearing for Eymir Sacred Healing Spring (Eymir Şifa Pınarı)
+    placed_spring: Optional[Tuple[int, int]] = None
     for sx, sy in candidates:
         if (sx, sy) in placed_camps or (sx, sy) in placed_kitabes:
             continue
@@ -220,11 +221,30 @@ def synthesize_autumn_structures(
             continue
         if (sx - shrine_tile[0]) ** 2 + (sy - shrine_tile[1]) ** 2 < 25:
             continue
+        placed_spring = (sx, sy)
         structures.append(
             StructurePlacement(
                 tile_x=sx,
                 tile_y=sy,
                 structure_type="eymir_pinari",
+                radius_tiles=1,
+            )
+        )
+        break
+
+    # Select 1 candidate clearing for Yalıncak Ancient Ruins & Sacred Dolmen (ODTÜ Yalıncak Höyüğü)
+    for yx, yy in candidates:
+        if (yx, yy) in placed_camps or (yx, yy) in placed_kitabes or (placed_spring is not None and (yx, yy) == placed_spring):
+            continue
+        if (yx - spawn_tile[0]) ** 2 + (yy - spawn_tile[1]) ** 2 < 25:
+            continue
+        if (yx - shrine_tile[0]) ** 2 + (yy - shrine_tile[1]) ** 2 < 25:
+            continue
+        structures.append(
+            StructurePlacement(
+                tile_x=yx,
+                tile_y=yy,
+                structure_type="yalincak_dolmen",
                 radius_tiles=1,
             )
         )

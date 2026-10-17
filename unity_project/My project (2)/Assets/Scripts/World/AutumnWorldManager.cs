@@ -251,6 +251,13 @@ namespace AutumnProcGen.World
                     col.radius = 1.8f;
                     io.InteractRadius = 2.2f;
                     break;
+                case "yalincak_dolmen":
+                    sr.sprite = GetSprite("shrine_dormant");
+                    io.Type = InteractableType.Kitabe;
+                    io.PromptText = "[E] Yalincak Kadim Dolmenini Uyandir";
+                    col.radius = 1.6f;
+                    io.InteractRadius = 2.0f;
+                    break;
             }
         }
 

@@ -76,9 +76,17 @@ namespace AutumnProcGen.Core
         public static readonly AchievementData[] Achievements = new AchievementData[]
         {
             new AchievementData("FIRST_DEFLECT", "CELIK & YANSITMA", "Dusman golge kuresini kilicla geri yansit", "⚡"),
+            new AchievementData("PERFECT_PARRY", "KUSURSUZ SAVURMA", "Dusman saldirisini savusturarak parri yap", "🛡️"),
             new AchievementData("COMPANION_FRIEND", "KAMPUSUN SADIK DOSTU", "Bozkir Kangali yoldasini sevip moral bul", "🐾"),
             new AchievementData("BILIM_CEREMONY", "1956 BILIM MESALESI", "ODTU Bilim Agaci Aniti ayinini harlayarak zafere ulas", "✦"),
-            new AchievementData("CHRONICLE_HISTORIAN", "KADIM HAFIZA", "ODTU Tarihsel Kitabelerinden en az 3 tanesini oku", "📜")
+            new AchievementData("STEPPE_ALCHEMY", "BOZKIR SIMYACISI", "Ates veya tapinak yaninda palamutlari simyala", "🔮"),
+            new AchievementData("BLADE_DANCE", "KASIRGA DANSI", "6 kombo vurusuna ulasip Bozkir Kilic Dansini icra et", "⚔️"),
+            new AchievementData("DEVRIM_OVERDRIVE", "1968 DEVRIM RUHU", "%70+ isi ile ODTU Devrim Overdrive alevli modunu ac", "🔥"),
+            new AchievementData("CHRONICLE_HISTORIAN", "KADIM HAFIZA", "ODTU Tarihsel Kitabelerinden en az 3 tanesini oku", "📜"),
+            new AchievementData("YALINCAK_ARCHAEOLOGIST", "YALINCAK HOYUK DOLMENI", "Yalincak arkeolojik dolmeninde Bronz Cagi Frig taslarini uyandir", "🏛️"),
+            new AchievementData("STEPPE_LYNX_HUNTER", "BOZKIRIN SINSI GOLGESI", "Bozkirin cevik yirticisi Anadolu Vasagi'ni alt et veya savustur", "🐾"),
+            new AchievementData("KANGAL_LOYALTY", "BOZKIR HAZINESI", "Kangal yoldasinin koklayip kazdigi kadim bozkir hazinesini topla", "🦴"),
+            new AchievementData("CYCLONE_DANCE", "GUZ KASIRGASI", "Bozkir Ruzgari Kasirgasi yetenegiyle yapraklari girdaba cevir", "🌪️")
         };
     }
 }

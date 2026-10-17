@@ -155,6 +155,10 @@ ACHIEVEMENT_REGISTRY: List[BozkirAchievement] = [
     BozkirAchievement("BLADE_DANCE", "KASIRGA DANSI", "6 kombo vuruşuna ulaşıp Bozkır Kılıç Dansını icra et [X]", "⚔️"),
     BozkirAchievement("DEVRIM_OVERDRIVE", "1968 DEVRİM RUHU", "%70+ ısı ile ODTÜ Devrim Overdrive alevli modunu aç [Z]", "🔥"),
     BozkirAchievement("CHRONICLE_HISTORIAN", "KADİM HAFIZA", "ODTÜ Tarihsel Kitabelerinden en az 3 tanesini oku", "📜"),
+    BozkirAchievement("YALINCAK_ARCHAEOLOGIST", "YALINCAK HÖYÜK DOLMENİ", "Yalıncak arkeolojik dolmeninde Bronz Çağı Frig taşlarını uyandır [E]", "🏛️"),
+    BozkirAchievement("STEPPE_LYNX_HUNTER", "BOZKIRIN SİNSİ GÖLGESİ", "Bozkırın çevik yırtıcısı Anadolu Vaşağı'nı alt et veya savuştur", "🐾"),
+    BozkirAchievement("KANGAL_LOYALTY", "BOZKIR HAZİNESİ", "Kangal yoldaşının koklayıp kazdığı kadim bozkır hazinesini topla [K]", "🦴"),
+    BozkirAchievement("CYCLONE_DANCE", "GÜZ KASIRGASI", "Bozkır Rüzgarı Kasırgası yeteneğiyle yaprakları girdaba çevir [T]", "🌪️"),
 ]
 
 

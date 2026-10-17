@@ -157,6 +157,32 @@ class VerletLeafSystem:
                 leaf.vz = max(leaf.vz, 14.0 * falloff)
                 leaf.z = max(leaf.z, 2.0)
 
+    def apply_vortex_impulse(
+        self, center_px_x: float, center_px_y: float, radius_px: float, strength: float = 3.8
+    ) -> None:
+        """
+        Pulls and swirls leaves in a high-speed orbital vortex around the center
+        (used during Bozkır Rüzgarı Kasırgası / Leaf Cyclone).
+        """
+        r_sq = radius_px * radius_px
+        for leaf in self.leaves:
+            dx = leaf.x - center_px_x
+            dy = leaf.y - center_px_y
+            d2 = dx * dx + dy * dy
+            if 1.0 < d2 < r_sq:
+                dist = math.sqrt(d2)
+                falloff = 1.0 - (dist / radius_px)
+                tangent_x = -dy / dist
+                tangent_y = dx / dist
+                inward_x = -dx / dist
+                inward_y = -dy / dist
+                impulse_t = strength * falloff
+                impulse_i = (strength * 0.45) * falloff
+                leaf.old_x -= (tangent_x * impulse_t + inward_x * impulse_i)
+                leaf.old_y -= (tangent_y * impulse_t + inward_y * impulse_i)
+                leaf.vz = max(leaf.vz, 16.0 * falloff)
+                leaf.z = max(leaf.z, 4.0)
+
     def update(
         self,
         dt: float,

@@ -639,6 +639,38 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
             arr[8 + bob, 13] = (*CRIMSON_DECAY, 255)
         arr[3 + bob, 9] = (*WITHERED_BARK, 255)
         arr[4 + bob, 8] = (*WITHERED_BARK, 255)
+    elif kind == "lynx":
+        # Anadolu Bozkır Vaşağı (Anatolian Steppe Lynx)
+        # Tawny amber coat, spotted markings, distinctive black ear tufts, short bobtail
+        leg_offset = 1 if frame == 1 else 0
+        for y in range(7 + bob, 14):
+            for x in range(3, 13):
+                if y == 13 and x in (4 - leg_offset, 5, 10, 11 + leg_offset):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                elif 8 + bob <= y <= 11 + bob and 4 <= x <= 11:
+                    col = HARVEST_GOLD if (x * 3 + y * 7) % 5 == 0 else OCHRE_CLAY
+                    if (x + y) % 4 == 0:
+                        col = BURNT_AMBER  # Lynx spots
+                    arr[y, x] = (*col, 255)
+        # Short bobtail with black tip
+        arr[8 + bob, 2] = (*OCHRE_CLAY, 255)
+        arr[9 + bob, 2] = (*DEEP_VOID, 255)
+        # Feline Head & White Ruff
+        for y in range(5 + bob, 10 + bob):
+            for x in range(9, 14):
+                arr[y, x] = (*OCHRE_CLAY, 255)
+        arr[9 + bob, 10] = (*PALE_SUNBEAM, 255)
+        arr[9 + bob, 11] = (*PALE_SUNBEAM, 255)
+        # Piercing amber feline eye & black nose
+        arr[6 + bob, 12] = (*SUNLIT_BIRCH, 255)
+        arr[7 + bob, 13] = (*DEEP_VOID, 255)
+        # High Black Lynx Ear Tufts
+        arr[4 + bob, 10] = (*OCHRE_CLAY, 255)
+        arr[3 + bob, 10] = (*DEEP_VOID, 255)
+        arr[2 + bob, 10] = (*DEEP_VOID, 255)
+        arr[4 + bob, 12] = (*OCHRE_CLAY, 255)
+        arr[3 + bob, 12] = (*DEEP_VOID, 255)
+        arr[2 + bob, 12] = (*DEEP_VOID, 255)
     else:  # golem
         # Heavy Hollow Bark Golem
         for y in range(2 + bob, 15):
@@ -810,6 +842,48 @@ def _build_shrine_sprite(awakened: bool = False) -> np.ndarray:
     return arr
 
 
+def _build_dolmen_sprite() -> np.ndarray:
+    """
+    Synthesizes the ODTÜ Yalıncak Ancient Dolmen (32x32 megalithic stone table structure).
+    Features Phrygian & Bronze Age megalithic slabs with engraved spiral petroglyphs and autumn lichen.
+    """
+    arr = np.zeros((32, 32, 4), dtype=np.uint8)
+    # Foundation earth mound / archaeological trench base
+    for y in range(24, 30):
+        for x in range(2, 30):
+            arr[y, x] = (*WITHERED_BARK, 255)
+    # Dual massive vertical megalith pillars
+    for y in range(10, 26):
+        # Left pillar
+        for x in range(5, 11):
+            c = PLUM_SHADOW if (x == 5 or y == 25) else SLATE_FOG
+            if (x + y) % 3 == 0:
+                c = DAMSON_MOSS  # ancient moss
+            arr[y, x] = (*c, 255)
+        # Right pillar
+        for x in range(21, 27):
+            c = PLUM_SHADOW if (x == 26 or y == 25) else SLATE_FOG
+            if (x + y) % 3 == 0:
+                c = DAMSON_MOSS
+            arr[y, x] = (*c, 255)
+    # Massive horizontal megalith capstone slab
+    for y in range(6, 12):
+        for x in range(3, 29):
+            if y == 6 or y == 11 or x in (3, 28):
+                arr[y, x] = (*DEEP_VOID, 255)
+            else:
+                c = SUNLIT_BIRCH if y == 7 else (SLATE_FOG if (x + y) % 2 == 0 else WITHERED_BARK)
+                arr[y, x] = (*c, 255)
+    # Engraved Ancient Anatolian Bronze Age Runic Spiral / Sun disk in center
+    arr[8, 15] = (*HARVEST_GOLD, 255)
+    arr[8, 16] = (*HARVEST_GOLD, 255)
+    arr[9, 14] = (*PALE_SUNBEAM, 255)
+    arr[9, 17] = (*PALE_SUNBEAM, 255)
+    arr[10, 15] = (*HARVEST_GOLD, 255)
+    arr[10, 16] = (*HARVEST_GOLD, 255)
+    return arr
+
+
 def _ndarray_to_surface(arr: np.ndarray) -> pygame.Surface:
     """Converts an (H, W, 4) RGBA uint8 numpy array into a per-pixel alpha Pygame Surface."""
     h, w, _ = arr.shape
@@ -884,7 +958,7 @@ class AssetBank:
         self.entity_surfaces: Dict[Tuple[str, int], pygame.Surface] = {}
         entities_sheet = np.zeros((32, 16 * 20, 4), dtype=np.uint8)
         ec = 0
-        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden", "raven", "companion"):
+        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden", "raven", "companion", "lynx"):
             for f in range(2):
                 e_arr = _build_entity_sprite(ekind, f)
                 self.entity_surfaces[(ekind, f)] = _ndarray_to_surface(e_arr)
@@ -902,6 +976,7 @@ class AssetBank:
         self.boardwalk_surf = _ndarray_to_surface(_build_boardwalk_sprite())
         self.bilim_agaci_surf = _ndarray_to_surface(_build_bilim_agaci_sprite())
         self.kitabe_surf = _ndarray_to_surface(_build_kitabe_sprite())
+        self.dolmen_surf = _ndarray_to_surface(_build_dolmen_sprite())
 
         shrine_dormant = _build_shrine_sprite(False)
         shrine_awake = _build_shrine_sprite(True)

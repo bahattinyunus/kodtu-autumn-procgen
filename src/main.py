@@ -414,6 +414,10 @@ class AutumnProcGenGame:
                     self._perform_harvest_nova()
                 elif event.key in (pygame.K_x, pygame.K_r):
                     self._perform_blade_dance()
+                elif event.key == pygame.K_t:
+                    self._perform_leaf_cyclone()
+                elif event.key == pygame.K_k:
+                    self._command_kangal_dig()
                 elif event.key in (pygame.K_LSHIFT, pygame.K_RSHIFT):
                     self._perform_gust_dash()
                 elif event.key == pygame.K_e:
@@ -754,15 +758,73 @@ class AutumnProcGenGame:
                 CRIMSON_DECAY,
             )
 
+    def _perform_leaf_cyclone(self) -> None:
+        """[T]: Unleashes Bozkır Rüzgarı Kasırgası (Leaf Cyclone), pulling leaves and damaging nearby enemies."""
+        if self.player.trigger_cyclone():
+            self.sound.play("leaf_cyclone")
+            self.camera.add_trauma(0.32)
+            pl_x_px = self.player.x * TILE_SIZE
+            pl_y_px = self.player.y * TILE_SIZE
+            self.leaf_system.spawn_burst(pl_x_px, pl_y_px, count=36, golden_bias=True)
+            self.leaf_system.apply_vortex_impulse(pl_x_px, pl_y_px, radius_px=56.0, strength=4.5)
+            self.hud.show_banner("🌪️ BOZKIR RÜZGARI KASIRGASI! (YAPRAK GİRDABI & SAVUNMA)", duration=3.0)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.7, "GÜZ KASIRGASI!", PALE_SUNBEAM)
+            # Damage nearby enemies in 2.8 tile radius
+            for en in self.enemies:
+                if en.alive and math.hypot(en.x - self.player.x, en.y - self.player.y) <= 2.8:
+                    defeated = en.apply_hit(4, self.player.x, self.player.y, knockback=8.0)
+                    self.spawn_floating_text(en.x, en.y - 0.4, "-4 KASIRGA", HARVEST_GOLD)
+                    if defeated:
+                        self._on_enemy_defeated(en)
+            # Deflect incoming enemy projectiles within 2.8 tile radius
+            for proj in self.projectiles:
+                if proj.alive and proj.owner == "enemy":
+                    if math.hypot(proj.x - self.player.x, proj.y - self.player.y) <= 2.8:
+                        proj.deflected = True
+                        proj.owner = "player"
+                        proj.vx = -proj.vx * 1.25
+                        proj.vy = -proj.vy * 1.25
+                        proj.damage = 12
+                        self.player.orbs_deflected += 1
+            ach = self.story.unlock_achievement("CYCLONE_DANCE")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
+
+    def _command_kangal_dig(self) -> None:
+        """[K]: Commands Bozkır Kangalı to sniff and unearth buried campus treasures."""
+        if not hasattr(self, "companion") or self.companion is None:
+            return
+        res = self.companion.command_dig(self.player)
+        if res is not None:
+            kind, amount = res
+            self.sound.play("kangal_dig")
+            cx_px = self.companion.x * TILE_SIZE
+            cy_px = self.companion.y * TILE_SIZE
+            self.leaf_system.spawn_burst(cx_px, cy_px, count=28, golden_bias=True)
+            if kind == "acorn":
+                msg = f"🐾 KANGAL KAZDI! (+{amount} PALAMUT)"
+                self.spawn_floating_text(self.companion.x, self.companion.y - 0.6, f"+{amount} PALAMUT!", HARVEST_GOLD)
+            else:
+                msg = "🐾 KANGAL KADİM REKOR PARÇASI BULDU! (+20 ISI)"
+                self.spawn_floating_text(self.companion.x, self.companion.y - 0.6, "KADİM PARÇA! +20 ISI", PALE_SUNBEAM)
+            self.hud.show_banner(msg, duration=3.2)
+            ach = self.story.unlock_achievement("KANGAL_LOYALTY")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
+        else:
+            self.hud.show_banner("🐾 Kangal etrafı kokluyor... (Kazı için biraz bekle)", duration=2.0)
+
     def _try_interact_action(self) -> None:
-        """[E] Interacts with Historical Kitabeler, Campfire, Spring, Bilim Ağacı, Shrine, or Steppe Kangal Companion."""
+        """[E] Interacts with Historical Kitabeler, Campfire, Spring, Bilim Ağacı, Yalıncak Dolmen, Shrine, or Steppe Kangal Companion."""
         closest_st = None
         closest_idx = -1
         closest_dist = 999.0
         for idx, st in enumerate(self.world.structures):
             cx, cy = st.tile_x + 0.5, st.tile_y + 0.5
             dist = math.hypot(self.player.x - cx, self.player.y - cy)
-            max_r = 2.4 if st.structure_type in ("bilim_agaci", "eymir_pinari") else 2.0
+            max_r = 2.4 if st.structure_type in ("bilim_agaci", "eymir_pinari", "yalincak_dolmen") else 2.0
             if dist <= max_r and dist < closest_dist:
                 closest_dist = dist
                 closest_st = st
@@ -828,6 +890,20 @@ class AutumnProcGenGame:
                 self.hud.show_banner("ODTÜ BİLİM AĞACI AYİNİ AKTİF! (30s BİLİM HALESİ & TAM ISI)", duration=4.0)
                 self.spawn_floating_text(bx, by - 0.7, "BİLİM AĞACI HARLANDI!", PALE_SUNBEAM)
                 ach = self.story.unlock_achievement("BILIM_CEREMONY")
+                if ach:
+                    self.sound.play("level_up")
+                    self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
+                return
+            elif st.structure_type == "yalincak_dolmen":
+                yx, yy = st.tile_x + 0.5, st.tile_y + 0.5
+                self.sound.play("dolmen_resonance")
+                self.player.warmth = self.player.max_warmth
+                self.player.yalincak_blessing_timer = 40.0
+                self.camera.add_trauma(0.35)
+                self.leaf_system.spawn_burst(yx * TILE_SIZE, yy * TILE_SIZE, count=32, golden_bias=True)
+                self.hud.show_banner("ODTÜ YALINCAK KADİM DOLMENİ UYANDI! (KADİM BOZKIR KALKANI +%40 DİRENÇ)", duration=4.0)
+                self.spawn_floating_text(yx, yy - 0.7, "KADİM YALINCAK KALKANI!", PALE_SUNBEAM)
+                ach = self.story.unlock_achievement("YALINCAK_ARCHAEOLOGIST")
                 if ach:
                     self.sound.play("level_up")
                     self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
@@ -1180,6 +1256,22 @@ class AutumnProcGenGame:
             self.leaf_system.spawn_burst(
                 enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=18, golden_bias=True
             )
+        elif enemy.kind == "lynx":
+            self.sound.play("lynx_snarl")
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 16.0)
+            self.player.base_speed *= 1.05
+            self.items.append(
+                CollectibleItem(x=enemy.x, y=enemy.y, kind="acorn", bob_phase=enemy.x)
+            )
+            self.spawn_floating_text(enemy.x, enemy.y - 0.5, "+VAŞAK PENÇESİ!", PALE_SUNBEAM)
+            self.hud.show_banner("ANADOLU VAŞAĞI ALT EDİLDİ! (+%5 ÇEVİKLİK & PALAMUT)", duration=3.2)
+            self.leaf_system.spawn_burst(
+                enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=22, golden_bias=True
+            )
+            ach = self.story.unlock_achievement("STEPPE_LYNX_HUNTER")
+            if ach:
+                self.sound.play("level_up")
+                self.hud.show_banner(f"🏆 BAŞARIM: {ach.title} — {ach.description}", duration=4.0)
         else:
             self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
             self.leaf_system.spawn_burst(
@@ -1230,6 +1322,10 @@ class AutumnProcGenGame:
                     en.apply_hit(5, self.player.x, self.player.y, knockback=12.0)
                     self.spawn_floating_text(en.x, en.y - 0.3, "-5 PARRY!", HARVEST_GOLD)
             return
+
+        if getattr(self.player, "yalincak_blessing_timer", 0.0) > 0.0:
+            damage *= 0.60
+            self.spawn_floating_text(self.player.x, self.player.y - 0.5, "KADİM KALKAN -%40", PALE_SUNBEAM)
 
         self.player.warmth = max(0.0, self.player.warmth - damage)
         self.player.invuln_timer = 0.75

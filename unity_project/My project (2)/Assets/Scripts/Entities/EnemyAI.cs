@@ -86,6 +86,12 @@ namespace AutumnProcGen.Entities
                     AttackDamage = 35;
                     AggroRadius = 4.5f;
                     break;
+                case "lynx":
+                    MaxHealth = 40;
+                    MoveSpeed = 3.5f;
+                    AttackDamage = 20;
+                    AggroRadius = 7.5f;
+                    break;
             }
         }
 

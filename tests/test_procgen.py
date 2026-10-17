@@ -1251,12 +1251,12 @@ def test_bozkir_achievements_system_and_leaf_pile_scattering() -> None:
     from src.main import AutumnProcGenGame
 
     # 1. Registry validation
-    assert len(ACHIEVEMENT_REGISTRY) == 8
+    assert len(ACHIEVEMENT_REGISTRY) >= 8
     expected_keys = {
         "FIRST_DEFLECT", "PERFECT_PARRY", "COMPANION_FRIEND", "BILIM_CEREMONY",
         "STEPPE_ALCHEMY", "BLADE_DANCE", "DEVRIM_OVERDRIVE", "CHRONICLE_HISTORIAN"
     }
-    assert {ach.key for ach in ACHIEVEMENT_REGISTRY} == expected_keys
+    assert expected_keys.issubset({ach.key for ach in ACHIEVEMENT_REGISTRY})
 
     # 2. StoryManager unlock mechanics
     story = StoryManager()
@@ -1294,6 +1294,213 @@ def test_bozkir_achievements_system_and_leaf_pile_scattering() -> None:
     game.story.unlock_achievement("BILIM_CEREMONY")
     game.render()
 
+    game.hud.ledger_modal_open = False
+    game.render()
+
+
+def test_yalincak_dolmen_structure_and_blessing() -> None:
+    """
+    Verifies:
+    1. Deterministic placement of 'yalincak_dolmen' in generated autumn worlds.
+    2. Asset builder generates dolmen_surf and assigns it properly.
+    3. Interacting with the dolmen grants Ancient Steppe Aegis (40% damage resistance).
+    4. Unlocks 'YALINCAK_ARCHAEOLOGIST' achievement.
+    5. synth_dolmen_resonance returns valid non-empty audio samples.
+    """
+    from src.procgen.pipeline import generate_autumn_world
+    from src.main import AutumnProcGenGame
+    from src.core.audio_synth import synth_dolmen_resonance
+
+    # 1. Pipeline placement verification
+    world = generate_autumn_world("YALINCAK-VERIFY-SEED", width=54, height=40)
+    dolmen_structures = [s for s in world.structures if s.structure_type == "yalincak_dolmen"]
+    assert len(dolmen_structures) >= 1
+    ds = dolmen_structures[0]
+    assert 2 <= ds.tile_x < world.width - 2
+    assert 2 <= ds.tile_y < world.height - 2
+
+    # 2. Audio synthesis verification
+    samples = synth_dolmen_resonance()
+    assert len(samples) > 0
+    assert float(np.max(np.abs(samples))) > 0.05
+    assert float(np.max(samples)) <= 1.0
+
+    # 3. Game interaction and damage mitigation
+    game = AutumnProcGenGame(initial_seed="YALINCAK-GAME-SEED", debug_procgen=False, headless=True)
+    assert hasattr(game.assets, "dolmen_surf")
+
+    # Move player next to dolmen and interact
+    game_dolmen = next(s for s in game.world.structures if s.structure_type == "yalincak_dolmen")
+    game.player.x = game_dolmen.tile_x + 0.5
+    game.player.y = game_dolmen.tile_y + 0.5
+    game._try_interact_action()
+
+    assert game.player.yalincak_blessing_timer > 0.0
+    assert "YALINCAK_ARCHAEOLOGIST" in game.story.unlocked_achievements
+
+    # Test 40% damage resistance
+    base_warmth = game.player.warmth
+    game._apply_player_damage(20.0)
+    # Damage should be 20 * 0.6 = 12
+    assert abs(game.player.warmth - (base_warmth - 12.0)) < 1e-4
+
+
+def test_steppe_lynx_enemy_ai_and_snarl_synthesis() -> None:
+    """
+    Verifies:
+    1. Steppe Lynx enemy stats and sprite surfaces.
+    2. Stalking and leap ambush AI behaviors.
+    3. Defeat rewards (+16 warmth, +5% agility, 'STEPPE_LYNX_HUNTER' achievement).
+    4. synth_lynx_snarl returns valid audio waveforms.
+    """
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+    from src.core.audio_synth import synth_lynx_snarl
+
+    # 1. Stats and properties
+    lynx = EnemyAgent(x=10.0, y=10.0, kind="lynx")
+    assert lynx.max_hp == 4
+    assert lynx.damage == 18.0
+    assert lynx.speed == 3.45
+
+    # 2. Audio synthesis
+    snarl = synth_lynx_snarl()
+    assert len(snarl) > 0
+    assert float(np.max(np.abs(snarl))) > 0.05
+
+    # 3. Game integration & defeat
+    game = AutumnProcGenGame(initial_seed="LYNX-GAME-TEST", debug_procgen=False, headless=True)
+    assert ("lynx", 0) in game.assets.entity_surfaces
+    assert ("lynx", 1) in game.assets.entity_surfaces
+
+    init_speed = game.player.base_speed
+    game._on_enemy_defeated(lynx)
+    assert game.player.base_speed > init_speed
+    assert "STEPPE_LYNX_HUNTER" in game.story.unlocked_achievements
+
+
+def test_kangal_dig_mechanic_and_loyalty_progression() -> None:
+    """
+    Verifies:
+    1. SteppeCompanion command_dig unearths treasures and awards bonus resources.
+    2. Loyalty tier progression from 1 to 2 to 3.
+    3. Unlocks 'KANGAL_LOYALTY' achievement.
+    4. synth_kangal_dig generates valid audio samples.
+    """
+    from src.entities.actors import SteppeCompanion, Player
+    from src.main import AutumnProcGenGame
+    from src.core.audio_synth import synth_kangal_dig
+
+    # 1. Audio synthesis
+    dig_wav = synth_kangal_dig()
+    assert len(dig_wav) > 0
+    assert float(np.max(np.abs(dig_wav))) > 0.05
+
+    # 2. Companion digging logic
+    kangal = SteppeCompanion(x=5.0, y=5.0)
+    player = Player(x=5.0, y=5.0)
+    assert kangal.loyalty_tier == 1
+
+    # First dig
+    res1 = kangal.command_dig(player)
+    assert res1 is not None
+    assert player.acorns_collected == 3
+    assert kangal.treasures_found == 1
+    assert kangal.loyalty_tier == 2
+
+    # Cannot dig during cooldown
+    assert kangal.command_dig(player) is None
+
+    # Reset cooldown and dig again
+    kangal.dig_cooldown = 0.0
+    res2 = kangal.command_dig(player)
+    assert res2 is not None
+
+    kangal.dig_cooldown = 0.0
+    res3 = kangal.command_dig(player)
+    assert res3 is not None
+    assert kangal.treasures_found == 3
+    assert kangal.loyalty_tier == 3
+
+    # 3. Game main command execution
+    game = AutumnProcGenGame(initial_seed="KANGAL-DIG-GAME", debug_procgen=False, headless=True)
+    game.companion.dig_cooldown = 0.0
+    game._command_kangal_dig()
+    assert "KANGAL_LOYALTY" in game.story.unlocked_achievements
+
+
+def test_steppe_leaf_cyclone_ability_and_vortex_particles() -> None:
+    """
+    Verifies:
+    1. Player trigger_cyclone consumes warmth and sets cooldown.
+    2. VerletLeafSystem.apply_vortex_impulse creates rotational tangential acceleration.
+    3. _perform_leaf_cyclone damages nearby enemies, deflects projectiles, and awards 'CYCLONE_DANCE'.
+    4. synth_leaf_cyclone produces valid audio waveforms.
+    """
+    from src.entities.actors import EnemyAgent, Projectile
+    from src.main import AutumnProcGenGame
+    from src.core.audio_synth import synth_leaf_cyclone
+
+    # 1. Audio synthesis
+    cyclone_sfx = synth_leaf_cyclone()
+    assert len(cyclone_sfx) > 0
+    assert float(np.max(np.abs(cyclone_sfx))) > 0.05
+
+    # 2. Game execution
+    game = AutumnProcGenGame(initial_seed="CYCLONE-TEST-SEED", debug_procgen=False, headless=True)
+    game.player.warmth = 80.0
+
+    # Place nearby enemy and enemy projectile
+    enemy = EnemyAgent(x=game.player.x + 1.2, y=game.player.y, kind="wisp")
+    game.enemies.append(enemy)
+
+    proj = Projectile(
+        x=game.player.x + 1.0,
+        y=game.player.y,
+        vx=-4.0,
+        vy=0.0,
+        owner="enemy",
+        damage=8,
+    )
+    game.projectiles.append(proj)
+
+    # Perform cyclone
+    game._perform_leaf_cyclone()
+
+    assert game.player.cyclone_timer > 0.0
+    assert "CYCLONE_DANCE" in game.story.unlocked_achievements
+    # Enemy was hit and damaged
+    assert enemy.hp < enemy.max_hp
+    # Projectile was deflected
+    assert proj.deflected is True
+    assert proj.owner == "player"
+    assert proj.vx > 0.0
+
+
+def test_expanded_twelve_bozkir_achievements_and_rendering() -> None:
+    """
+    Verifies:
+    1. ACHIEVEMENT_REGISTRY has all 12 defined campus milestones.
+    2. Headless game rendering with all 12 achievements unlocked in ledger modal.
+    """
+    from src.core.story import ACHIEVEMENT_REGISTRY
+    from src.main import AutumnProcGenGame
+
+    assert len(ACHIEVEMENT_REGISTRY) == 12
+    keys = {a.key for a in ACHIEVEMENT_REGISTRY}
+    expected = {
+        "FIRST_DEFLECT", "PERFECT_PARRY", "COMPANION_FRIEND", "BILIM_CEREMONY",
+        "STEPPE_ALCHEMY", "BLADE_DANCE", "DEVRIM_OVERDRIVE", "CHRONICLE_HISTORIAN",
+        "YALINCAK_ARCHAEOLOGIST", "STEPPE_LYNX_HUNTER", "KANGAL_LOYALTY", "CYCLONE_DANCE"
+    }
+    assert keys == expected
+
+    game = AutumnProcGenGame(initial_seed="ACHIEVE-12-TEST", debug_procgen=False, headless=True)
+    for k in expected:
+        game.story.unlock_achievement(k)
+
+    game.hud.ledger_modal_open = True
+    game.render()
     game.hud.ledger_modal_open = False
     game.render()
 

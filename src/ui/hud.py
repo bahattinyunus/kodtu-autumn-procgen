@@ -75,6 +75,8 @@ class GameHUD:
                     surf.set_at((st.tile_x, st.tile_y), SUNLIT_BIRCH)
                 elif st.structure_type == "odtu_kitabe":
                     surf.set_at((st.tile_x, st.tile_y), AUTUMN_MIST)
+                elif st.structure_type == "yalincak_dolmen":
+                    surf.set_at((st.tile_x, st.tile_y), PALE_SUNBEAM)
             self._minimap_base_surf = surf
             self._minimap_seed_u64 = world.seed_uint64
         return self._minimap_base_surf

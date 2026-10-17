@@ -26,7 +26,7 @@ from src.core.palette import (
     AUTUMN_MIST,
 )
 from src.core.asset_builder import AssetBank
-from src.core.story import StoryManager, CHAPTER_INFO, evaluate_academic_grade
+from src.core.story import StoryManager, CHAPTER_INFO, evaluate_academic_grade, ACHIEVEMENT_REGISTRY
 from src.entities.actors import Player, CollectibleItem, EnemyAgent, AUTUMN_BOONS
 from src.procgen.pipeline import WorldData
 
@@ -91,6 +91,8 @@ class ModernStoryOverlay:
                     surf.set_at((st.tile_x, st.tile_y), SUNLIT_BIRCH)
                 elif st.structure_type == "odtu_kitabe":
                     surf.set_at((st.tile_x, st.tile_y), AUTUMN_MIST)
+                elif st.structure_type == "yalincak_dolmen":
+                    surf.set_at((st.tile_x, st.tile_y), PALE_SUNBEAM)
             self._minimap_surf = surf
             self._minimap_seed = world.seed_uint64
         return self._minimap_surf
@@ -438,8 +440,8 @@ class ModernStoryOverlay:
         pygame.draw.rect(bar, BURNT_AMBER, (0, 0, bw, bh), 1, border_radius=6)
 
         txt = (
-            "[WASD] Yürü  •  [SPACE] Kılıç & Parri  •  [F] Köz  •  [Z] DEVRİM  •  "
-            "[X] KILIÇ DANSI  •  [E] Ayin/Közle  •  [G] SİMYA  •  [J] Sefer Günlüğü  •  [N] Harita  •  [P] Duraklat"
+            "[WASD] Yürü  •  [SPACE] Kılıç & Parri  •  [F] Köz  •  [T] KASIRGA  •  [K] KANGAL  •  "
+            "[Z] DEVRİM  •  [X] KILIÇ DANSI  •  [E] Etkileşim  •  [G] SİMYA  •  [J] Günlük  •  [C] Kodeks & Fauna"
         )
         lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))
@@ -927,7 +929,7 @@ class ModernStoryOverlay:
         pygame.draw.rect(rsurf, WITHERED_BARK, (0, 0, rw, rh), 1, border_radius=8)
 
         ach_count = len(getattr(story, "unlocked_achievements", set()))
-        lbl_rt = self.f_small.render(f"🗺️ KODTÜ RESMİ SEFER TOHUMLARI & 🏆 BOZKIR BAŞARIMLARI ({ach_count}/8 Açıldı)", True, HARVEST_GOLD)
+        lbl_rt = self.f_small.render(f"🗺️ KODTÜ RESMİ SEFER TOHUMLARI & 🏆 BOZKIR BAŞARIMLARI ({ach_count}/{len(ACHIEVEMENT_REGISTRY)} Açıldı)", True, HARVEST_GOLD)
         rsurf.blit(lbl_rt, (16, 8))
 
         curated = [

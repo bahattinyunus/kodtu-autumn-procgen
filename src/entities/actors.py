@@ -123,6 +123,12 @@ class EnemyAgent:
             self.aggro_range = 8.0
             self.radius = 0.28
             self.damage = 10.0
+        elif kind == "lynx":
+            self.max_hp = 4
+            self.speed = 3.45
+            self.aggro_range = 7.8
+            self.radius = 0.30
+            self.damage = 18.0
         elif kind == "warden":
             self.max_hp = 12
             self.speed = 2.65
@@ -228,6 +234,15 @@ class EnemyAgent:
                 dive = 1.35 if math.sin(self.phase * 2.4) > 0.3 else 0.90
                 dir_x = (dir_x * dive) + (perp_x * swoop)
                 dir_y = (dir_y * dive) + (perp_x * swoop)
+            elif self.kind == "lynx":
+                # Anadolu Bozkır Vaşağı: Stealth stalking in autumn brush; leaps with agile burst when close
+                if dist > 2.8:
+                    current_speed = self.speed * 0.70
+                else:
+                    leap = 1.95 if math.sin(self.phase * 4.2) > 0.15 else 0.85
+                    dir_x *= leap
+                    dir_y *= leap
+                    current_speed = self.speed * 1.30
             elif self.kind == "warden":
                 # Elder Stag Warden: Phase 1 has rhythmic surges & 3-way orbs; Phase 2 (Enraged) has rapid charges & 8-way ring volley
                 if self.is_enraged:
@@ -331,9 +346,15 @@ class SteppeCompanion:
         self.base_speed = 4.2
         self.radius = 0.30
         self.bark_alert_trigger = False
+        self.loyalty_tier = 1
+        self.dig_cooldown = 0.0
+        self.dig_timer = 0.0
+        self.treasures_found = 0
 
     @property
     def anim_frame(self) -> int:
+        if self.dig_timer > 0.0:
+            return 1 if int(self.dig_timer * 8.0) % 2 == 0 else 0
         if self.is_moving:
             return int(self.anim_timer * 7.0) % 2
         return 1 if self.tail_wag_timer > 0.0 and int(self.tail_wag_timer * 6.0) % 2 == 0 else 0
@@ -348,6 +369,39 @@ class SteppeCompanion:
             if hasattr(player, "pets_count"):
                 player.pets_count += 1
         return True
+
+    def command_dig(self, player: Optional[Any] = None) -> Optional[Tuple[str, int]]:
+        """
+        [K]: Commands Kangal to sniff and dig into the autumn soil for hidden campus treasures.
+        Unearths bonus acorns or ancient relic shards, strengthening the companion bond.
+        """
+        if self.dig_cooldown > 0.0:
+            return None
+        self.dig_cooldown = 10.0
+        self.dig_timer = 1.6
+        self.tail_wag_timer = 4.0
+        self.treasures_found += 1
+        if self.treasures_found >= 3:
+            self.loyalty_tier = 3
+        elif self.treasures_found >= 1:
+            self.loyalty_tier = 2
+
+        if self.treasures_found % 3 == 0:
+            kind = "relic_shard"
+            amount = 1
+        else:
+            kind = "acorn"
+            amount = 3
+
+        if player is not None:
+            if kind == "acorn":
+                player.acorns_collected += amount
+            elif kind == "relic_shard":
+                player.warmth = min(player.max_warmth, player.warmth + 20.0)
+            if hasattr(player, "kangal_treasures_found"):
+                player.kangal_treasures_found += 1
+
+        return kind, amount
 
     def update(
         self,
@@ -375,6 +429,8 @@ class SteppeCompanion:
         self.distract_cooldown = max(0.0, self.distract_cooldown - dt)
         self.tail_wag_timer = max(0.0, self.tail_wag_timer - dt)
         self.pet_timer = max(0.0, self.pet_timer - dt)
+        self.dig_cooldown = max(0.0, self.dig_cooldown - dt)
+        self.dig_timer = max(0.0, self.dig_timer - dt)
         self.bark_alert_trigger = False
 
         # 1. Follow Player Behavior
@@ -521,6 +577,14 @@ class Player:
         # ODTÜ Bilim Ağacı Ayini / Science Tree Activation Aura ([E])
         self.bilim_ritual_timer = 0.0
         self.perfect_parries = 0
+
+        # Yalıncak Antik Bozkır Kalkanı / Ancient Steppe Aegis Blessing ([E])
+        self.yalincak_blessing_timer = 0.0
+
+        # Bozkır Rüzgarı Kasırgası / Leaf Cyclone Vortex ([T])
+        self.cyclone_timer = 0.0
+        self.cyclone_cooldown = 0.0
+        self.kangal_treasures_found = 0
 
     @property
     def is_in_overdrive(self) -> bool:
@@ -677,6 +741,16 @@ class Player:
         self.invuln_timer = max(self.invuln_timer, 0.70)
         return True
 
+    def trigger_cyclone(self) -> bool:
+        """[T]: Unleashes Bozkır Rüzgarı Kasırgası (Leaf Cyclone), gathering leaves in a 360-deg whirlwind."""
+        if self.cyclone_cooldown > 0.0 or self.warmth < 15.0:
+            return False
+        self.warmth = max(1.0, self.warmth - 14.0)
+        self.cyclone_timer = 1.85
+        self.cyclone_cooldown = 3.60
+        self.invuln_timer = max(self.invuln_timer, 0.45)
+        return True
+
     def update(
         self,
         dt: float,
@@ -705,6 +779,9 @@ class Player:
         self.campfire_aura_timer = max(0.0, self.campfire_aura_timer - dt)
         self.overdrive_timer = max(0.0, self.overdrive_timer - dt)
         self.bilim_ritual_timer = max(0.0, self.bilim_ritual_timer - dt)
+        self.yalincak_blessing_timer = max(0.0, self.yalincak_blessing_timer - dt)
+        self.cyclone_timer = max(0.0, self.cyclone_timer - dt)
+        self.cyclone_cooldown = max(0.0, self.cyclone_cooldown - dt)
 
         # Passive Solar Bolt recharge, Devrim Torch warmth aura & Bilim Ağacı ritual halo
         if self.solar_bolts < self.max_solar_bolts:

@@ -491,6 +491,71 @@ def synth_leaf_scatter() -> np.ndarray:
     return wave
 
 
+def synth_lynx_snarl() -> np.ndarray:
+    """
+    Synthesizes an authentic feline hiss/snarl for the Anatolian Steppe Lynx.
+    Aggressive rasping noise modulated by a descending pitch throat growl.
+    """
+    duration = int(SAMPLE_RATE * 0.38)
+    t = np.linspace(0.0, 0.38, duration, endpoint=False)
+    freq = 460.0 - 180.0 * (t / 0.38)
+    tone = np.sin(2.0 * np.pi * np.cumsum(freq) / SAMPLE_RATE)
+    rasp = 0.5 + 0.5 * np.sin(2.0 * np.pi * 75.0 * t)
+    noise = np.random.uniform(-0.5, 0.5, duration)
+    env = np.sin(np.pi * (t / 0.38)) * np.exp(-t * 2.8)
+    wave = ((tone * 0.45 * rasp) + (noise * 0.55)) * env * 0.42
+    return wave
+
+
+def synth_dolmen_resonance() -> np.ndarray:
+    """
+    Synthesizes the deep, ancient megalithic bell resonance of the Yalıncak Dolmen.
+    Sub-bass ground hum (82 Hz) blended with shimmering Anatolian bronze bell harmonics.
+    """
+    duration = int(SAMPLE_RATE * 0.95)
+    t = np.linspace(0.0, 0.95, duration, endpoint=False)
+    sub_bass = np.sin(2.0 * np.pi * 82.4 * t) * np.exp(-t * 2.2)
+    bronze_1 = np.sin(2.0 * np.pi * 329.6 * t) * np.exp(-t * 4.5)
+    bronze_2 = np.sin(2.0 * np.pi * 493.88 * t) * np.exp(-t * 6.0)
+    shimmer = np.sin(2.0 * np.pi * 659.25 * t) * np.exp(-t * 7.5) * (0.5 + 0.5 * np.sin(2.0 * np.pi * 6.0 * t))
+    wave = (sub_bass * 0.45 + bronze_1 * 0.30 + bronze_2 * 0.20 + shimmer * 0.15) * 0.45
+    return wave
+
+
+def synth_leaf_cyclone() -> np.ndarray:
+    """
+    Synthesizes a sweeping, swirling autumn leaf whirlwind vortex.
+    Rising wind whistle envelope blended with granular leaf rustle and Doppler swirl.
+    """
+    duration = int(SAMPLE_RATE * 0.55)
+    t = np.linspace(0.0, 0.55, duration, endpoint=False)
+    freq_sweep = np.linspace(160.0, 520.0, duration)
+    wind = np.sin(2.0 * np.pi * np.cumsum(freq_sweep) / SAMPLE_RATE)
+    swirl = 0.5 + 0.5 * np.sin(2.0 * np.pi * 12.0 * t)
+    leaf_noise = np.random.uniform(-0.4, 0.4, duration) * (0.4 + 0.6 * np.sin(2.0 * np.pi * 18.0 * t))
+    env = np.sin(np.pi * (t / 0.55)) * np.exp(-t * 1.5)
+    wave = (wind * 0.50 * swirl + leaf_noise * 0.50) * env * 0.45
+    return wave
+
+
+def synth_kangal_dig() -> np.ndarray:
+    """
+    Synthesizes a soil digging scrape followed by a celebratory treasure discovery chime.
+    """
+    duration = int(SAMPLE_RATE * 0.42)
+    t = np.linspace(0.0, 0.42, duration, endpoint=False)
+    scrape_mask = np.where(t < 0.22, 1.0, 0.0)
+    scrape = np.random.uniform(-0.5, 0.5, duration) * np.sin(2.0 * np.pi * 28.0 * t) * scrape_mask
+    chime_mask = np.where(t >= 0.18, 1.0, 0.0)
+    chime_t = np.maximum(0.0, t - 0.18)
+    chime = (
+        np.sin(2.0 * np.pi * 659.25 * chime_t) * np.exp(-chime_t * 9.0)
+        + 0.5 * np.sin(2.0 * np.pi * 880.0 * chime_t) * np.exp(-chime_t * 12.0)
+    ) * chime_mask
+    wave = (scrape * 0.35 + chime * 0.40) * 0.45
+    return wave
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -522,6 +587,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "distant_thunder": audio_dir / "distant_thunder.wav",
         "companion_bark": audio_dir / "companion_bark.wav",
         "leaf_scatter": audio_dir / "leaf_scatter.wav",
+        "lynx_snarl": audio_dir / "lynx_snarl.wav",
+        "dolmen_resonance": audio_dir / "dolmen_resonance.wav",
+        "leaf_cyclone": audio_dir / "leaf_cyclone.wav",
+        "kangal_dig": audio_dir / "kangal_dig.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -578,6 +647,14 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["companion_bark"], synth_companion_bark())
     if not files["leaf_scatter"].exists():
         _save_wav_int16(files["leaf_scatter"], synth_leaf_scatter())
+    if not files["lynx_snarl"].exists():
+        _save_wav_int16(files["lynx_snarl"], synth_lynx_snarl())
+    if not files["dolmen_resonance"].exists():
+        _save_wav_int16(files["dolmen_resonance"], synth_dolmen_resonance())
+    if not files["leaf_cyclone"].exists():
+        _save_wav_int16(files["leaf_cyclone"], synth_leaf_cyclone())
+    if not files["kangal_dig"].exists():
+        _save_wav_int16(files["kangal_dig"], synth_kangal_dig())
 
     return files
 
