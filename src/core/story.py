@@ -295,3 +295,33 @@ class StoryManager:
             if self.dialogue_timer <= 0.0:
                 self.active_dialogue = None
         return revealed_char
+
+
+def evaluate_academic_grade(
+    relics_collected: int,
+    acorns_collected: int,
+    enemies_defeated: int,
+    orbs_deflected: int,
+    active_boons_count: int,
+    depth_level: int = 1,
+) -> Tuple[str, str, int]:
+    """
+    Evaluates player run performance into an official METU Academic Honor Rank (S/A/B/C).
+    Returns (grade_letter, title, total_score).
+    """
+    score = (
+        relics_collected * 600
+        + acorns_collected * 180
+        + enemies_defeated * 220
+        + orbs_deflected * 150
+        + active_boons_count * 400
+        + depth_level * 500
+    )
+    if score >= 10000:
+        return "S", "ODTÜ KEMAL KURDAŞ ÜSTÜN BAŞARI DERECESİ", score
+    elif score >= 6000:
+        return "A", "ODTÜ BİLİM & EMEK ŞEREF LİSTESİ", score
+    elif score >= 3000:
+        return "B", "BOZKIR SEYYAHI LİYAKAT DİPLOMASI", score
+    else:
+        return "C", "GÜZ ÇIRAĞI KATILIM BELGESİ", score

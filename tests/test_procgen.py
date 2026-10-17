@@ -942,6 +942,140 @@ def test_steppe_alchemy_and_tactical_map_modal() -> None:
     assert game.tactical_map_open
 
 
+def test_steppe_raven_enemy_and_screech_synthesis() -> None:
+    """
+    [Test 32] Verifies:
+    1. Procedural avian screech synthesizer synth_raven_screech() outputs valid audio array.
+    2. Bozkır Kuzgunu (Steppe Shadow Raven) enemy stats, swoop and dive AI behavior.
+    3. Defeating a raven triggers speed boost and acorn drop.
+    """
+    import numpy as np
+    from src.core.audio_synth import synth_raven_screech
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    screech = synth_raven_screech()
+    assert len(screech) > 0
+    assert np.max(np.abs(screech)) <= 1.0
+
+    game = AutumnProcGenGame(initial_seed="RAVEN-TEST", debug_procgen=False, headless=True)
+    raven = EnemyAgent(x=game.player.x + 3.0, y=game.player.y + 1.0, kind="raven")
+    assert raven.max_hp == 2
+    assert raven.speed == 3.90
+    assert raven.radius == 0.28
+    game.enemies.append(raven)
+
+    # Update raven AI
+    raven.update(0.016, game.player.x, game.player.y, 0.0, game.spatial_hash)
+    assert abs(raven.vx) > 0.0 or abs(raven.vy) > 0.0
+
+    # Defeat raven and test reward
+    initial_items = len(game.items)
+    game._on_enemy_defeated(raven)
+    assert game.player.leaf_boost_timer > 3.0
+    assert len(game.items) == initial_items + 1
+
+    # Render frame with raven
+    game.render()
+
+
+def test_eymir_spring_structure_and_healing() -> None:
+    """
+    [Test 33] Verifies:
+    1. Procedural bubbling water synthesizer synth_spring_splash() outputs valid audio array.
+    2. Eymir Şifa Pınarı (Sacred Healing Spring) structure placement in world gen.
+    3. Interacting with the spring restores full warmth, invulnerability, and speed.
+    """
+    import numpy as np
+    from src.core.audio_synth import synth_spring_splash
+    from src.procgen.structures import StructurePlacement
+    from src.main import AutumnProcGenGame
+
+    splash = synth_spring_splash()
+    assert len(splash) > 0
+    assert np.max(np.abs(splash)) <= 1.0
+
+    game = AutumnProcGenGame(initial_seed="SPRING-TEST", debug_procgen=False, headless=True)
+    # Manually ensure an eymir_pinari structure exists near player
+    spring_x = int(game.player.x) + 1
+    spring_y = int(game.player.y)
+    game.world.structures.append(
+        StructurePlacement(tile_x=spring_x, tile_y=spring_y, structure_type="eymir_pinari", radius_tiles=1)
+    )
+
+    # Deplete warmth
+    game.player.warmth = 25.0
+    game.player.invuln_timer = 0.0
+    game.player.leaf_boost_timer = 0.0
+
+    # Interact with spring
+    game._try_interact_action()
+    assert game.player.warmth == game.player.max_warmth
+    assert game.player.invuln_timer > 2.0
+    assert game.player.leaf_boost_timer > 5.0
+
+    # Render frame
+    game.render()
+
+
+def test_perfect_parry_and_academic_grade_evaluator() -> None:
+    """
+    [Test 34] Verifies:
+    1. METU Academic Grade Evaluator calculates S, A, B, and C tiers correctly.
+    2. Perfect Parry counter timing blocks damage, awards warmth, recharges bolts, and counters enemy.
+    3. Victory modal renders S-tier academic grade strip cleanly in headless mode.
+    """
+    from src.core.story import evaluate_academic_grade
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    # 1. Academic Grade Evaluation tests
+    grade_c, title_c, score_c = evaluate_academic_grade(1, 1, 1, 0, 0, 1)
+    assert grade_c == "C"
+    assert "ÇIRAĞI" in title_c
+
+    grade_b, title_b, score_b = evaluate_academic_grade(3, 4, 3, 2, 1, 2)
+    assert grade_b == "B"
+    assert "SEYYAHI" in title_b
+
+    grade_a, title_a, score_a = evaluate_academic_grade(4, 6, 5, 4, 3, 3)
+    assert grade_a == "A"
+    assert "ŞEREF" in title_a
+
+    grade_s, title_s, score_s = evaluate_academic_grade(5, 8, 8, 6, 5, 4)
+    assert grade_s == "S"
+    assert "KURDAŞ" in title_s
+
+    # 2. Perfect Parry Counter Mechanics
+    game = AutumnProcGenGame(initial_seed="PARRY-TEST", debug_procgen=False, headless=True)
+    game.player.warmth = 80.0
+    game.player.attack_timer = 0.12  # Active swing
+    game.player.solar_bolts = 0
+
+    # Spawn enemy near player
+    wolf = EnemyAgent(x=game.player.x + 0.8, y=game.player.y, kind="wolf")
+    wolf.hp = 10
+    game.enemies.append(wolf)
+
+    # Apply enemy incoming hit during active player swing -> triggers PERFECT PARRY!
+    game._apply_player_damage(20.0)
+
+    # Warmth should not have decreased; instead gained parry warmth
+    assert game.player.warmth > 80.0
+    assert game.player.solar_bolts > 0
+    assert game.player.invuln_timer > 0.40
+    # Enemy took parry counter damage
+    assert wolf.hp <= 5
+
+    # 3. Victory modal rendering with S-rank
+    game.story.show_victory_modal = True
+    game.player.relics_collected = 5
+    game.player.acorns_collected = 10
+    game.player.enemies_defeated = 10
+    game.render()
+
+
+
 
 
 

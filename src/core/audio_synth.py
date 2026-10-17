@@ -362,6 +362,48 @@ def synth_alchemy_chime() -> np.ndarray:
     return wave
 
 
+def synth_raven_screech() -> np.ndarray:
+    """
+    Synthesizes a predatory avian screech for Bozkır Kuzgunu (Steppe Raven)
+    using frequency-modulated harmonic overtones and rapid pitch decay.
+    """
+    duration = int(SAMPLE_RATE * 0.42)
+    t = np.linspace(0.0, 0.42, duration, endpoint=False)
+    # Pitch descent from 2200 Hz down to 880 Hz
+    f0 = 2200.0 * np.exp(-t * 3.2)
+    fm = 40.0 * np.sin(2.0 * np.pi * 35.0 * t)
+    phase = 2.0 * np.pi * np.cumsum(f0 + fm) / SAMPLE_RATE
+    carrier = np.sin(phase) + 0.5 * np.sin(2.0 * phase) + 0.25 * np.sin(3.0 * phase)
+    noise = np.random.uniform(-0.15, 0.15, duration)
+    env = np.sin(np.pi * (t / 0.42)) ** 0.8
+    wave = (carrier + noise) * env * 0.38
+    return wave
+
+
+def synth_spring_splash() -> np.ndarray:
+    """
+    Synthesizes a bubbling subterranean mineral water droplet surge
+    for Eymir Şifa Pınarı (Sacred Healing Springs).
+    """
+    duration = int(SAMPLE_RATE * 0.55)
+    wave = np.zeros(duration, dtype=np.float32)
+    # Staggered bubbling droplets
+    bubble_freqs = [440.0, 523.25, 659.25, 880.0, 1046.50]
+    for idx, f in enumerate(bubble_freqs):
+        offset = int(idx * 0.08 * SAMPLE_RATE)
+        sub_len = duration - offset
+        if sub_len <= 0:
+            continue
+        t_sub = np.linspace(0.0, sub_len / SAMPLE_RATE, sub_len, endpoint=False)
+        # Upward chirping bubble pitch
+        f_chirp = f * (1.0 + 1.2 * (t_sub * 4.0))
+        phase = 2.0 * np.pi * np.cumsum(f_chirp) / SAMPLE_RATE
+        env = np.exp(-t_sub * 16.0)
+        bubble = np.sin(phase) * env
+        wave[offset:] += bubble * 0.22
+    return wave
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -387,6 +429,8 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "level_up": audio_dir / "level_up.wav",
         "devrim_overdrive": audio_dir / "devrim_overdrive.wav",
         "alchemy_chime": audio_dir / "alchemy_chime.wav",
+        "raven_screech": audio_dir / "raven_screech.wav",
+        "spring_splash": audio_dir / "spring_splash.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -431,6 +475,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["devrim_overdrive"], synth_devrim_overdrive())
     if not files["alchemy_chime"].exists():
         _save_wav_int16(files["alchemy_chime"], synth_alchemy_chime())
+    if not files["raven_screech"].exists():
+        _save_wav_int16(files["raven_screech"], synth_raven_screech())
+    if not files["spring_splash"].exists():
+        _save_wav_int16(files["spring_splash"], synth_spring_splash())
 
     return files
 

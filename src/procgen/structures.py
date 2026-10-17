@@ -212,6 +212,24 @@ def synthesize_autumn_structures(
                     )
                 )
 
+    # Select 1 candidate clearing for Eymir Sacred Healing Spring (Eymir Şifa Pınarı)
+    for sx, sy in candidates:
+        if (sx, sy) in placed_camps or (sx, sy) in placed_kitabes:
+            continue
+        if (sx - spawn_tile[0]) ** 2 + (sy - spawn_tile[1]) ** 2 < 25:
+            continue
+        if (sx - shrine_tile[0]) ** 2 + (sy - shrine_tile[1]) ** 2 < 25:
+            continue
+        structures.append(
+            StructurePlacement(
+                tile_x=sx,
+                tile_y=sy,
+                structure_type="eymir_pinari",
+                radius_tiles=1,
+            )
+        )
+        break
+
     # Place wooden boardwalk tiles along a segment of the shortest path
     if len(shortest_path) > 10:
         mid_idx = len(shortest_path) // 2

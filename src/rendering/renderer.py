@@ -21,6 +21,7 @@ from src.core.palette import (
     SUNLIT_BIRCH,
     PALE_SUNBEAM,
     AUTUMN_MIST,
+    SLATE_FOG,
     hue_shift_toward_light,
     hue_shift_toward_shadow,
 )
@@ -190,6 +191,18 @@ class WorldRenderer:
                         pygame.draw.circle(canvas, HARVEST_GOLD, (dx, dy), 10, 1)
                         canvas.blit(self.assets.kitabe_surf, (dx - 8, dy - 20))
                     y_sort_queue.append((ky_px, _draw_kitabe))
+            elif st.structure_type == "eymir_pinari":
+                sx_px = (st.tile_x + 0.5) * TILE_SIZE
+                sy_px = (st.tile_y + 0.5) * TILE_SIZE
+                ssx, ssy = camera.world_to_screen(sx_px, sy_px)
+                if -24 <= ssx <= NATIVE_WIDTH + 24 and -24 <= ssy <= NATIVE_HEIGHT + 24:
+                    spring_f = int(time_sec * 4.5) % 2
+                    spring_s = self.assets.spring_frames[spring_f]
+                    def _draw_spring(dx: int = ssx, dy: int = ssy, s=spring_s) -> None:
+                        pygame.draw.circle(canvas, AUTUMN_MIST, (dx, dy), 12, 1)
+                        pygame.draw.circle(canvas, SLATE_FOG, (dx, dy), 8, 1)
+                        canvas.blit(s, (dx - 8, dy - 9))
+                    y_sort_queue.append((sy_px, _draw_spring))
 
         # 3c. Ancient Autumn Shrine (32x32)
         shx = (world.shrine_tile[0] + 0.5) * TILE_SIZE

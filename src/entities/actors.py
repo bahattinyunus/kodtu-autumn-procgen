@@ -117,6 +117,12 @@ class EnemyAgent:
             self.aggro_range = 7.2
             self.radius = 0.32
             self.damage = 14.0
+        elif kind == "raven":
+            self.max_hp = 2
+            self.speed = 3.90
+            self.aggro_range = 8.0
+            self.radius = 0.28
+            self.damage = 10.0
         elif kind == "warden":
             self.max_hp = 12
             self.speed = 2.65
@@ -211,6 +217,13 @@ class EnemyAgent:
                     pounce = 1.65 if math.sin(self.phase * 3.6) > 0.25 else 0.85
                     dir_x *= pounce
                     dir_y *= pounce
+            elif self.kind == "raven":
+                # Bozkır Kuzgunu: Airborne aerial predator swoops in arcs and dives
+                perp_x, perp_y = -dir_y, dir_x
+                swoop = math.sin(self.phase * 3.2) * 0.75
+                dive = 1.35 if math.sin(self.phase * 2.4) > 0.3 else 0.90
+                dir_x = (dir_x * dive) + (perp_x * swoop)
+                dir_y = (dir_y * dive) + (perp_x * swoop)
             elif self.kind == "warden":
                 # Elder Stag Warden: Phase 1 has rhythmic surges & 3-way orbs; Phase 2 (Enraged) has rapid charges & 8-way ring volley
                 if self.is_enraged:

@@ -26,7 +26,7 @@ from src.core.palette import (
     AUTUMN_MIST,
 )
 from src.core.asset_builder import AssetBank
-from src.core.story import StoryManager, CHAPTER_INFO
+from src.core.story import StoryManager, CHAPTER_INFO, evaluate_academic_grade
 from src.entities.actors import Player, CollectibleItem, EnemyAgent, AUTUMN_BOONS
 from src.procgen.pipeline import WorldData
 
@@ -929,13 +929,36 @@ class ModernStoryOverlay:
             sb.blit(lbl_sv, ((stat_w - lbl_sv.get_width()) // 2, 50))
             card.blit(sb, (sx, stat_y))
 
+        # Academic Honor Rank Strip
+        grade_letter, grade_title, total_score = evaluate_academic_grade(
+            relics_collected=player.relics_collected,
+            acorns_collected=player.acorns_collected,
+            enemies_defeated=player.enemies_defeated,
+            orbs_deflected=player.orbs_deflected,
+            active_boons_count=len(player.active_boons),
+            depth_level=world.depth_level,
+        )
+        grade_y = 330
+        grade_w = cw - 64
+        grade_surf = pygame.Surface((grade_w, 34), pygame.SRCALPHA)
+        grade_surf.fill((*PLUM_SHADOW, 230))
+        pygame.draw.rect(grade_surf, HARVEST_GOLD, (0, 0, grade_w, 34), 2, border_radius=6)
+        grade_col = PALE_SUNBEAM if grade_letter == "S" else (SUNLIT_BIRCH if grade_letter == "A" else HARVEST_GOLD)
+        lbl_grade = self.f_body_bold.render(
+            f"🎓 [DERECENİZ: {grade_letter}] {grade_title}  •  AKADEMİK BAŞARI SKORU: {total_score:,} PUAN",
+            True,
+            grade_col,
+        )
+        grade_surf.blit(lbl_grade, ((grade_w - lbl_grade.get_width()) // 2, 7))
+        card.blit(grade_surf, (32, grade_y))
+
         # Seed Sharing Strip
-        strip_y = 340
+        strip_y = 372
         strip_w = cw - 64
-        strip = pygame.Surface((strip_w, 36), pygame.SRCALPHA)
+        strip = pygame.Surface((strip_w, 34), pygame.SRCALPHA)
         strip.fill((*DEEP_VOID, 240))
-        pygame.draw.rect(strip, HARVEST_GOLD, (0, 0, strip_w, 36), 1, border_radius=6)
-        lbl_seed = self.f_body_bold.render(
+        pygame.draw.rect(strip, WITHERED_BARK, (0, 0, strip_w, 34), 1, border_radius=6)
+        lbl_seed = self.f_small.render(
             f"MÜHÜRLENEN ŞAMPİYONLUK TOHUMU: {world.seed_code}  (Arkadaşlarınla Paylaş)",
             True,
             PALE_SUNBEAM,

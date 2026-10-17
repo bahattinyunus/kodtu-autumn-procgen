@@ -218,7 +218,10 @@ def _budget_entities_and_relics(
         elif cd >= 0.50 and threat_budget >= 2 and prng.random() < 0.45:
             etype = "wolf"
             cost = 2
-        elif cd >= 0.36 and threat_budget >= 2 and prng.random() < 0.65:
+        elif cd >= 0.40 and threat_budget >= 2 and prng.random() < 0.45:
+            etype = "raven"
+            cost = 2
+        elif cd >= 0.32 and threat_budget >= 2 and prng.random() < 0.65:
             etype = "stalker"
             cost = 2
         else:

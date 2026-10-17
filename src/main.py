@@ -726,6 +726,17 @@ class AutumnProcGenGame:
                         )
                         self.spawn_floating_text(cx, cy - 0.5, "KAMP ATEŞİ DİNLENMESİ!", PALE_SUNBEAM)
                     return
+            elif st.structure_type == "eymir_pinari":
+                px, py = st.tile_x + 0.5, st.tile_y + 0.5
+                if math.hypot(self.player.x - px, self.player.y - py) <= 2.2:
+                    self.sound.play("spring_splash")
+                    self.player.warmth = self.player.max_warmth
+                    self.player.invuln_timer = max(self.player.invuln_timer, 2.5)
+                    self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 6.0)
+                    self.leaf_system.spawn_burst(px * TILE_SIZE, py * TILE_SIZE, count=24, golden_bias=True)
+                    self.hud.show_banner("EYMİR ŞİFA PINARI YUDUMLANDI! (TAM ISI + 6s HIZ + KORUMA)", duration=3.5)
+                    self.spawn_floating_text(px, py - 0.5, "ŞİFA PINARI!", PALE_SUNBEAM)
+                    return
 
         # 2. Check Shrine
         self._try_interact_shrine()
@@ -1024,6 +1035,18 @@ class AutumnProcGenGame:
             self.leaf_system.spawn_burst(
                 enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=16, golden_bias=False
             )
+        elif enemy.kind == "raven":
+            self.sound.play("raven_screech")
+            self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 4.0)
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 10.0)
+            self.items.append(
+                CollectibleItem(x=enemy.x, y=enemy.y, kind="acorn", bob_phase=enemy.x)
+            )
+            self.spawn_floating_text(enemy.x, enemy.y - 0.4, "+KUZGUN HIZI!", PALE_SUNBEAM)
+            self.hud.show_banner("BOZKIR KUZGUNU SAVUŞTURULDU! (+4s HIZ İVMESİ & PALAMUT)", duration=3.0)
+            self.leaf_system.spawn_burst(
+                enemy.x * TILE_SIZE, enemy.y * TILE_SIZE, count=18, golden_bias=True
+            )
         else:
             self.player.warmth = min(self.player.max_warmth, self.player.warmth + 8.0)
             self.leaf_system.spawn_burst(
@@ -1050,6 +1073,26 @@ class AutumnProcGenGame:
             self.spawn_floating_text(self.player.x, self.player.y - 0.5, "FENER YENİDEN HARLANDI!", PALE_SUNBEAM)
 
     def _apply_player_damage(self, damage: float) -> None:
+        # Check for Perfect Parry timing: player was in active ember slash or dash
+        if self.player.attack_timer > 0.04 or (self.player.dash_timer > 0.05 and self.player.invuln_timer <= 0.0):
+            # Mükemmel Savurma / Perfect Parry Counter!
+            self.sound.play("parry_spark")
+            self.sound.play("deflect_clash")
+            self.hit_stop_timer = 0.08
+            self.camera.add_trauma(0.45)
+            self.player.invuln_timer = 0.50
+            self.player.warmth = min(self.player.max_warmth, self.player.warmth + 12.0)
+            self.player.recharge_bolt_on_melee()
+            self.player.increment_combo(2)
+            self.spawn_floating_text(self.player.x, self.player.y - 0.5, "MÜKEMMEL SAVURMA!", PALE_SUNBEAM)
+            self.hud.show_banner("⚡ MÜKEMMEL SAVURMA! (HASAR BLOKLANDI +12 ISI & KÖZ DOLUMU)", duration=2.8)
+            self.leaf_system.spawn_burst(self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=16, golden_bias=True)
+            for en in self.enemies:
+                if en.alive and math.hypot(en.x - self.player.x, en.y - self.player.y) <= 2.2:
+                    en.apply_hit(5, self.player.x, self.player.y, knockback=12.0)
+                    self.spawn_floating_text(en.x, en.y - 0.3, "-5 PARRY!", HARVEST_GOLD)
+            return
+
         self.player.warmth = max(0.0, self.player.warmth - damage)
         self.player.invuln_timer = 0.75
         self.camera.add_trauma(0.40)

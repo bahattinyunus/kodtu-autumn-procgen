@@ -570,6 +570,26 @@ def _build_entity_sprite(kind: str, frame: int = 0) -> np.ndarray:
         arr[3 + bob, 10] = (*DEEP_VOID, 255)
         arr[4 + bob, 12] = (*BURNT_AMBER, 255)
         arr[3 + bob, 12] = (*DEEP_VOID, 255)
+    elif kind == "raven":
+        # Bozkır Kuzgunu (Steppe Shadow Raven: sleek plumage, flapping wings, amber eye)
+        wing_span = 2 if frame == 1 else 0
+        for y in range(4 - wing_span, 9):
+            for x in range(1, 15):
+                if x in (1, 14) or y == (4 - wing_span):
+                    arr[y, x] = (*DEEP_VOID, 255)
+                elif 3 <= x <= 12:
+                    col = WITHERED_BARK if (x + y) % 2 == 0 else PLUM_SHADOW
+                    arr[y, x] = (*col, 255)
+        # Body & Tail
+        for y in range(7, 13):
+            for x in range(6, 10):
+                body_c = DEEP_VOID if (x in (6, 9) or y == 12) else PLUM_SHADOW
+                arr[y, x] = (*body_c, 255)
+        # Head & Sharp Beak
+        arr[5, 8] = (*PLUM_SHADOW, 255)
+        arr[5, 9] = (*SUNLIT_BIRCH, 255)  # Glowing amber eye
+        arr[6, 10] = (*HARVEST_GOLD, 255)  # Amber beak
+        arr[6, 11] = (*DEEP_VOID, 255)
     elif kind == "warden":
         # Elder Stag Warden (Crowned Shrine Guardian with Golden Antlers)
         for y in range(4 + bob, 15):
@@ -626,6 +646,24 @@ def _build_campfire_sprite(frame: int = 0) -> np.ndarray:
             else:
                 col = HARVEST_GOLD if (x + y + frame) % 2 == 0 else BURNT_AMBER
             arr[y, x] = (*col, 255)
+    return arr
+
+
+def _build_spring_sprite(frame: int = 0) -> np.ndarray:
+    """Renders a 16x16 bubbling Eymir Sacred Healing Spring with slate basin and crystal ripple."""
+    arr = np.zeros((16, 16, 4), dtype=np.uint8)
+    # Slate basin ring
+    _draw_circle_px(arr, 8, 9, 6, SLATE_FOG)
+    _draw_circle_px(arr, 8, 9, 5, WITHERED_BARK)
+    _draw_circle_px(arr, 8, 9, 4, AUTUMN_MIST)
+    _draw_circle_px(arr, 8, 9, 3, PLUM_SHADOW)
+    # Bubbling central water fountain
+    rip = 1 if frame % 2 == 1 else 0
+    arr[7 - rip, 8] = (*PALE_SUNBEAM, 255)
+    arr[8, 8] = (*SUNLIT_BIRCH, 255)
+    arr[9, 8] = (*AUTUMN_MIST, 255)
+    arr[8, 7] = (*SLATE_FOG, 255)
+    arr[8, 9] = (*SLATE_FOG, 255)
     return arr
 
 
@@ -814,7 +852,7 @@ class AssetBank:
         self.entity_surfaces: Dict[Tuple[str, int], pygame.Surface] = {}
         entities_sheet = np.zeros((32, 16 * 16, 4), dtype=np.uint8)
         ec = 0
-        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden"):
+        for ekind in ("relic", "acorn", "wisp", "stalker", "wolf", "golem", "warden", "raven"):
             for f in range(2):
                 e_arr = _build_entity_sprite(ekind, f)
                 self.entity_surfaces[(ekind, f)] = _ndarray_to_surface(e_arr)
@@ -824,6 +862,10 @@ class AssetBank:
         self.campfire_frames = [
             _ndarray_to_surface(_build_campfire_sprite(0)),
             _ndarray_to_surface(_build_campfire_sprite(1)),
+        ]
+        self.spring_frames = [
+            _ndarray_to_surface(_build_spring_sprite(0)),
+            _ndarray_to_surface(_build_spring_sprite(1)),
         ]
         self.boardwalk_surf = _ndarray_to_surface(_build_boardwalk_sprite())
         self.bilim_agaci_surf = _ndarray_to_surface(_build_bilim_agaci_sprite())
