@@ -125,6 +125,7 @@ class AutumnProcGenGame:
         self.target_victory_depth = target_victory_depth
         self.is_paused = False
         self.tactical_map_open = False
+        self.thunder_timer = 18.0
 
         # Active world state
         self.world: WorldData
@@ -286,6 +287,21 @@ class AutumnProcGenGame:
                             self.hud.seed_input_buffer += ch
                     continue
 
+                if getattr(self.hud, "ledger_modal_open", False):
+                    if event.key in (pygame.K_ESCAPE, pygame.K_j, pygame.K_SPACE, pygame.K_RETURN):
+                        self.hud.ledger_modal_open = False
+                        continue
+                    elif event.key == pygame.K_c:
+                        self.hud.ledger_modal_open = False
+                        self.hud.codex_modal_open = True
+                        continue
+                    elif event.key == pygame.K_TAB:
+                        self.hud.ledger_modal_open = False
+                        self.hud.seed_modal_open = True
+                        self.hud.seed_input_buffer = self.world.seed_input
+                        continue
+                    continue
+
                 if getattr(self, "tactical_map_open", False):
                     if event.key in (pygame.K_ESCAPE, pygame.K_n, pygame.K_m, pygame.K_SPACE, pygame.K_RETURN):
                         self.tactical_map_open = False
@@ -307,6 +323,9 @@ class AutumnProcGenGame:
                     elif event.key == pygame.K_c:
                         self.hud.codex_modal_open = not self.hud.codex_modal_open
                         continue
+                    elif event.key == pygame.K_j:
+                        self.hud.ledger_modal_open = not self.hud.ledger_modal_open
+                        continue
                     elif event.key == pygame.K_n:
                         self.tactical_map_open = not self.tactical_map_open
                         continue
@@ -315,6 +334,9 @@ class AutumnProcGenGame:
                     continue
 
                 if event.key == pygame.K_ESCAPE:
+                    if self.hud.ledger_modal_open:
+                        self.hud.ledger_modal_open = False
+                        continue
                     if self.hud.codex_modal_open:
                         self.hud.codex_modal_open = False
                         continue
@@ -329,10 +351,18 @@ class AutumnProcGenGame:
                     self.story.show_intro_card = not self.story.show_intro_card
                 elif event.key == pygame.K_c:
                     self.hud.codex_modal_open = not self.hud.codex_modal_open
+                    if self.hud.codex_modal_open:
+                        self.hud.ledger_modal_open = False
+                elif event.key == pygame.K_j:
+                    self.hud.ledger_modal_open = not self.hud.ledger_modal_open
+                    if self.hud.ledger_modal_open:
+                        self.hud.codex_modal_open = False
+                        self.tactical_map_open = False
                 elif event.key == pygame.K_n:
                     self.tactical_map_open = not self.tactical_map_open
                 elif event.key == pygame.K_TAB:
                     self.hud.codex_modal_open = False
+                    self.hud.ledger_modal_open = False
                     self.hud.seed_modal_open = True
                     self.hud.seed_input_buffer = self.world.seed_input
                 elif event.key == pygame.K_m:
@@ -416,6 +446,7 @@ class AutumnProcGenGame:
         if (
             self.is_paused
             or getattr(self, "tactical_map_open", False)
+            or getattr(self.hud, "ledger_modal_open", False)
             or self.hud.seed_modal_open
             or self.hud.codex_modal_open
             or self.story.show_intro_card
@@ -688,55 +719,74 @@ class AutumnProcGenGame:
             )
 
     def _try_interact_action(self) -> None:
-        """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele or Shrine."""
-        # 1. Check proximity to Historical Kitabeler
+        """[E] Interacts with the closest structure: Historical ODTÜ Inscription Stele, Campfire, Spring, Bilim Ağacı or Shrine."""
+        closest_st = None
+        closest_idx = -1
+        closest_dist = 999.0
         for idx, st in enumerate(self.world.structures):
+            cx, cy = st.tile_x + 0.5, st.tile_y + 0.5
+            dist = math.hypot(self.player.x - cx, self.player.y - cy)
+            max_r = 2.4 if st.structure_type in ("bilim_agaci", "eymir_pinari") else 2.0
+            if dist <= max_r and dist < closest_dist:
+                closest_dist = dist
+                closest_st = st
+                closest_idx = idx
+
+        if closest_st is not None:
+            st = closest_st
             if st.structure_type == "odtu_kitabe":
                 kx, ky = st.tile_x + 0.5, st.tile_y + 0.5
-                if math.hypot(self.player.x - kx, self.player.y - ky) <= 2.0:
-                    title, _ = self.story.on_read_kitabe(idx)
-                    self.player.warmth = min(self.player.max_warmth, self.player.warmth + 15.0)
-                    self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 8.0)
-                    self.sound.play("kitabe_chime")
-                    self.spawn_floating_text(kx, ky - 0.5, "KADİM ODTÜ MİRASI +ISI & HIZ", PALE_SUNBEAM)
-                    self.leaf_system.spawn_burst(
-                        kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
-                    )
-                    return
+                title, _ = self.story.on_read_kitabe(closest_idx)
+                self.player.warmth = min(self.player.max_warmth, self.player.warmth + 15.0)
+                self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 8.0)
+                self.sound.play("kitabe_chime")
+                self.spawn_floating_text(kx, ky - 0.5, "KADİM ODTÜ MİRASI +ISI & HIZ", PALE_SUNBEAM)
+                self.leaf_system.spawn_burst(
+                    kx * TILE_SIZE, ky * TILE_SIZE, count=18, golden_bias=True
+                )
+                return
             elif st.structure_type == "campfire":
                 cx, cy = st.tile_x + 0.5, st.tile_y + 0.5
-                if math.hypot(self.player.x - cx, self.player.y - cy) <= 2.0:
-                    self.sound.play("campfire_sizzle")
-                    self.player.warmth = self.player.max_warmth
-                    self.player.campfire_aura_timer = 25.0
-                    self.leaf_system.spawn_burst(
-                        cx * TILE_SIZE, cy * TILE_SIZE, count=24, golden_bias=True
+                self.sound.play("campfire_sizzle")
+                self.player.warmth = self.player.max_warmth
+                self.player.campfire_aura_timer = 25.0
+                self.leaf_system.spawn_burst(
+                    cx * TILE_SIZE, cy * TILE_SIZE, count=24, golden_bias=True
+                )
+                if self.player.acorns_collected > 0:
+                    self.player.acorns_collected -= 1
+                    self.hud.show_banner(
+                        "KÖZDE BOZKIR KESTANESİ KAVRULDU! (TAM ISI + 25s SICAK KÖZ AURASI)",
+                        duration=3.5,
                     )
-                    if self.player.acorns_collected > 0:
-                        self.player.acorns_collected -= 1
-                        self.hud.show_banner(
-                            "KÖZDE BOZKIR KESTANESİ KAVRULDU! (TAM ISI + 25s SICAK KÖZ AURASI)",
-                            duration=3.5,
-                        )
-                        self.spawn_floating_text(cx, cy - 0.5, "KÖZLENMİŞ KESTANE!", HARVEST_GOLD)
-                    else:
-                        self.hud.show_banner(
-                            "KAMP ATEŞİNDE DİNLENİLDİ (TAM ISI + SICAK KÖZ AURASI)",
-                            duration=3.0,
-                        )
-                        self.spawn_floating_text(cx, cy - 0.5, "KAMP ATEŞİ DİNLENMESİ!", PALE_SUNBEAM)
-                    return
+                    self.spawn_floating_text(cx, cy - 0.5, "KÖZLENMİŞ KESTANE!", HARVEST_GOLD)
+                else:
+                    self.hud.show_banner(
+                        "KAMP ATEŞİNDE DİNLENİLDİ (TAM ISI + SICAK KÖZ AURASI)",
+                        duration=3.0,
+                    )
+                    self.spawn_floating_text(cx, cy - 0.5, "KAMP ATEŞİ DİNLENMESİ!", PALE_SUNBEAM)
+                return
             elif st.structure_type == "eymir_pinari":
                 px, py = st.tile_x + 0.5, st.tile_y + 0.5
-                if math.hypot(self.player.x - px, self.player.y - py) <= 2.2:
-                    self.sound.play("spring_splash")
-                    self.player.warmth = self.player.max_warmth
-                    self.player.invuln_timer = max(self.player.invuln_timer, 2.5)
-                    self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 6.0)
-                    self.leaf_system.spawn_burst(px * TILE_SIZE, py * TILE_SIZE, count=24, golden_bias=True)
-                    self.hud.show_banner("EYMİR ŞİFA PINARI YUDUMLANDI! (TAM ISI + 6s HIZ + KORUMA)", duration=3.5)
-                    self.spawn_floating_text(px, py - 0.5, "ŞİFA PINARI!", PALE_SUNBEAM)
-                    return
+                self.sound.play("spring_splash")
+                self.player.warmth = self.player.max_warmth
+                self.player.invuln_timer = max(self.player.invuln_timer, 2.5)
+                self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 6.0)
+                self.leaf_system.spawn_burst(px * TILE_SIZE, py * TILE_SIZE, count=24, golden_bias=True)
+                self.hud.show_banner("EYMİR ŞİFA PINARI YUDUMLANDI! (TAM ISI + 6s HIZ + KORUMA)", duration=3.5)
+                self.spawn_floating_text(px, py - 0.5, "ŞİFA PINARI!", PALE_SUNBEAM)
+                return
+            elif st.structure_type == "bilim_agaci":
+                bx, by = st.tile_x + 0.5, st.tile_y + 0.5
+                self.sound.play("bilim_chime")
+                self.player.warmth = self.player.max_warmth
+                self.player.bilim_ritual_timer = 30.0
+                self.camera.add_trauma(0.40)
+                self.leaf_system.spawn_burst(bx * TILE_SIZE, by * TILE_SIZE, count=36, golden_bias=True)
+                self.hud.show_banner("ODTÜ BİLİM AĞACI AYİNİ AKTİF! (30s BİLİM HALESİ & TAM ISI)", duration=4.0)
+                self.spawn_floating_text(bx, by - 0.7, "BİLİM AĞACI HARLANDI!", PALE_SUNBEAM)
+                return
 
         # 2. Check Shrine
         self._try_interact_shrine()
@@ -770,10 +820,11 @@ class AutumnProcGenGame:
         if typewriter_stepped and int(self.time_sec * 24) % 3 == 0:
             self.sound.play("dialogue_blip")
 
-        # Pause gameplay movement/enemies while reading Intro Card, Victory Modal, Tactical Map, or when Paused
+        # Pause gameplay movement/enemies while reading Intro Card, Victory Modal, Tactical Map, Ledger, or when Paused
         if (
             self.is_paused
             or getattr(self, "tactical_map_open", False)
+            or getattr(self.hud, "ledger_modal_open", False)
             or self.story.show_intro_card
             or getattr(self.story, "show_victory_modal", False)
         ):
@@ -809,9 +860,14 @@ class AutumnProcGenGame:
             if self.player.warmth <= 0.0:
                 self._respawn_player(reason="frost")
         elif w_phase == 2:
-            # Steppe Gale Surge: tailwind acceleration when moving
+            # Steppe Gale Surge: tailwind acceleration when moving & rolling distant thunder
             if self.player.walk_timer > 0.0:
                 self.player.leaf_boost_timer = max(self.player.leaf_boost_timer, 0.25)
+            self.thunder_timer = getattr(self, "thunder_timer", 18.0) - dt
+            if self.thunder_timer <= 0.0:
+                self.thunder_timer = 22.0
+                self.sound.play("distant_thunder")
+                self.camera.add_trauma(0.18)
 
         # Periodically evolve the 2D Wind Vector Field with time
         self.wind_refresh_timer += dt
@@ -1084,6 +1140,7 @@ class AutumnProcGenGame:
             self.player.warmth = min(self.player.max_warmth, self.player.warmth + 12.0)
             self.player.recharge_bolt_on_melee()
             self.player.increment_combo(2)
+            self.player.perfect_parries += 1
             self.spawn_floating_text(self.player.x, self.player.y - 0.5, "MÜKEMMEL SAVURMA!", PALE_SUNBEAM)
             self.hud.show_banner("⚡ MÜKEMMEL SAVURMA! (HASAR BLOKLANDI +12 ISI & KÖZ DOLUMU)", duration=2.8)
             self.leaf_system.spawn_burst(self.player.x * TILE_SIZE, self.player.y * TILE_SIZE, count=16, golden_bias=True)
@@ -1169,6 +1226,7 @@ class AutumnProcGenGame:
             weather_name=w_name,
             is_paused=self.is_paused,
             tactical_map_open=getattr(self, "tactical_map_open", False),
+            ledger_open=getattr(self.hud, "ledger_modal_open", False),
         )
         pygame.display.flip()
 

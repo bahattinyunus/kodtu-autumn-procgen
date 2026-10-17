@@ -39,6 +39,7 @@ class GameHUD:
         self.font = PixelFontRenderer()
         self.seed_modal_open = False
         self.codex_modal_open = False
+        self.ledger_modal_open = False
         self.seed_input_buffer = ""
         self.banner_text = ""
         self.banner_timer = 0.0

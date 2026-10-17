@@ -112,6 +112,7 @@ class ModernStoryOverlay:
         weather_name: str = "ALTIN İKİNDİ",
         is_paused: bool = False,
         tactical_map_open: bool = False,
+        ledger_open: bool = False,
     ) -> None:
         sw, sh = screen.get_size()
         if sw < 640 or sh < 360:
@@ -128,7 +129,7 @@ class ModernStoryOverlay:
         self._render_compass_and_boss_bar(screen, sw, world, player, items, enemies)
 
         # 3. Top-Right: Chapter Title & Crisp 2x Minimap Radar
-        if show_minimap and not seed_modal_open and not codex_open and not tactical_map_open:
+        if show_minimap and not seed_modal_open and not codex_open and not tactical_map_open and not ledger_open:
             self._render_minimap_panel(screen, sw, world, player, items)
 
         # 4. Bottom-Center: Story Dialogue Box (or Minimalist Control Hint Bar)
@@ -141,7 +142,7 @@ class ModernStoryOverlay:
         if banner_timer > 0.0 and banner_text and not story.show_intro_card:
             self._render_banner_toast(screen, sw, banner_text)
 
-        # 6. Interactive Modals ([C] Story & Boon Codex, [TAB] Seed Input, Victory Modal, or Story Intro Card)
+        # 6. Interactive Modals ([C] Codex, [J] Sefer Günlüğü, [TAB] Seed, Victory Modal, Intro Card)
         if story.show_intro_card:
             self._render_story_intro_card(screen, sw, sh, world)
         elif getattr(story, "show_victory_modal", False):
@@ -150,6 +151,8 @@ class ModernStoryOverlay:
             self._render_pause_modal_hd(screen, sw, sh)
         elif tactical_map_open:
             self._render_tactical_map_hd(screen, sw, sh, world, player, items, enemies, story)
+        elif ledger_open:
+            self._render_ledger_modal_hd(screen, sw, sh, world, player, story)
         elif codex_open:
             self._render_codex_modal_hd(screen, sw, sh, world, player, story)
         elif seed_modal_open:
@@ -435,8 +438,8 @@ class ModernStoryOverlay:
         pygame.draw.rect(bar, BURNT_AMBER, (0, 0, bw, bh), 1, border_radius=6)
 
         txt = (
-            "[WASD] Yürü  •  [SPACE] Kılıç & Yansıt  •  [F] Köz Atışı  •  [Z] DEVRİM HARLA  •  "
-            "[X] KILIÇ DANSI  •  [Q] Nova  •  [E] Oku/Közle  •  [G] SİMYA  •  [N] Harita  •  [P] Duraklat"
+            "[WASD] Yürü  •  [SPACE] Kılıç & Parri  •  [F] Köz  •  [Z] DEVRİM  •  "
+            "[X] KILIÇ DANSI  •  [E] Ayin/Közle  •  [G] SİMYA  •  [J] Sefer Günlüğü  •  [N] Harita  •  [P] Duraklat"
         )
         lbl = self.f_tiny.render(txt, True, SUNLIT_BIRCH)
         bar.blit(lbl, ((bw - lbl.get_width()) // 2, 8))
@@ -809,6 +812,143 @@ class ModernStoryOverlay:
             HARVEST_GOLD,
         )
         card.blit(footer, ((cw - footer.get_width()) // 2, ch - 34))
+        screen.blit(card, (cx, cy))
+
+    def _render_ledger_modal_hd(
+        self,
+        screen: pygame.Surface,
+        sw: int,
+        sh: int,
+        world: WorldData,
+        player: Player,
+        story: StoryManager,
+    ) -> None:
+        dim = pygame.Surface((sw, sh), pygame.SRCALPHA)
+        dim.fill((*DEEP_VOID, 215))
+        screen.blit(dim, (0, 0))
+
+        cw = min(940, sw - 40)
+        ch = min(590, sh - 40)
+        cx = (sw - cw) // 2
+        cy = (sh - ch) // 2
+        card = pygame.Surface((cw, ch), pygame.SRCALPHA)
+        card.fill((*PLUM_SHADOW, 250))
+        pygame.draw.rect(card, HARVEST_GOLD, (0, 0, cw, ch), 3, border_radius=12)
+        pygame.draw.rect(card, SUNLIT_BIRCH, (5, 5, cw - 10, ch - 10), 1, border_radius=9)
+
+        # Header Title with Bilim Ağacı icon
+        t_main = self.f_title.render("📜 ODTÜ SEFER GÜNLÜĞÜ & BOZKIR KRONİĞİ [J]", True, PALE_SUNBEAM)
+        tw = t_main.get_width()
+        tx = (cw - tw) // 2
+        card.blit(t_main, (tx, 16))
+
+        s_bilim = pygame.transform.scale(self.assets.bilim_agaci_surf, (36, 36))
+        card.blit(s_bilim, (max(16, tx - 46), 12))
+
+        t_sub = self.f_subtitle.render(
+            f"Tohum: {world.seed_input} (0x{world.seed_uint64:016X})  •  Bölüm: Koru {world.depth_level}  •  Alan: {world.width}x{world.height} Parsel",
+            True,
+            HARVEST_GOLD,
+        )
+        card.blit(t_sub, ((cw - t_sub.get_width()) // 2, 52))
+
+        # Academic Honor Grade Banner
+        grade_letter, grade_title, total_score = evaluate_academic_grade(
+            relics_collected=player.relics_collected,
+            acorns_collected=player.acorns_collected,
+            enemies_defeated=player.enemies_defeated,
+            orbs_deflected=player.orbs_deflected,
+            active_boons_count=len(player.active_boons),
+            depth_level=world.depth_level,
+        )
+        gw = cw - 56
+        gh = 36
+        gx = 28
+        gy = 84
+        gsurf = pygame.Surface((gw, gh), pygame.SRCALPHA)
+        gsurf.fill((*DEEP_VOID, 230))
+        pygame.draw.rect(gsurf, BURNT_AMBER, (0, 0, gw, gh), 2, border_radius=6)
+        grade_col = PALE_SUNBEAM if grade_letter == "S" else (SUNLIT_BIRCH if grade_letter == "A" else HARVEST_GOLD)
+        lbl_grade = self.f_body_bold.render(
+            f"🎓 CANLI AKADEMİK BAŞARI DERECESİ: [{grade_letter}] {grade_title}  •  TOPLAM SKOR: {total_score:,} PUAN",
+            True,
+            grade_col,
+        )
+        gsurf.blit(lbl_grade, ((gw - lbl_grade.get_width()) // 2, 8))
+        card.blit(gsurf, (gx, gy))
+
+        # 4 Statistical Grid Boxes
+        stat_y = 130
+        stat_w = (cw - 56 - 36) // 4
+        stat_h = 76
+        stats = [
+            ("ANIT & KİTABELER", f"{getattr(story, 'steles_read', 0)} Okundu • {'HALELİ' if getattr(player, 'bilim_ritual_timer', 0.0) > 0.0 else 'HAZIR'}", PALE_SUNBEAM),
+            ("SİMYA DÖNÜŞÜMÜ", f"{getattr(player, 'transmute_count', 0)} Palamut Sentezi", SUNLIT_BIRCH),
+            ("KUSURSUZ PARRİ", f"{getattr(player, 'perfect_parries', 0)} Parri / {player.orbs_deflected} Deflect", HARVEST_GOLD),
+            ("BOZKIR SAVAŞI", f"{player.enemies_defeated} İnfaz • {player.combo_hits_max} Max Kombo", RUST_TERRACOTTA),
+        ]
+        for i, (stitle, sval, scol) in enumerate(stats):
+            sx = 28 + i * (stat_w + 12)
+            sb = pygame.Surface((stat_w, stat_h), pygame.SRCALPHA)
+            sb.fill((*DEEP_VOID, 230))
+            pygame.draw.rect(sb, WITHERED_BARK, (0, 0, stat_w, stat_h), 1, border_radius=6)
+            lbl_st = self.f_small.render(stitle, True, AUTUMN_MIST)
+            lbl_sv = self.f_subtitle.render(sval, True, scol)
+            sb.blit(lbl_st, ((stat_w - lbl_st.get_width()) // 2, 14))
+            sb.blit(lbl_sv, ((stat_w - lbl_sv.get_width()) // 2, 42))
+            card.blit(sb, (sx, stat_y))
+
+        # Chapter Narrative & Lore Summary
+        ch_key = min(3, max(1, world.depth_level))
+        ch_title, ch_desc, ch_obj = CHAPTER_INFO[ch_key]
+        lw = cw - 56
+        lh = 100
+        lx = 28
+        ly = 216
+        lsurf = pygame.Surface((lw, lh), pygame.SRCALPHA)
+        lsurf.fill((*DEEP_VOID, 235))
+        pygame.draw.rect(lsurf, HARVEST_GOLD, (0, 0, lw, lh), 1, border_radius=8)
+
+        lbl_ct = self.f_body_bold.render(f"📖 AKTİF BÖLÜM: {ch_title}", True, SUNLIT_BIRCH)
+        lbl_co = self.f_small.render(f"🎯 GÖREV: {ch_obj}", True, PALE_SUNBEAM)
+        lsurf.blit(lbl_ct, (16, 10))
+        lsurf.blit(lbl_co, (16, 30))
+        for j, line in enumerate(_wrap_text(ch_desc, self.f_body, lw - 32)[:3]):
+            lsurf.blit(self.f_body.render(line, True, AUTUMN_MIST), (16, 52 + j * 18))
+        card.blit(lsurf, (lx, ly))
+
+        # Curated Seed Roster Quick Reference
+        rw = cw - 56
+        rh = 146
+        rx = 28
+        ry = 326
+        rsurf = pygame.Surface((rw, rh), pygame.SRCALPHA)
+        rsurf.fill((*DEEP_VOID, 230))
+        pygame.draw.rect(rsurf, WITHERED_BARK, (0, 0, rw, rh), 1, border_radius=8)
+
+        lbl_rt = self.f_small.render("🗺️ KODTÜ RESMİ SEFER TOHUMLARI LİSTESİ ([TAB] ile Girin)", True, HARVEST_GOLD)
+        rsurf.blit(lbl_rt, (16, 8))
+
+        curated = [
+            ("ODTU-KORULUK-1956", "Kemal Kurdaş Ağaçlandırma Seferi • Dengeli Bozkır & Kitabeler"),
+            ("EYMIR-GOLU-1962", "Eymir Şifa Pınarı Kıyısı • Geniş Göletler & Yoğun Söğütlük"),
+            ("DEVRIM-BOZKIR-GIZEMI", "Bozkır Fırtınası & Yüksek Rüzgar • Zengin Palamut Rezervi"),
+            ("BILIM-AGACI-ANITI", "Anıt Meydanı Odaklı Tohum • Hızlı Isı ve Ayin Merkezi"),
+            ("YALINCAK-GALE-1956", "Hızlı Rüzgar & Çevik Kurt Sürüleri • Zorlu Hayatta Kalma"),
+        ]
+        for k, (c_seed, c_note) in enumerate(curated):
+            sy = 30 + k * 22
+            lbl_seed = self.f_tiny.render(f"• {c_seed:<22}", True, PALE_SUNBEAM)
+            lbl_note = self.f_tiny.render(f"| {c_note}", True, AUTUMN_MIST)
+            rsurf.blit(lbl_seed, (16, sy))
+            rsurf.blit(lbl_note, (180, sy))
+        card.blit(rsurf, (rx, ry))
+
+        # Bottom Instructions Footer
+        ft_txt = "[J] veya [ESC] : Günlüğü Kapat  •  [TAB] : Tohum Değiştir  •  [C] : Kutsama Kodeksi  •  [M] : Harita"
+        lbl_ft = self.f_small.render(ft_txt, True, SUNLIT_BIRCH)
+        card.blit(lbl_ft, ((cw - lbl_ft.get_width()) // 2, ch - 26))
+
         screen.blit(card, (cx, cy))
 
     def _render_seed_modal_hd(

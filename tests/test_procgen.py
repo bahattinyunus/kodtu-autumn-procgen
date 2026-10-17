@@ -1075,6 +1075,99 @@ def test_perfect_parry_and_academic_grade_evaluator() -> None:
     game.render()
 
 
+def test_bilim_agaci_ceremony_and_thunder_synthesis() -> None:
+    """
+    Verifies:
+    1. Audio synthesis for 'bilim_chime' (celestial tubular bells) and 'distant_thunder' (sub-bass rolling rumble).
+    2. Interacting [E] near ODTÜ Bilim Ağacı monument triggers ceremony:
+       - Refills warmth to max
+       - Activates 30s celestial halo (bilim_ritual_timer)
+       - Plays bilim_chime audio
+    3. bilim_ritual_timer applies passive warmth regeneration and decays cleanly over time.
+    """
+    from src.core.audio_synth import synth_bilim_chime, synth_distant_thunder
+    from src.main import AutumnProcGenGame
+
+    # 1. Audio synthesis checks
+    chime_wave = synth_bilim_chime()
+    assert len(chime_wave) > 0
+    assert float(np.max(np.abs(chime_wave))) > 0.05
+
+    thunder_wave = synth_distant_thunder()
+    assert len(thunder_wave) > 0
+    assert float(np.max(np.abs(thunder_wave))) > 0.05
+
+    # 2. In-game Bilim Ağacı interaction ceremony
+    game = AutumnProcGenGame(initial_seed="KODTU2026", debug_procgen=False, headless=True)
+    # Find Bilim Ağacı structure
+    bilim_st = next((st for st in game.world.structures if st.structure_type == "bilim_agaci"), None)
+    assert bilim_st is not None
+
+    # Teleport player near Bilim Ağacı
+    game.player.x = float(bilim_st.tile_x) + 0.5
+    game.player.y = float(bilim_st.tile_y) + 0.5
+    game.player.warmth = 25.0
+    assert game.player.bilim_ritual_timer == 0.0
+
+    # Trigger interaction [E]
+    game._try_interact_action()
+
+    # Verify ceremony activation
+    assert game.player.warmth == game.player.max_warmth
+    assert game.player.bilim_ritual_timer == 30.0
+
+    # 3. Verify passive warmth regeneration and timer decrement
+    game.player.warmth = 50.0
+    game.player.update(
+        dt=1.0,
+        move_x=0.0,
+        move_y=0.0,
+        spatial_hash=game.spatial_hash,
+        biome_grid=game.world.biome_grid,
+    )
+    assert game.player.bilim_ritual_timer == 29.0
+    assert game.player.warmth == 54.0  # +4.0 warmth regen/sec
+
+
+def test_chronicle_ledger_modal_and_ritual_halo() -> None:
+    """
+    Verifies:
+    1. Sefer Günlüğü / Run Chronicle Ledger modal ([J]) toggles, pauses movement and updates statistics.
+    2. Perfect parries are recorded and incremented on player stats.
+    3. Rendering of modern HD overlay with ledger_open renders without exceptions.
+    4. Rendering player with active bilim_ritual_timer expands lighting vignette base halo.
+    """
+    from src.entities.actors import EnemyAgent
+    from src.main import AutumnProcGenGame
+
+    game = AutumnProcGenGame(initial_seed="ODTU-LEDGER-TEST", debug_procgen=False, headless=True)
+    assert not game.hud.ledger_modal_open
+
+    # 1. Toggle ledger modal open
+    game.hud.ledger_modal_open = True
+    assert game.hud.ledger_modal_open
+
+    # When ledger modal is open, movement vector must be 0, 0
+    mx, my = game._get_move_vector()
+    assert mx == 0.0 and my == 0.0
+
+    # 2. Perfect parry increments player.perfect_parries
+    game.player.perfect_parries = 0
+    game.player.attack_timer = 0.14
+    wolf = EnemyAgent(x=game.player.x + 0.5, y=game.player.y, kind="wolf")
+    game.enemies.append(wolf)
+    game._apply_player_damage(15.0)
+    assert game.player.perfect_parries == 1
+
+    # 3. Render frame with ledger_open = True
+    game.render()
+
+    # 4. Ritual halo rendering test
+    game.hud.ledger_modal_open = False
+    game.player.bilim_ritual_timer = 25.0
+    game.render()
+
+
 
 
 

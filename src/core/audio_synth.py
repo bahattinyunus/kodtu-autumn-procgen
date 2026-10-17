@@ -404,6 +404,47 @@ def synth_spring_splash() -> np.ndarray:
     return wave
 
 
+def synth_bilim_chime() -> np.ndarray:
+    """
+    Synthesizes a deep, resonant celestial tubular bell chord (D4, A4, F#5, A5)
+    for the ODTÜ Bilim Ağacı Anıtı Activation Ceremony.
+    """
+    duration = int(SAMPLE_RATE * 1.4)
+    wave = np.zeros(duration, dtype=np.float32)
+    pitches = [293.66, 440.0, 739.99, 880.0]
+    for idx, f in enumerate(pitches):
+        offset = int(idx * 0.04 * SAMPLE_RATE)
+        sub_len = duration - offset
+        if sub_len <= 0:
+            continue
+        t_sub = np.linspace(0.0, sub_len / SAMPLE_RATE, sub_len, endpoint=False)
+        env = np.exp(-t_sub * 4.2)
+        harmonic = (
+            np.sin(2.0 * np.pi * f * t_sub)
+            + 0.45 * np.sin(2.0 * np.pi * 2.0 * f * t_sub)
+            + 0.20 * np.sin(2.0 * np.pi * 3.0 * f * t_sub)
+        ) * env
+        wave[offset:] += harmonic * 0.24
+    return wave
+
+
+def synth_distant_thunder() -> np.ndarray:
+    """
+    Synthesizes a low-frequency rolling sub-bass thunder rumble
+    resonating across the autumn steppe over Lake Eymir.
+    """
+    duration = int(SAMPLE_RATE * 1.6)
+    t = np.linspace(0.0, 1.6, duration, endpoint=False)
+    # Filtered low noise + rolling sub-bass wave
+    f_sub = 55.0 + 15.0 * np.sin(2.0 * np.pi * 3.5 * t)
+    sub = np.sin(2.0 * np.pi * f_sub * t) * np.exp(-t * 1.5)
+    noise = np.random.uniform(-0.35, 0.35, duration)
+    # Low-pass rolling envelope
+    roll = (np.sin(np.pi * (t / 1.6)) ** 1.5) * np.exp(-t * 0.8)
+    wave = (sub * 0.65 + noise * 0.35) * roll * 0.50
+    return wave
+
+
 def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
     """Generates and saves all `.wav` audio files into `assets/audio/` if not already present."""
     audio_dir.mkdir(parents=True, exist_ok=True)
@@ -431,6 +472,8 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         "alchemy_chime": audio_dir / "alchemy_chime.wav",
         "raven_screech": audio_dir / "raven_screech.wav",
         "spring_splash": audio_dir / "spring_splash.wav",
+        "bilim_chime": audio_dir / "bilim_chime.wav",
+        "distant_thunder": audio_dir / "distant_thunder.wav",
     }
 
     if not files["leaf_crunch_1"].exists():
@@ -479,6 +522,10 @@ def ensure_audio_assets(audio_dir: Path) -> Dict[str, Path]:
         _save_wav_int16(files["raven_screech"], synth_raven_screech())
     if not files["spring_splash"].exists():
         _save_wav_int16(files["spring_splash"], synth_spring_splash())
+    if not files["bilim_chime"].exists():
+        _save_wav_int16(files["bilim_chime"], synth_bilim_chime())
+    if not files["distant_thunder"].exists():
+        _save_wav_int16(files["distant_thunder"], synth_distant_thunder())
 
     return files
 

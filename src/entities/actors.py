@@ -381,6 +381,10 @@ class Player:
         self.transmute_count = 0
         self.dash_cooldown_mult = 1.0
 
+        # ODTÜ Bilim Ağacı Ayini / Science Tree Activation Aura ([E])
+        self.bilim_ritual_timer = 0.0
+        self.perfect_parries = 0
+
     @property
     def is_in_overdrive(self) -> bool:
         """True when player is channeling ODTÜ Devrim Overdrive Mode."""
@@ -563,8 +567,9 @@ class Player:
         self.blade_dance_timer = max(0.0, self.blade_dance_timer - dt)
         self.campfire_aura_timer = max(0.0, self.campfire_aura_timer - dt)
         self.overdrive_timer = max(0.0, self.overdrive_timer - dt)
+        self.bilim_ritual_timer = max(0.0, self.bilim_ritual_timer - dt)
 
-        # Passive Solar Bolt recharge & Devrim Torch warmth aura
+        # Passive Solar Bolt recharge, Devrim Torch warmth aura & Bilim Ağacı ritual halo
         if self.solar_bolts < self.max_solar_bolts:
             self.bolt_recharge_timer += dt
             if self.bolt_recharge_timer >= 2.4:
@@ -572,6 +577,8 @@ class Player:
                 self.solar_bolts += 1
         if self.has_boon("DEVRIM_TORCH"):
             self.warmth = min(self.max_warmth, self.warmth + dt * 2.5)
+        if self.bilim_ritual_timer > 0.0:
+            self.warmth = min(self.max_warmth, self.warmth + dt * 4.0)
 
         stepped_dry_leaves = False
         stepped_mud = False

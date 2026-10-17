@@ -305,7 +305,17 @@ class WorldRenderer:
                     pygame.draw.circle(canvas, SUNLIT_BIRCH, (bx, by), 3)
                 # Outer shockwave leaf ring
                 ring_r = int(round(12.0 + d_prog * 28.0))
-                pygame.draw.circle(canvas, HARVEST_GOLD, (pl_sx, pl_sy - 4), ring_r, 1)
+            if getattr(player, "bilim_ritual_timer", 0.0) > 0.0:
+                # ODTÜ Bilim Ağacı Celestial Halo (orbiting golden sparks and aura)
+                b_spin = time_sec * 3.8
+                for pt_i in range(6):
+                    pt_ang = b_spin + (pt_i * math.pi / 3.0)
+                    pt_r = 13.0 + 2.0 * math.sin(time_sec * 6.0 + pt_i)
+                    px_c = int(round(pl_sx + math.cos(pt_ang) * pt_r))
+                    py_c = int(round(pl_sy - 6 + math.sin(pt_ang) * pt_r))
+                    pygame.draw.circle(canvas, PALE_SUNBEAM, (px_c, py_c), 2)
+                    pygame.draw.circle(canvas, HARVEST_GOLD, (px_c, py_c), 1)
+                pygame.draw.circle(canvas, SUNLIT_BIRCH, (pl_sx, pl_sy - 6), 16, 1)
 
             canvas.blit(p_surf, (pl_sx - 8, pl_sy - 14))
             if player.attack_timer > 0.0:
@@ -413,7 +423,12 @@ class WorldRenderer:
 
         # Cut out soft warm radial halos around light sources
         pl_sx, pl_sy = camera.world_to_screen(player.x * TILE_SIZE, player.y * TILE_SIZE)
-        base_halo = 72.0 if getattr(player, "campfire_aura_timer", 0.0) > 0.0 else 56.0
+        if getattr(player, "bilim_ritual_timer", 0.0) > 0.0:
+            base_halo = 92.0
+        elif getattr(player, "campfire_aura_timer", 0.0) > 0.0:
+            base_halo = 72.0
+        else:
+            base_halo = 56.0
         halo_radius = int(round(base_halo + 4.0 * math.sin(time_sec * 3.5)))
         # Warm inner glow around player
         pygame.draw.circle(vignette, (*PALE_SUNBEAM, 0), (pl_sx, pl_sy - 4), halo_radius)
