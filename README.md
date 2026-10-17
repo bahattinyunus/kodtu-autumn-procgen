@@ -19,6 +19,7 @@
 [![Mechanic: Procedural Generation](https://img.shields.io/badge/Mekanik-6--Aşamalı_Deterministik_PCG-B5592A?style=for-the-badge&labelColor=1A1118)](#bolum-4)
 [![Modern UI: 1280x720 HD](https://img.shields.io/badge/Arayüz-1280x720_Modern_HD_Overlay-9E472A?style=for-the-badge&labelColor=1A1118)](#bolum-7)
 [![Tests: 38/38 Passed](https://img.shields.io/badge/Pytest_Suite-38%2F38_Passed_(100%25)-4E222A?style=for-the-badge&labelColor=1A1118)](#bolum-11)
+[![Engine: Unity 6 (URP 2D)](https://img.shields.io/badge/Engine-Unity_6_(URP_2D)_Ready-black?style=for-the-badge&logo=unity&logoColor=white)](#bolum-unity)
 [![License: MIT](https://img.shields.io/badge/Lisans-MIT_Open_Source-D4C8BE?style=for-the-badge&labelColor=1A1118)](#bolum-12)
 
 <br />
@@ -45,7 +46,8 @@
 9. [🏆 Dünya Çapında Muadil Oyunlar & Rakip Analiz Matrisi](#bolum-9)
 10. [🗂️ Sıfır Bağımlılıklı Modüler Proje Mimarisi](#bolum-10)
 11. [🚀 Hızlı Başlangıç & Otomasyon Testleri](#bolum-11)
-12. [📜 Lisans ve Teşekkür](#bolum-12)
+12. [🍁 Unity 2D (URP) Motor Desteği & C# Mimarisi](#bolum-unity)
+13. [📜 Lisans ve Teşekkür](#bolum-13)
 
 <p align="center">
   <img src="docs/banners/section_divider_autumn.png" alt="Autumn Leaf Divider" width="100%" />
@@ -544,8 +546,36 @@ Proje, `.github/workflows/ci.yml` iş akışı aracılığıyla her `push` ve `p
 
 ---
 
-<a id="bolum-12"></a>
-## 📜 12. Lisans ve Teşekkür
+<a id="bolum-unity"></a>
+## 🍁 12. Unity 2D (URP) Motor Desteği & C# Mimarisi
+
+KODTÜ: Autumn ProcGen Engine, Python mimarisinin yanı sıra modern ve endüstri standardı **Unity 6 (Universal Render Pipeline - 2D)** platformuna da tam teşekküllü olarak taşınmıştır (`unity_project/`).
+
+```text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   UNITY 2D (C#) MİMARİ EŞLEŞTİRME                                │
+├──────────────────────────┬──────────────────────────────────────────┬────────────────────────────┤
+│ PYTHON BİLEŞENİ          │ UNITY 2D KARŞILIĞI                       │ GÖREV & ÖZELLİK            │
+├──────────────────────────┼──────────────────────────────────────────┼────────────────────────────┤
+│ prng.py & noise.py       │ Xoshiro256.cs & SimplexNoise2D.cs        │ Deterministik 64-bit tohum │
+│ automata.py & poisson.py │ CellularAutomata.cs & PoissonSampling.cs │ B678/S345678 CA & Flora    │
+│ autotile.py              │ AutotileMasks.cs + Unity Tilemap         │ 47-Blob otomatik karo      │
+│ actors.py                │ PlayerController.cs & EnemyAI.cs         │ Hareket, Fener, Saldırı, AI│
+│ asset_builder.py         │ tools/export_unity_assets.py             │ Otomatik PNG/WAV aktarımı  │
+│ modern_overlay.py        │ AutumnHUD.cs & StoryData.cs              │ Daktilo ODTÜ Kitabeleri    │
+└──────────────────────────┴──────────────────────────────────────────┴────────────────────────────┘
+```
+
+#### 🚀 Unity Hub ile Hızlı Başlangıç:
+1. **Unity Hub'ı Açın:** `Add project from disk` butonuna tıklayın ve `unity_project` klasörünü seçin.
+2. **Unity Sürümü:** Unity 6 (`6000.6.6f1`) veya üzeri bir 2D (URP) şablonuyla projeyi başlatın.
+3. **Tek Tıkla Kurulum:** Editör menüsünden `Tools -> KODTÜ Autumn -> 1. Setup Game Scene` seçeneğine tıklayın.
+4. **▶ Play:** Hazır sahne, Tilemap'ler, parçacık efektleri ve ODTÜ Kitabeleriyle anında oynamaya başlayın!
+
+---
+
+<a id="bolum-13"></a>
+## 📜 13. Lisans ve Teşekkür
 
 Bu proje **MIT Lisansı** altında açık kaynaklı olarak yayımlanmıştır.
 
